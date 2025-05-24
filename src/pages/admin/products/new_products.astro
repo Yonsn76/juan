@@ -1,0 +1,403 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import '../../../styles/admin.css';
+import { supabase } from '../../../lib/supabase';
+import { catalogData } from '../../../data/catalog'; // Como respaldo
+
+// Obtener categorías desde Supabase
+let categories = [];
+
+try {
+  const { data, error } = await supabase
+    .from('categories')
+    .select('*')
+    .order('name');
+
+  if (error) throw error;
+  categories = data || [];
+} catch (error) {
+  console.error('Error al obtener categorías de Supabase:', error);
+
+  // Si hay un error, usar los datos estáticos como respaldo
+  categories = Object.entries(catalogData).map(([key, category]) => ({
+    id: key,
+    name: category.category,
+    description: category.description
+  }));
+}
+---
+
+<Layout title="Nuevo Producto - Casa Biker">
+  <div class="admin-container">
+    <header class="admin-header">
+      <div class="admin-header-content">
+        <h1>
+          <i class="fas fa-box"></i>
+          Nuevo Producto
+        </h1>
+        <a href="/admin/products/index_products" class="admin-back-btn">
+          <i class="fas fa-arrow-left"></i> Volver
+        </a>
+      </div>
+    </header>
+
+    <div class="admin-content">
+      <aside class="admin-sidebar">
+        <nav class="admin-nav">
+          <ul>
+            <li class="admin-nav-item">
+              <a href="/admin" class="admin-nav-link">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+              </a>
+            </li>
+            <li class="admin-nav-item active">
+              <a href="/admin/products" class="admin-nav-link">
+                <i class="fas fa-box"></i>
+                <span>Productos</span>
+              </a>
+            </li>
+            <li class="admin-nav-item">
+              <a href="/admin/categories" class="admin-nav-link">
+                <i class="fas fa-tags"></i>
+                <span>Categorías</span>
+              </a>
+            </li>
+            <li class="admin-nav-item">
+              <a href="/admin/settings" class="admin-nav-link">
+                <i class="fas fa-cog"></i>
+                <span>Configuración</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      <main class="admin-main">
+        <div class="admin-content-header">
+          <h2>Añadir Nuevo Producto</h2>
+          <a href="/admin/products" class="admin-btn admin-btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver a la lista
+          </a>
+        </div>
+
+        <div class="admin-form-container">
+          <form id="product-form" class="admin-form">
+            <!-- El ID del producto será generado automáticamente por Supabase -->
+
+            <div class="admin-form-group">
+              <label for="product-name" class="admin-form-label">Nombre del Producto</label>
+              <input
+                type="text"
+                id="product-name"
+                name="name"
+                class="admin-form-input"
+                placeholder="Nombre del producto"
+                required
+              >
+            </div>
+
+            <div class="admin-form-group">
+              <label for="product-description" class="admin-form-label">Descripción Corta</label>
+              <input
+                type="text"
+                id="product-description"
+                name="description"
+                class="admin-form-input"
+                placeholder="Breve descripción del producto"
+                required
+              >
+              <small class="admin-form-help">Descripción corta que aparecerá en las tarjetas de producto</small>
+            </div>
+
+            <div class="admin-form-group">
+              <label for="product-details" class="admin-form-label">Detalles</label>
+              <textarea
+                id="product-details"
+                name="details"
+                class="admin-form-textarea"
+                placeholder="Descripción detallada del producto"
+                rows="5"
+              ></textarea>
+              <small class="admin-form-help">Descripción completa que aparecerá en la vista detallada</small>
+            </div>
+
+            <div class="admin-form-row">
+              <div class="admin-form-group">
+                <label for="product-price" class="admin-form-label">Precio (S/)</label>
+                <input
+                  type="number"
+                  id="product-price"
+                  name="price"
+                  class="admin-form-input"
+                  placeholder="0.00"
+                  step="0.01"
+                  min="0"
+                  required
+                >
+              </div>
+
+              <div class="admin-form-group">
+                <label for="product-discount" class="admin-form-label">Descuento (%)</label>
+                <input
+                  type="number"
+                  id="product-discount"
+                  name="discount"
+                  class="admin-form-input"
+                  placeholder="0"
+                  min="0"
+                  max="100"
+                >
+              </div>
+
+              <div class="admin-form-group">
+                <label for="product-stock" class="admin-form-label">Stock</label>
+                <input
+                  type="number"
+                  id="product-stock"
+                  name="stock"
+                  class="admin-form-input"
+                  placeholder="0"
+                  min="0"
+                >
+              </div>
+            </div>
+
+            <div class="admin-form-group">
+              <label for="product-category" class="admin-form-label">Categoría</label>
+              <select id="product-category" name="category_id" class="admin-form-select" required>
+                <option value="">Seleccionar categoría</option>
+                {categories.map((category) => (
+                  <option value={category.id}>{category.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div class="admin-form-group">
+              <label for="product-image" class="admin-form-label">Imagen</label>
+              <div class="admin-form-file-input">
+                <input
+                  type="file"
+                  id="product-image"
+                  name="image"
+                  class="admin-form-file"
+                  accept="image/*"
+                >
+                <label for="product-image" class="admin-form-file-label">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                  <span>Seleccionar imagen</span>
+                </label>
+              </div>
+              <div id="image-preview" class="admin-image-preview"></div>
+              <small class="admin-form-help">Formato recomendado: JPG o PNG, máximo 2MB</small>
+            </div>
+
+            <div class="admin-form-group">
+              <div class="admin-form-checkbox-group">
+                <input
+                  type="checkbox"
+                  id="product-featured"
+                  name="featured"
+                  class="admin-form-checkbox"
+                >
+                <label for="product-featured" class="admin-form-checkbox-label">
+                  Producto destacado
+                </label>
+              </div>
+              <small class="admin-form-help">Los productos destacados aparecerán en la página principal</small>
+            </div>
+
+            <div class="admin-form-actions">
+              <button type="button" class="admin-btn admin-btn-secondary" id="cancel-btn">
+                Cancelar
+              </button>
+              <button type="submit" class="admin-btn admin-btn-primary" id="save-btn">
+                <i class="fas fa-save"></i> Guardar Producto
+              </button>
+            </div>
+          </form>
+        </div>
+      </main>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import { createClient } from '@supabase/supabase-js';
+
+  // Crear cliente de Supabase
+  const supabaseUrl = 'https://cnrhqbbquymnlquuwkbh.supabase.co';
+  const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNucmhxYmJxdXltbmxxdXV3a2JoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5NDYwNDksImV4cCI6MjA2MzUyMjA0OX0.uWq6EPQrMOq1vBif4flJVnjHhvKjIlbB-nrnxgRzCbY';
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const productForm = document.getElementById('product-form');
+    const cancelBtn = document.getElementById('cancel-btn');
+    const imageInput = document.getElementById('product-image');
+    const imagePreview = document.getElementById('image-preview');
+    const saveBtn = document.getElementById('save-btn');
+
+    // Manejar la vista previa de la imagen
+    if (imageInput && imagePreview) {
+      imageInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            imagePreview.innerHTML = `
+              <img src="${e.target.result}" alt="Vista previa" class="admin-preview-img">
+              <button type="button" class="admin-btn admin-btn-icon admin-btn-remove-image">
+                <i class="fas fa-times"></i>
+              </button>
+            `;
+
+            // Agregar evento para eliminar la imagen
+            const removeBtn = imagePreview.querySelector('.admin-btn-remove-image');
+            if (removeBtn) {
+              removeBtn.addEventListener('click', () => {
+                imageInput.value = '';
+                imagePreview.innerHTML = '';
+              });
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    // Manejar el botón de cancelar
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => {
+        if (confirm('¿Estás seguro de que deseas cancelar? Los cambios no guardados se perderán.')) {
+          window.location.href = '/admin/products/index_products';
+        }
+      });
+    }
+
+    // Manejar el envío del formulario
+    if (productForm) {
+      productForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        try {
+          // Mostrar indicador de carga
+          if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+          }
+
+          // Recopilar datos del formulario
+          const formData = new FormData(productForm);
+          const productData = Object.fromEntries(formData.entries());
+
+          // Eliminar el ID para que Supabase lo genere automáticamente
+          delete productData.id;
+
+          // Convertir valores numéricos
+          productData.price = parseFloat(productData.price);
+          productData.discount = productData.discount ? parseInt(productData.discount) : null;
+          productData.stock = productData.stock ? parseInt(productData.stock) : 0;
+          productData.featured = !!formData.get('featured');
+
+          // Manejar la imagen
+          const imageFile = imageInput.files[0];
+          console.log('Archivo de imagen seleccionado:', imageFile);
+
+          if (imageFile) {
+            try {
+              console.log('Iniciando proceso de subida de imagen...');
+
+              // Generar un nombre único para la imagen (sin depender del ID del producto)
+              const timestamp = Date.now();
+              const randomString = Math.random().toString(36).substring(2, 15);
+              const fileExt = imageFile.name.split('.').pop();
+              const fileName = `${timestamp}_${randomString}.${fileExt}`;
+              const filePath = `${fileName}`; // Sin carpeta, directamente en la raíz del bucket
+
+              console.log('Ruta de archivo generada:', filePath);
+              console.log('Tipo de archivo:', imageFile.type);
+              console.log('Tamaño de archivo:', imageFile.size, 'bytes');
+
+              // Verificar que el bucket existe
+              const { data: buckets, error: bucketsError } = await supabase.storage
+                .listBuckets();
+
+              console.log('Buckets disponibles:', buckets);
+
+              if (bucketsError) {
+                console.error('Error al listar buckets:', bucketsError);
+                throw bucketsError;
+              }
+
+              // Subir la imagen al bucket de Supabase
+              console.log('Intentando subir imagen a Supabase...');
+              const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('productos') // Usar el bucket "productos" en lugar de "products"
+                .upload(filePath, imageFile, {
+                  cacheControl: '3600',
+                  upsert: true,
+                  contentType: imageFile.type
+                });
+
+              console.log('Respuesta de subida:', { uploadData, uploadError });
+
+              if (uploadError) {
+                console.error('Error detallado al subir la imagen:', uploadError);
+                throw uploadError;
+              }
+
+              // Obtener la URL pública de la imagen
+              const { data: publicUrlData } = supabase.storage
+                .from('productos')
+                .getPublicUrl(filePath);
+
+              console.log('URL pública de la imagen:', publicUrlData);
+
+              // Guardar la ruta de la imagen en el producto
+              productData.image = filePath;
+
+              console.log('Imagen subida correctamente:', publicUrlData.publicUrl);
+            } catch (uploadError) {
+              console.error('Error al subir la imagen:', uploadError);
+              console.error('Detalles del error:', JSON.stringify(uploadError, null, 2));
+              // Si hay un error al subir la imagen, usar una imagen por defecto
+              productData.image = 'placeholder.jpg';
+            }
+          } else {
+            console.log('No se seleccionó ninguna imagen, usando placeholder');
+            productData.image = 'placeholder.jpg';
+          }
+
+          console.log('Datos del producto a guardar:', productData);
+
+          // Guardar el producto en Supabase
+          const { data, error } = await supabase
+            .from('products')
+            .insert(productData)
+            .select();
+
+          if (error) throw error;
+
+          console.log('Producto guardado correctamente:', data);
+
+          // Mostrar mensaje de éxito
+          alert('Producto guardado correctamente');
+
+          // Redirigir a la lista de productos
+          setTimeout(() => {
+            window.location.href = '/admin/products/index_products';
+          }, 2000);
+        } catch (error) {
+          console.error('Error al guardar el producto:', error);
+          alert('Error al guardar el producto: ' + error.message);
+
+          // Restaurar el botón de guardar
+          if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Producto';
+          }
+        }
+      });
+    }
+  });
+</script>

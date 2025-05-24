@@ -1,0 +1,288 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import CartButton from '../components/Cart/CartButton.astro';
+import CartModal from '../components/Cart/CartModal.astro';
+
+const teamMembers = [
+  {
+    name: 'Juan Pérez',
+    role: 'Fundador & Gerente',
+    image: 'team/juan.jpg',
+    description: 'Con más de 15 años de experiencia en el mundo de las motos.'
+  },
+  {
+    name: 'Ana García',
+    role: 'Especialista en Ventas',
+    image: 'team/ana.jpg',
+    description: 'Experta en asesoramiento y atención al cliente.'
+  },
+  {
+    name: 'Carlos López',
+    role: 'Técnico Principal',
+    image: 'team/carlos.jpg',
+    description: 'Mecánico certificado con especialización en tunning.'
+  },
+  {
+    name: 'María Torres',
+    role: 'Diseñadora',
+    image: 'team/maria.jpg',
+    description: 'Especialista en personalización y diseño de motos.'
+  }
+];
+---
+
+<Layout title="Nosotros">
+  <Header slot="header" />
+
+  <main class="about-page">
+    <!-- Hero Section -->
+    <section class="about-hero">
+      <div class="container">
+        <h1>Nuestra Historia</h1>
+        <p class="lead">
+          Desde 2015, Zona Biker 15 ha sido el destino preferido de los amantes de las motos en Huánuco.
+        </p>
+      </div>
+    </section>
+
+    <!-- Mission & Vision Section -->
+    <section class="section">
+      <div class="container">
+        <div class="mission-vision-grid">
+          <div class="mission-card">
+            <h2>Misión</h2>
+            <p>
+              Proporcionar productos y servicios de alta calidad para la comunidad de motociclistas, 
+              garantizando la mejor experiencia y seguridad para nuestros clientes.
+            </p>
+          </div>
+          <div class="vision-card">
+            <h2>Visión</h2>
+            <p>
+              Ser la empresa líder en el sector de motocicletas en Huánuco, reconocida por nuestra 
+              excelencia en servicio y compromiso con la comunidad biker.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Values Section -->
+    <section class="section values-section">
+      <div class="container">
+        <h2 class="section-title">Nuestros Valores</h2>
+        <div class="values-grid">
+          <div class="value-card">
+            <i class="fas fa-heart"></i>
+            <h3>Pasión</h3>
+            <p>Amamos lo que hacemos y lo transmitimos en cada servicio.</p>
+          </div>
+          <div class="value-card">
+            <i class="fas fa-star"></i>
+            <h3>Calidad</h3>
+            <p>Trabajamos con los mejores productos y estándares del mercado.</p>
+          </div>
+          <div class="value-card">
+            <i class="fas fa-handshake"></i>
+            <h3>Confianza</h3>
+            <p>Construimos relaciones duraderas con nuestros clientes.</p>
+          </div>
+          <div class="value-card">
+            <i class="fas fa-users"></i>
+            <h3>Comunidad</h3>
+            <p>Fomentamos la unión y el crecimiento de la comunidad biker.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Team Section -->
+    <section class="section team-section">
+      <div class="container">
+        <h2 class="section-title">Nuestro Equipo</h2>
+        <div class="team-grid">
+          {teamMembers.map(member => (
+            <div class="team-card">
+              <div class="team-image">
+                <img src={`/images/${member.image}`} alt={member.name} />
+              </div>
+              <div class="team-info">
+                <h3>{member.name}</h3>
+                <span class="team-role">{member.role}</span>
+                <p>{member.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <CartButton />
+  <CartModal />
+  
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  .about-page {
+    padding-top: var(--header-height);
+  }
+
+  /* Hero Section */
+  .about-hero {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+                      url('/images/about-hero.jpg');
+    background-size: cover;
+    background-position: center;
+    color: white;
+    padding: 6rem 0;
+    text-align: center;
+  }
+
+  .about-hero h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .lead {
+    font-size: 1.25rem;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  /* Mission & Vision */
+  .mission-vision-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+
+  .mission-card,
+  .vision-card {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .mission-card h2,
+  .vision-card h2 {
+    color: var(--biker-red);
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+  }
+
+  /* Values Section */
+  .values-section {
+    background-color: var(--gray-100);
+  }
+
+  .values-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+  }
+
+  .value-card {
+    text-align: center;
+    padding: 2rem;
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .value-card i {
+    font-size: 2.5rem;
+    color: var(--biker-red);
+    margin-bottom: 1rem;
+  }
+
+  .value-card h3 {
+    margin-bottom: 0.5rem;
+  }
+
+  /* Team Section */
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+  }
+
+  .team-card {
+    background-color: white;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .team-image {
+    height: 250px;
+    overflow: hidden;
+  }
+
+  .team-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .team-info {
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .team-info h3 {
+    margin-bottom: 0.5rem;
+  }
+
+  .team-role {
+    display: block;
+    color: var(--biker-red);
+    font-weight: 500;
+    margin-bottom: 1rem;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 1024px) {
+    .values-grid,
+    .team-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .mission-vision-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .about-hero {
+      padding: 4rem 0;
+    }
+
+    .about-hero h1 {
+      font-size: 2.5rem;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .values-grid,
+    .team-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .about-hero h1 {
+      font-size: 2rem;
+    }
+
+    .lead {
+      font-size: 1.1rem;
+    }
+
+    .team-image {
+      height: 200px;
+    }
+  }
+</style>

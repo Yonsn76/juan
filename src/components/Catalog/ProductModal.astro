@@ -1,0 +1,222 @@
+---
+import type { Product } from '../../types/catalog';
+import { supabase } from '../../lib/supabase';
+import '../../styles/product-modal.css';
+---
+
+<div id="product-modal" class="product-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="modal-product-title" class="modal-title">Nombre del Producto</h3>
+      <button id="close-modal" class="close-button" aria-label="Cerrar modal">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="product-details">
+        <div class="product-image-container">
+          <img
+            id="modal-product-image"
+            src="/images/placeholder.jpg"
+            alt="Producto"
+            class="product-image"
+            loading="lazy"
+          >
+        </div>
+        <div class="product-info">
+          <p id="modal-product-description" class="product-description">
+            Descripción detallada del producto.
+          </p>
+          <p class="product-price">
+            <span id="modal-product-price">S/ 0.00</span>
+          </p>
+          <button
+            class="add-to-cart-button"
+            id="add-to-cart"
+            aria-label="Añadir al carrito"
+          >
+            <i class="fas fa-shopping-cart"></i> Añadir al carrito
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { createClient } from '@supabase/supabase-js';
+
+  // Crear cliente de Supabase
+  const supabaseUrl = 'https://cnrhqbbquymnlquuwkbh.supabase.co';
+  const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNucmhxYmJxdXltbmxxdXV3a2JoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5NDYwNDksImV4cCI6MjA2MzUyMjA0OX0.uWq6EPQrMOq1vBif4flJVnjHhvKjIlbB-nrnxgRzCbY';
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Elements
+    const modal = document.getElementById('product-modal');
+    const closeButton = document.getElementById('close-modal');
+    const addToCartButton = document.getElementById('add-to-cart');
+    let currentProduct = null;
+
+    // Show modal function
+    const showModal = () => {
+      if (modal) {
+        document.body.style.overflow = 'hidden';
+        modal.classList.add('active');
+        closeButton?.focus();
+      }
+    };
+
+    // Hide modal function
+    const hideModal = () => {
+      if (modal) {
+        document.body.style.overflow = '';
+        modal.classList.remove('active');
+      }
+    };
+
+    // Show notification function
+    const showNotification = (message) => {
+      const notification = document.createElement('div');
+      notification.className = 'notification';
+      notification.innerHTML = `
+        <div class="notification-content">
+          <i class="fas fa-check-circle"></i>
+          <span>${message} añadido al carrito</span>
+        </div>
+      `;
+      document.body.appendChild(notification);
+
+      // Remove notification after 3 seconds
+      setTimeout(() => {
+        notification.classList.add('fade-out');
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    };
+
+    // Event Listeners
+    closeButton?.addEventListener('click', hideModal);
+
+    modal?.addEventListener('click', (e) => {
+      if (e.target === modal) hideModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal?.classList.contains('active')) {
+        hideModal();
+      }
+    });
+
+    // Add to cart functionality
+    if (addToCartButton) {
+      addToCartButton.addEventListener('click', () => {
+        if (!currentProduct) return;
+
+        // Get or initialize cart
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+
+        // Check if product already in cart
+        const existingItem = cart.find(item => item.id === currentProduct.id);
+
+        if (existingItem) {
+          existingItem.quantity += 1;
+        } else {
+          cart.push({
+            ...currentProduct,
+            quantity: 1
+          });
+        }
+
+        // Save to localStorage
+        localStorage.setItem('cart', JSON.stringify(cart));
+
+        // Show success message
+        showNotification(currentProduct.name);
+
+        // Update cart count
+        updateCartCount();
+
+        // Close modal
+        hideModal();
+      });
+    }
+
+    // Update cart count in UI
+    function updateCartCount() {
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+      const cartCount = document.getElementById('cart-count');
+
+      if (cartCount) {
+        cartCount.textContent = totalItems > 0 ? totalItems : '';
+        cartCount.style.display = totalItems > 0 ? 'flex' : 'none';
+      }
+    }
+
+    // Expose function to update modal content
+    window.updateProductModal = (product) => {
+      if (!modal) return;
+
+      // Store current product
+      currentProduct = product;
+
+      // Update modal content
+      const titleEl = document.getElementById('modal-product-title');
+      const imageEl = document.getElementById('modal-product-image');
+      const descEl = document.getElementById('modal-product-description');
+      const priceEl = document.getElementById('modal-product-price');
+
+      if (titleEl) titleEl.textContent = product.name || 'Producto';
+
+      if (imageEl) {
+        let imageUrl = product.image ? `/images/${product.image}` : '/images/placeholder.jpg';
+
+        // Verificar si la imagen es una ruta de archivo (no una URL completa)
+        if (product.image && !product.image.startsWith('http')) {
+          try {
+            const { data } = supabase.storage
+              .from('productos')
+              .getPublicUrl(product.image);
+
+            if (data && data.publicUrl) {
+              imageUrl = data.publicUrl;
+              console.log('URL de imagen obtenida de Supabase para modal:', imageUrl);
+            }
+          } catch (error) {
+            console.error('Error al obtener URL de imagen para modal:', error);
+          }
+        }
+
+        imageEl.src = imageUrl;
+        imageEl.alt = product.name || 'Producto';
+        imageEl.onerror = () => {
+          imageEl.src = '/images/placeholder.jpg';
+        };
+      }
+
+      if (descEl) {
+        descEl.textContent = product.details || product.description || 'Descripción no disponible';
+      }
+
+      if (priceEl) {
+        const finalPrice = product.discount
+          ? product.price * (1 - product.discount / 100)
+          : product.price;
+
+        priceEl.innerHTML = `S/ ${finalPrice.toFixed(2)}`;
+
+        // Show original price if there's a discount
+        if (product.discount) {
+          const originalPrice = document.createElement('span');
+          originalPrice.className = 'original-price';
+          originalPrice.textContent = `S/ ${product.price.toFixed(2)}`;
+          priceEl.appendChild(document.createElement('br'));
+          priceEl.appendChild(originalPrice);
+        }
+      }
+
+      // Show the modal
+      showModal();
+    };
+  });
+</script>

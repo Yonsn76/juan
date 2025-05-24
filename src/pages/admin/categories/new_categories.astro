@@ -1,0 +1,298 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import '../../../styles/admin.css';
+
+// Lista de iconos disponibles de Font Awesome
+const availableIcons = [
+  'motorcycle', 'hard-hat', 'tshirt', 'cogs', 'tools', 'gift',
+  'shield-alt', 'bolt', 'oil-can', 'wrench', 'cog', 'helmet-safety',
+  'screwdriver', 'car-battery', 'gas-pump', 'key', 'map-marker-alt',
+  'road', 'tachometer-alt', 'truck', 'user-shield', 'shopping-cart'
+];
+---
+
+<Layout title="Nueva Categoría - Casa Biker">
+  <div class="admin-container">
+    <header class="admin-header">
+      <div class="admin-header-content">
+        <h1>
+          <i class="fas fa-folder-plus"></i>
+          Nueva Categoría
+        </h1>
+        <div class="admin-user-info">
+          <span class="admin-username">Admin</span>
+          <button id="logout-btn" class="admin-logout-btn">
+            <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="admin-content">
+      <aside class="admin-sidebar">
+        <nav class="admin-nav">
+          <ul>
+            <li class="admin-nav-item">
+              <a href="/admin" class="admin-nav-link">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+              </a>
+            </li>
+            <li class="admin-nav-item">
+              <a href="/admin/products" class="admin-nav-link">
+                <i class="fas fa-box"></i>
+                <span>Productos</span>
+              </a>
+            </li>
+            <li class="admin-nav-item active">
+              <a href="/admin/categories" class="admin-nav-link">
+                <i class="fas fa-tags"></i>
+                <span>Categorías</span>
+              </a>
+            </li>
+            <li class="admin-nav-item">
+              <a href="/admin/settings" class="admin-nav-link">
+                <i class="fas fa-cog"></i>
+                <span>Configuración</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      <main class="admin-main">
+        <div class="admin-content-header">
+          <h2>Añadir Nueva Categoría</h2>
+          <a href="/admin/categories/index_categories" class="admin-btn admin-btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+          </a>
+        </div>
+
+        <div id="error-message" class="admin-alert admin-alert-danger" style="display: none;">
+          <i class="fas fa-exclamation-circle"></i>
+          <span id="error-text"></span>
+        </div>
+
+        <div id="success-message" class="admin-alert admin-alert-success" style="display: none;">
+          <i class="fas fa-check-circle"></i>
+          <span>Categoría creada correctamente. Redirigiendo...</span>
+        </div>
+
+        <form id="category-form" class="admin-form">
+          <!-- El ID de la categoría será generado automáticamente por Supabase -->
+
+          <div class="admin-form-group">
+            <label for="category-name" class="admin-form-label">Nombre de la Categoría</label>
+            <input
+              type="text"
+              id="category-name"
+              name="name"
+              class="admin-form-input"
+              placeholder="Ej: Cascos, Accesorios, Herramientas"
+              required
+            >
+          </div>
+
+          <div class="admin-form-group">
+            <label for="category-description" class="admin-form-label">Descripción</label>
+            <textarea
+              id="category-description"
+              name="description"
+              class="admin-form-textarea"
+              rows="3"
+              placeholder="Descripción breve de la categoría"
+            ></textarea>
+            <small class="admin-form-help">Descripción breve de la categoría</small>
+          </div>
+
+          <div class="admin-form-group">
+            <label class="admin-form-label">Icono</label>
+            <div class="admin-icon-selector">
+              <input type="hidden" id="selected-icon" name="icon" value="tag">
+              <div class="admin-icon-grid">
+                {availableIcons.map(icon => (
+                  <div
+                    class={`admin-icon-option ${icon === 'tag' ? 'selected' : ''}`}
+                    data-icon={icon}
+                  >
+                    <i class={`fas fa-${icon}`}></i>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <small class="admin-form-help">Selecciona un icono para representar la categoría</small>
+          </div>
+
+          <div class="admin-form-actions">
+            <a href="/admin/categories/index_categories" class="admin-btn admin-btn-secondary" id="cancel-btn">
+              <i class="fas fa-times"></i> Cancelar
+            </a>
+            <button type="submit" class="admin-btn admin-btn-primary" id="save-btn">
+              <i class="fas fa-save"></i> Guardar Categoría
+            </button>
+          </div>
+        </form>
+      </main>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import { createClient } from '@supabase/supabase-js';
+
+  // Crear cliente de Supabase
+  const supabaseUrl = 'https://cnrhqbbquymnlquuwkbh.supabase.co';
+  const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNucmhxYmJxdXltbmxxdXV3a2JoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5NDYwNDksImV4cCI6MjA2MzUyMjA0OX0.uWq6EPQrMOq1vBif4flJVnjHhvKjIlbB-nrnxgRzCbY';
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const categoryForm = document.getElementById('category-form') as HTMLFormElement;
+    const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
+    const iconOptions = document.querySelectorAll('.admin-icon-option');
+    const selectedIconInput = document.getElementById('selected-icon') as HTMLInputElement;
+
+    // Manejar la selección de iconos
+    iconOptions.forEach(option => {
+      option.addEventListener('click', () => {
+        // Quitar la clase seleccionada de todas las opciones
+        iconOptions.forEach(opt => opt.classList.remove('selected'));
+
+        // Añadir la clase seleccionada a la opción actual
+        option.classList.add('selected');
+
+        // Actualizar el valor del input oculto
+        const iconName = option.getAttribute('data-icon') || 'tag';
+        if (selectedIconInput) {
+          selectedIconInput.value = iconName;
+        }
+      });
+    });
+
+    // Seleccionar el primer icono por defecto
+    if (iconOptions.length > 0) {
+      const firstIcon = iconOptions[0] as HTMLElement;
+      firstIcon.click();
+    }
+
+    // Manejar el envío del formulario
+    if (categoryForm) {
+      categoryForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        try {
+          // Mostrar indicador de carga
+          if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+          }
+
+          // Recopilar datos del formulario
+          const formData = new FormData(categoryForm);
+          const categoryData = Object.fromEntries(formData.entries());
+
+          console.log('Datos del formulario:', categoryData);
+
+          // Obtener la fecha y hora actual
+          const now = new Date().toISOString();
+
+          // Añadir campos de fecha
+          categoryData.created_at = now;
+          categoryData.updated_at = now;
+
+          // Validar que el nombre no esté vacío
+          const name = categoryData.name?.toString() || '';
+          if (!name || name.trim() === '') {
+            throw new Error('El nombre de la categoría es obligatorio');
+          }
+
+          console.log('Datos de categoría a guardar:', categoryData);
+
+          // Guardar la categoría en Supabase
+          const { data, error } = await supabase
+            .from('categories')
+            .insert(categoryData)
+            .select();
+
+          if (error) throw error;
+
+          console.log('Categoría guardada correctamente:', data);
+
+          // Mostrar mensaje de éxito
+          const successMessage = document.getElementById('success-message');
+          if (successMessage) {
+            successMessage.style.display = 'flex';
+          }
+
+          // Redirigir a la lista de categorías después de 2 segundos
+          setTimeout(() => {
+            window.location.href = '/admin/categories/index_categories';
+          }, 2000);
+        } catch (error) {
+          console.error('Error al guardar la categoría:', error);
+
+          // Mostrar mensaje de error
+          const errorMessage = document.getElementById('error-message');
+          const errorText = document.getElementById('error-text');
+          if (errorMessage && errorText) {
+            errorText.textContent = 'Error al guardar la categoría: ' + error.message;
+            errorMessage.style.display = 'flex';
+
+            // Ocultar el mensaje después de 5 segundos
+            setTimeout(() => {
+              errorMessage.style.display = 'none';
+            }, 5000);
+          }
+
+          // Restaurar el botón de guardar
+          if (saveBtn instanceof HTMLButtonElement) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Categoría';
+          }
+        }
+      });
+    }
+  });
+</script>
+
+<style>
+  .admin-icon-selector {
+    margin-bottom: 1rem;
+  }
+
+  .admin-icon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .admin-icon-option {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .admin-icon-option i {
+    font-size: 1.25rem;
+    color: #4b5563;
+  }
+
+  .admin-icon-option:hover {
+    background-color: #f3f4f6;
+  }
+
+  .admin-icon-option.selected {
+    background-color: #e63946;
+    border-color: #e63946;
+  }
+
+  .admin-icon-option.selected i {
+    color: white;
+  }
+</style>

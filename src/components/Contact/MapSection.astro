@@ -1,0 +1,104 @@
+---
+---
+<section class="map-section">
+  <div class="map-container">
+    <h2 class="map-title">Encuéntranos en Tiempo Real</h2>
+    <div class="map-box">
+      <div class="map-tabs">
+        <button id="map-tab" class="map-tab active">
+          <i class="fas fa-map-marker-alt"></i> Mapa
+        </button>
+        <button id="route-tab" class="map-tab">
+          <i class="fas fa-route"></i> Cómo Llegar
+        </button>
+      </div>
+
+      <div id="map-content" class="map-content">
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!4v1700000000000!6m8!1m7!1sCAoSLEFGMVFpcE9fWWZQRXRXWXRXRGJQVnZYRXdVRnZVRnJfbXRkNnVYTGRXTlE.!2m2!1d-9.9297071!2d-76.2426442!3f180!4f0!5f0.7"
+          allowfullscreen=""
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+      </div>
+
+      <div id="route-content" class="route-content">
+        <div class="video-container">
+          <video 
+            id="route-video"
+            class="route-video"
+            controls
+            poster="/images/route-poster.jpg">
+            <source src="/videos/ruta.mp4" type="video/mp4">
+            Tu navegador no soporta videos HTML5.
+          </video>
+          <div id="video-overlay" class="video-overlay">
+            <i class="fas fa-play-circle"></i>
+            <p>Haz clic para ver el video con instrucciones para llegar a nuestra tienda</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="map-footer">
+      <p>Puedes encontrarnos fácilmente utilizando Google Maps o siguiendo las indicaciones del video.</p>
+      <a href="https://www.google.com/maps?q=-9.9297071,-76.2426442" 
+         target="_blank" 
+         class="maps-button">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        Abrir en Google Maps
+      </a>
+    </div>
+  </div>
+</section>
+
+<script>
+  const mapTab = document.getElementById('map-tab');
+  const routeTab = document.getElementById('route-tab');
+  const mapContent = document.getElementById('map-content');
+  const routeContent = document.getElementById('route-content');
+  const routeVideo = document.getElementById('route-video') as HTMLVideoElement | null;
+  const videoOverlay = document.getElementById('video-overlay');
+
+  if (mapTab && routeTab && mapContent && routeContent && routeVideo && videoOverlay) {
+    // Video controls
+    routeVideo.addEventListener('play', () => {
+      videoOverlay.classList.add('hidden');
+    });
+
+    routeVideo.addEventListener('pause', () => {
+      videoOverlay.classList.remove('hidden');
+    });
+
+    routeVideo.addEventListener('ended', () => {
+      videoOverlay.classList.remove('hidden');
+    });
+
+    routeContent.addEventListener('click', () => {
+      if (routeVideo.paused) {
+        routeVideo.play();
+      } else {
+        routeVideo.pause();
+      }
+    });
+
+    // Tab controls
+    mapTab.addEventListener('click', () => {
+      mapContent.classList.remove('hidden');
+      routeContent.classList.remove('active');
+      mapTab.classList.add('active');
+      routeTab.classList.remove('active');
+      routeVideo.pause();
+    });
+
+    routeTab.addEventListener('click', () => {
+      mapContent.classList.add('hidden');
+      routeContent.classList.add('active');
+      routeTab.classList.add('active');
+      mapTab.classList.remove('active');
+    });
+  }
+</script>

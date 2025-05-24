@@ -1,0 +1,581 @@
+---
+import type { Product } from '../../types/catalog';
+import { supabase } from '../../lib/supabase';
+
+interface Props {
+  product: Product;
+  categoryName: string;
+}
+
+const { product, categoryName } = Astro.props;
+const { name, description, price, image, discount } = product;
+
+// Función para formatear el precio con descuento
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat('es-PE', {
+    style: 'currency',
+    currency: 'PEN',
+    minimumFractionDigits: 2
+  }).format(price);
+};
+
+// Calcular precio con descuento si existe
+const finalPrice = discount ? price * (1 - discount / 100) : price;
+
+// Obtener la URL de la imagen desde Supabase
+let imageUrl = `/images/${image}`;
+
+// Verificar si la imagen es una ruta de archivo (no una URL completa)
+if (image && !image.startsWith('http')) {
+  try {
+    const { data } = supabase.storage
+      .from('productos')
+      .getPublicUrl(image);
+
+    if (data && data.publicUrl) {
+      imageUrl = data.publicUrl;
+      console.log('URL de imagen obtenida de Supabase:', imageUrl);
+    }
+  } catch (error) {
+    console.error('Error al obtener URL de imagen:', error);
+  }
+}
+---
+
+<article class="card">
+  <!-- Badge de descuento -->
+  {discount && (
+    <div class="discount-badge">
+      -{discount}%
+    </div>
+  )}
+
+  <!-- Contenedor de imagen -->
+  <div class="card-img">
+    <img
+      src={imageUrl}
+      alt={name}
+      class="product-image"
+      loading="lazy"
+      onerror="this.src='/images/placeholder.jpg'"
+    />
+    <!-- Botón de favoritos -->
+    <button
+      class="favorite-btn"
+      aria-label="Añadir a favoritos"
+      data-product-id={product.id}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Categoría -->
+  <span class="card-category">{categoryName}</span>
+
+  <!-- Título y descripción -->
+  <h3 class="card-title">{name}</h3>
+  <p class="card-subtitle">{description}</p>
+
+  <!-- Precios -->
+  <div class="price-container">
+    <span class="card-price">{formatPrice(finalPrice)}</span>
+    {discount && (
+      <span class="original-price">{formatPrice(price)}</span>
+    )}
+  </div>
+
+  <hr class="card-divider">
+
+  <!-- Acciones -->
+  <div class="card-footer">
+    <button
+      class="details-btn"
+      data-product={JSON.stringify(product)}
+      aria-label={`Ver detalles de ${name}`}
+    >
+      Ver detalles
+    </button>
+    <button
+      class="cart-btn"
+      data-product={JSON.stringify(product)}
+      aria-label="Añadir al carrito"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="9" cy="21" r="1"></circle>
+        <circle cx="20" cy="21" r="1"></circle>
+        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+      </svg>
+    </button>
+  </div>
+</article>
+
+<style>
+  .card {
+    --font-color: #2d3436;
+    --font-color-sub: #636e72;
+    --bg-color: #fff;
+    --main-color: #2d3436;
+    --main-focus: #e63946;
+    --secondary-color: #f8f9fa;
+    --success-color: #2ecc71;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+    position: relative;
+    width: 100%;
+    max-width: 250px;
+    height: auto;
+    background: var(--bg-color);
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    gap: 8px;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+  }
+
+  /* Badge de descuento */
+  .discount-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: var(--main-focus);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    z-index: 2;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Contenedor de imagen */
+  .card-img {
+    position: relative;
+    width: 100%;
+    height: 150px;
+    border-radius: 6px;
+    overflow: hidden;
+    background-color: #f8f9fa;
+    margin-bottom: 3px;
+  }
+
+  .product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: transform 0.5s ease;
+    padding: 8px;
+    background: white;
+  }
+
+  .card:hover .product-image {
+    transform: scale(1.05);
+  }
+
+  /* Botón de favoritos */
+  .favorite-btn {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 2;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .favorite-btn:hover {
+    background: #fff;
+    transform: scale(1.1);
+  }
+
+  .favorite-btn svg {
+    width: 14px;
+    height: 14px;
+    stroke: #e74c3c;
+    fill: none;
+    transition: all 0.3s ease;
+  }
+
+  .favorite-btn:hover svg,
+  .favorite-btn.active svg {
+    fill: #e74c3c;
+  }
+
+  /* Categoría */
+  .card-category {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--main-focus);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: -3px;
+  }
+
+  /* Título */
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--font-color);
+    margin: 0;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.6em;
+  }
+
+  /* Descripción */
+  .card-subtitle {
+    font-size: 12px;
+    color: var(--font-color-sub);
+    margin: 3px 0 6px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.8em;
+  }
+
+  /* Contenedor de precios */
+  .price-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 3px 0;
+  }
+
+  /* Precio actual */
+  .card-price {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--main-focus);
+  }
+
+  /* Precio original tachado */
+  .original-price {
+    font-size: 12px;
+    color: var(--font-color-sub);
+    text-decoration: line-through;
+  }
+
+  /* Divisor */
+  .card-divider {
+    width: 100%;
+    border: none;
+    border-top: 1px solid #f0f0f0;
+    margin: 3px 0 6px;
+  }
+
+  /* Pie de tarjeta */
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-top: auto;
+  }
+
+  /* Botón de detalles */
+  .details-btn {
+    flex: 1;
+    background: transparent;
+    color: var(--main-color);
+    border: 1px solid var(--main-color);
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .details-btn:hover {
+    background: var(--main-color);
+    color: white;
+  }
+
+  /* Botón de carrito */
+  .cart-btn {
+    width: 32px;
+    height: 28px;
+    background: transparent;
+    border: 1px solid var(--main-color);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .cart-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--main-color);
+    transition: all 0.2s ease;
+  }
+
+  .cart-btn:hover {
+    background: var(--main-focus);
+    border-color: var(--main-focus);
+  }
+
+  .cart-btn:hover svg {
+    stroke: white;
+  }
+
+  /* Efecto de carga */
+  @keyframes shimmer {
+    0% { background-position: -468px 0; }
+    100% { background-position: 468px 0; }
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .card {
+      max-width: 100%;
+    }
+
+    .card-img {
+      height: 160px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      min-height: 2.4em;
+    }
+
+    .card-subtitle {
+      font-size: 12px;
+      min-height: 2.6em;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .card {
+      padding: 10px;
+      gap: 6px;
+    }
+
+    .card-img {
+      height: 140px;
+    }
+
+    .card-category {
+      font-size: 9px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      min-height: 2.2em;
+    }
+
+    .card-subtitle {
+      font-size: 11px;
+      margin: 2px 0 4px;
+      min-height: 2.4em;
+    }
+
+    .card-price {
+      font-size: 14px;
+    }
+
+    .original-price {
+      font-size: 11px;
+    }
+
+    .details-btn {
+      padding: 5px 8px;
+      font-size: 11px;
+    }
+
+    .cart-btn {
+      width: 28px;
+      height: 26px;
+    }
+
+    .cart-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .discount-badge {
+      font-size: 9px;
+      padding: 2px 6px;
+    }
+
+    .favorite-btn {
+      width: 24px;
+      height: 24px;
+    }
+
+    .favorite-btn svg {
+      width: 12px;
+      height: 12px;
+    }
+  }
+
+  @media (max-width: 360px) {
+    .card {
+      padding: 8px;
+      gap: 4px;
+    }
+
+    .card-img {
+      height: 120px;
+    }
+
+    .card-category {
+      font-size: 8px;
+    }
+
+    .card-title {
+      font-size: 12px;
+      min-height: 2em;
+    }
+
+    .card-subtitle {
+      font-size: 10px;
+      margin: 1px 0 3px;
+      min-height: 2.2em;
+    }
+
+    .card-price {
+      font-size: 13px;
+    }
+
+    .original-price {
+      font-size: 10px;
+    }
+
+    .details-btn {
+      padding: 4px 6px;
+      font-size: 10px;
+    }
+
+    .cart-btn {
+      width: 24px;
+      height: 24px;
+    }
+
+    .cart-btn svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .discount-badge {
+      font-size: 8px;
+      padding: 2px 5px;
+    }
+
+    .favorite-btn {
+      width: 22px;
+      height: 22px;
+    }
+
+    .favorite-btn svg {
+      width: 11px;
+      height: 11px;
+    }
+  }
+</style>
+
+<!-- Script para manejar interacciones -->
+<script>
+  // Extender la interfaz Window para incluir updateProductModal
+  declare global {
+    interface Window {
+      updateProductModal?: (product: any) => void;
+    }
+  }
+
+  // Función de utilidad para manejar el evento de clic
+  function handleCardClick(e: MouseEvent) {
+    const target = e.target as HTMLElement | null;
+    if (!target) return;
+
+    // Manejar clic en botón de favoritos
+    const favBtn = target.closest<HTMLButtonElement>('.favorite-btn');
+    if (favBtn) {
+      e.preventDefault();
+      favBtn.classList.toggle('active');
+      const productId = favBtn.getAttribute('data-product-id');
+      // Aquí puedes agregar la lógica para guardar en favoritos
+      console.log('Producto favorito:', productId);
+      return;
+    }
+
+    // Manejar clic en botón de carrito
+    const cartBtn = target.closest<HTMLButtonElement>('.cart-btn');
+    if (cartBtn) {
+      e.preventDefault();
+      const productData = cartBtn.getAttribute('data-product');
+      if (productData) {
+        try {
+          const product = JSON.parse(productData);
+          // Aquí puedes agregar la lógica para añadir al carrito
+          console.log('Añadir al carrito:', product);
+
+          // Efecto visual al añadir al carrito
+          const icon = cartBtn.querySelector('svg');
+          if (icon) {
+            icon.setAttribute('style', 'transform: scale(1.3);');
+            setTimeout(() => {
+              icon.setAttribute('style', 'transform: scale(1);');
+            }, 200);
+          }
+        } catch (error) {
+          console.error('Error al procesar el producto:', error);
+        }
+      }
+      return;
+    }
+
+    // Manejar clic en botón de detalles
+    const detailsBtn = target.closest<HTMLButtonElement>('.details-btn');
+    if (detailsBtn) {
+      e.preventDefault();
+      const productData = detailsBtn.getAttribute('data-product');
+      if (productData) {
+        try {
+          const product = JSON.parse(productData);
+          // Usar la función global para abrir el modal de detalles
+          if (typeof window.updateProductModal === 'function') {
+            window.updateProductModal(product);
+          }
+        } catch (error) {
+          console.error('Error al procesar los detalles del producto:', error);
+        }
+      }
+    }
+  }
+
+  // Agregar el event listener cuando el DOM esté listo
+  if (typeof document !== 'undefined') {
+    document.addEventListener('click', handleCardClick);
+  }
+</script>

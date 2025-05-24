@@ -1,0 +1,176 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { supabase } from '../../../lib/supabase';
+
+// Obtener el usuario de locals (establecido por el middleware)
+const user = Astro.locals.user;
+
+// Obtener usuarios de Supabase
+let users = [];
+let error = null;
+
+try {
+  console.log('Obteniendo usuarios de Supabase...');
+  const { data: usersData, error: usersError } = await supabase
+    .from('users')
+    .select('*')
+    .order('name');
+
+  if (usersError) {
+    console.error('Error al obtener usuarios:', usersError);
+    error = usersError.message;
+  } else {
+    users = usersData || [];
+    console.log(`Obtenidos ${users.length} usuarios de Supabase`);
+  }
+} catch (err) {
+  console.error('Error al obtener datos:', err);
+  error = err.message;
+}
+---
+
+<AdminLayout title="Gestión de Usuarios" user={user}>
+  <div class="admin-header">
+    <h1>Gestión de Usuarios</h1>
+    <div class="admin-actions">
+      <a href="/admin/users/new_users" class="admin-btn admin-btn-primary">
+        <i class="fas fa-plus"></i> Nuevo Usuario
+      </a>
+    </div>
+  </div>
+  
+  {error && (
+    <div class="admin-alert admin-alert-danger">
+      <i class="fas fa-exclamation-circle"></i>
+      <span>Error: {error}</span>
+    </div>
+  )}
+  
+  {users.length === 0 && !error ? (
+    <div class="admin-empty-state">
+      <i class="fas fa-users"></i>
+      <h3>No hay usuarios</h3>
+      <p>Aún no has creado ningún usuario. Haz clic en "Nuevo Usuario" para comenzar.</p>
+    </div>
+  ) : (
+    <div class="admin-table-container">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Rol</th>
+            <th>Creado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="users-table-body">
+          {users.map((user) => (
+            <tr data-id={user.id}>
+              <td>#{user.id}</td>
+              <td>{user.name}</td>
+              <td>{user.email}</td>
+              <td>
+                <span class={`admin-badge admin-badge-${user.role === 'admin' ? 'primary' : 'info'}`}>
+                  {user.role === 'admin' ? 'Administrador' : 'Usuario'}
+                </span>
+              </td>
+              <td class="admin-date-cell">
+                {user.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}
+              </td>
+              <td class="admin-table-actions">
+                <a href={`/admin/users/edit_users?id=${user.id}`} class="admin-btn admin-btn-edit">
+                  <i class="fas fa-edit"></i>
+                </a>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</AdminLayout>
+
+<script>
+  import { createClient } from '@supabase/supabase-js';
+
+  // Crear cliente de Supabase
+  const supabaseUrl = 'https://cnrhqbbquymnlquuwkbh.supabase.co';
+  const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNucmhxYmJxdXltbmxxdXV3a2JoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5NDYwNDksImV4cCI6MjA2MzUyMjA0OX0.uWq6EPQrMOq1vBif4flJVnjHhvKjIlbB-nrnxgRzCbY';
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Botones de eliminación
+    document.querySelectorAll('.admin-btn-delete').forEach(button => {
+      button.addEventListener('click', async () => {
+        // Verificar si el botón está deshabilitado
+        if (button.hasAttribute('disabled')) {
+          alert('No puedes eliminar tu propio usuario.');
+          return;
+        }
+        
+        const userId = button.getAttribute('data-id');
+        const userName = button.getAttribute('data-name');
+        
+        if (confirm(`¿Estás seguro de que deseas eliminar al usuario "${userName}"? Esta acción no se puede deshacer.`)) {
+          try {
+            console.log(`Eliminando usuario ${userId}...`);
+            
+            // Eliminar el usuario de Supabase
+            const { error } = await supabase
+              .from('users')
+              .delete()
+              .eq('id', userId);
+
+            if (error) {
+              throw error;
+            }
+
+            console.log(`Usuario ${userId} eliminado correctamente`);
+            
+            // Ocultar la fila en la tabla
+            const row = button.closest('tr');
+            if (row) {
+              row.style.display = 'none';
+            }
+            
+            // Mostrar mensaje de éxito
+            alert('Usuario eliminado correctamente');
+          } catch (error) {
+            console.error('Error al eliminar usuario:', error);
+            alert('Error al eliminar el usuario. Inténtalo de nuevo.');
+          }
+        }
+      });
+    });
+  });
+</script>
+
+<style>
+  .admin-date-cell {
+    font-size: 0.875rem;
+    color: #6c757d;
+    white-space: nowrap;
+  }
+  
+  .admin-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .admin-badge-primary {
+    background-color: #4361ee;
+    color: white;
+  }
+  
+  .admin-badge-info {
+    background-color: #3a86ff;
+    color: white;
+  }
+</style>

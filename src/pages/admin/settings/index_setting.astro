@@ -1,0 +1,459 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { supabase } from '../../../lib/supabase';
+
+// Obtener el usuario de locals (establecido por el middleware)
+const user = Astro.locals.user;
+
+// Configuración de la tienda (en una aplicación real, esto vendría de una tabla de configuración)
+const storeSettings = {
+  storeName: 'Casa Biker',
+  storeDescription: 'Tienda especializada en accesorios para motociclistas',
+  storeEmail: 'contacto@casabiker.com',
+  storePhone: '+123456789',
+  storeAddress: 'Calle Principal 123, Ciudad',
+  currency: 'USD',
+  taxRate: 16,
+  showFeaturedProducts: true,
+  productsPerPage: 12
+};
+---
+
+<AdminLayout title="Configuración" user={user}>
+  <div class="admin-content-header">
+    <h2>Configuración</h2>
+  </div>
+  
+  <div id="error-message" class="admin-alert admin-alert-danger" style="display: none;">
+    <i class="fas fa-exclamation-circle"></i>
+    <span id="error-text"></span>
+  </div>
+  
+  <div id="success-message" class="admin-alert admin-alert-success" style="display: none;">
+    <i class="fas fa-check-circle"></i>
+    <span>Configuración guardada correctamente.</span>
+  </div>
+  
+  <div class="admin-settings-container">
+    <div class="admin-settings-sidebar">
+      <ul class="admin-settings-nav">
+        <li class="admin-settings-nav-item active" data-tab="general">
+          <i class="fas fa-store"></i> General
+        </li>
+        <li class="admin-settings-nav-item" data-tab="account">
+          <i class="fas fa-user-circle"></i> Mi Cuenta
+        </li>
+        <li class="admin-settings-nav-item" data-tab="appearance">
+          <i class="fas fa-paint-brush"></i> Apariencia
+        </li>
+        <li class="admin-settings-nav-item" data-tab="advanced">
+          <i class="fas fa-cogs"></i> Avanzado
+        </li>
+      </ul>
+    </div>
+    
+    <div class="admin-settings-content">
+      <!-- Pestaña General -->
+      <div class="admin-settings-tab active" id="general-tab">
+        <h3>Configuración General</h3>
+        <p class="admin-settings-description">Configura la información básica de tu tienda.</p>
+        
+        <form id="general-form" class="admin-form">
+          <div class="admin-form-group">
+            <label for="store-name" class="admin-form-label">Nombre de la Tienda</label>
+            <input
+              type="text"
+              id="store-name"
+              name="storeName"
+              class="admin-form-input"
+              value={storeSettings.storeName}
+              required
+            >
+          </div>
+          
+          <div class="admin-form-group">
+            <label for="store-description" class="admin-form-label">Descripción</label>
+            <textarea
+              id="store-description"
+              name="storeDescription"
+              class="admin-form-textarea"
+              rows="3"
+            >{storeSettings.storeDescription}</textarea>
+          </div>
+          
+          <div class="admin-form-row">
+            <div class="admin-form-group">
+              <label for="store-email" class="admin-form-label">Email</label>
+              <input
+                type="email"
+                id="store-email"
+                name="storeEmail"
+                class="admin-form-input"
+                value={storeSettings.storeEmail}
+              >
+            </div>
+            
+            <div class="admin-form-group">
+              <label for="store-phone" class="admin-form-label">Teléfono</label>
+              <input
+                type="text"
+                id="store-phone"
+                name="storePhone"
+                class="admin-form-input"
+                value={storeSettings.storePhone}
+              >
+            </div>
+          </div>
+          
+          <div class="admin-form-group">
+            <label for="store-address" class="admin-form-label">Dirección</label>
+            <input
+              type="text"
+              id="store-address"
+              name="storeAddress"
+              class="admin-form-input"
+              value={storeSettings.storeAddress}
+            >
+          </div>
+          
+          <div class="admin-form-row">
+            <div class="admin-form-group">
+              <label for="currency" class="admin-form-label">Moneda</label>
+              <select id="currency" name="currency" class="admin-form-select">
+                <option value="USD" selected={storeSettings.currency === 'USD'}>USD - Dólar Estadounidense</option>
+                <option value="EUR" selected={storeSettings.currency === 'EUR'}>EUR - Euro</option>
+                <option value="MXN" selected={storeSettings.currency === 'MXN'}>MXN - Peso Mexicano</option>
+              </select>
+            </div>
+            
+            <div class="admin-form-group">
+              <label for="tax-rate" class="admin-form-label">Tasa de Impuesto (%)</label>
+              <input
+                type="number"
+                id="tax-rate"
+                name="taxRate"
+                class="admin-form-input"
+                value={storeSettings.taxRate}
+                min="0"
+                max="100"
+                step="0.01"
+              >
+            </div>
+          </div>
+          
+          <div class="admin-form-group">
+            <label class="admin-form-label">Opciones de Catálogo</label>
+            <div class="admin-form-checkbox">
+              <input
+                type="checkbox"
+                id="show-featured"
+                name="showFeaturedProducts"
+                checked={storeSettings.showFeaturedProducts}
+              >
+              <label for="show-featured">Mostrar productos destacados en la página principal</label>
+            </div>
+          </div>
+          
+          <div class="admin-form-group">
+            <label for="products-per-page" class="admin-form-label">Productos por página</label>
+            <input
+              type="number"
+              id="products-per-page"
+              name="productsPerPage"
+              class="admin-form-input"
+              value={storeSettings.productsPerPage}
+              min="4"
+              max="48"
+              step="4"
+            >
+          </div>
+          
+          <div class="admin-form-actions">
+            <button type="submit" class="admin-btn admin-btn-primary" id="save-general-btn">
+              <i class="fas fa-save"></i> Guardar Cambios
+            </button>
+          </div>
+        </form>
+      </div>
+      
+      <!-- Pestaña Mi Cuenta -->
+      <div class="admin-settings-tab" id="account-tab">
+        <h3>Mi Cuenta</h3>
+        <p class="admin-settings-description">Actualiza tu información personal y contraseña.</p>
+        
+        <form id="account-form" class="admin-form">
+          <div class="admin-form-group">
+            <label for="account-name" class="admin-form-label">Nombre</label>
+            <input
+              type="text"
+              id="account-name"
+              name="name"
+              class="admin-form-input"
+              value={user?.name}
+              required
+            >
+          </div>
+          
+          <div class="admin-form-group">
+            <label for="account-email" class="admin-form-label">Correo Electrónico</label>
+            <input
+              type="email"
+              id="account-email"
+              name="email"
+              class="admin-form-input"
+              value={user?.email}
+              required
+            >
+          </div>
+          
+          <div class="admin-form-group">
+            <label for="current-password" class="admin-form-label">Contraseña Actual</label>
+            <input
+              type="password"
+              id="current-password"
+              name="currentPassword"
+              class="admin-form-input"
+              placeholder="Ingresa tu contraseña actual"
+            >
+          </div>
+          
+          <div class="admin-form-group">
+            <label for="new-password" class="admin-form-label">Nueva Contraseña</label>
+            <input
+              type="password"
+              id="new-password"
+              name="newPassword"
+              class="admin-form-input"
+              placeholder="Ingresa tu nueva contraseña"
+            >
+          </div>
+          
+          <div class="admin-form-group">
+            <label for="confirm-password" class="admin-form-label">Confirmar Contraseña</label>
+            <input
+              type="password"
+              id="confirm-password"
+              name="confirmPassword"
+              class="admin-form-input"
+              placeholder="Confirma tu nueva contraseña"
+            >
+          </div>
+          
+          <div class="admin-form-actions">
+            <button type="submit" class="admin-btn admin-btn-primary" id="save-account-btn">
+              <i class="fas fa-save"></i> Actualizar Cuenta
+            </button>
+          </div>
+        </form>
+      </div>
+      
+      <!-- Pestaña Apariencia -->
+      <div class="admin-settings-tab" id="appearance-tab">
+        <h3>Apariencia</h3>
+        <p class="admin-settings-description">Personaliza la apariencia de tu tienda.</p>
+        
+        <div class="admin-empty-state">
+          <i class="fas fa-paint-brush"></i>
+          <p>Esta funcionalidad estará disponible próximamente.</p>
+        </div>
+      </div>
+      
+      <!-- Pestaña Avanzado -->
+      <div class="admin-settings-tab" id="advanced-tab">
+        <h3>Configuración Avanzada</h3>
+        <p class="admin-settings-description">Opciones avanzadas para usuarios experimentados.</p>
+        
+        <div class="admin-empty-state">
+          <i class="fas fa-cogs"></i>
+          <p>Esta funcionalidad estará disponible próximamente.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</AdminLayout>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Navegación por pestañas
+    const navItems = document.querySelectorAll('.admin-settings-nav-item');
+    const tabs = document.querySelectorAll('.admin-settings-tab');
+    
+    navItems.forEach(item => {
+      item.addEventListener('click', () => {
+        // Quitar clase activa de todos los elementos
+        navItems.forEach(navItem => navItem.classList.remove('active'));
+        tabs.forEach(tab => tab.classList.remove('active'));
+        
+        // Añadir clase activa al elemento seleccionado
+        item.classList.add('active');
+        const tabId = `${item.getAttribute('data-tab')}-tab`;
+        document.getElementById(tabId)?.classList.add('active');
+      });
+    });
+    
+    // Manejar envío del formulario general
+    const generalForm = document.getElementById('general-form');
+    if (generalForm) {
+      generalForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        
+        // Mostrar mensaje de éxito
+        const successMessage = document.getElementById('success-message');
+        if (successMessage) {
+          successMessage.style.display = 'flex';
+          
+          // Ocultar el mensaje después de 3 segundos
+          setTimeout(() => {
+            successMessage.style.display = 'none';
+          }, 3000);
+        }
+      });
+    }
+    
+    // Manejar envío del formulario de cuenta
+    const accountForm = document.getElementById('account-form');
+    if (accountForm) {
+      accountForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        
+        // Validar contraseñas
+        const newPassword = (document.getElementById('new-password') as HTMLInputElement)?.value;
+        const confirmPassword = (document.getElementById('confirm-password') as HTMLInputElement)?.value;
+        
+        if (newPassword && newPassword !== confirmPassword) {
+          // Mostrar mensaje de error
+          const errorMessage = document.getElementById('error-message');
+          const errorText = document.getElementById('error-text');
+          if (errorMessage && errorText) {
+            errorText.textContent = 'Las contraseñas no coinciden';
+            errorMessage.style.display = 'flex';
+            
+            // Ocultar el mensaje después de 3 segundos
+            setTimeout(() => {
+              errorMessage.style.display = 'none';
+            }, 3000);
+          }
+          return;
+        }
+        
+        // Mostrar mensaje de éxito
+        const successMessage = document.getElementById('success-message');
+        if (successMessage) {
+          successMessage.style.display = 'flex';
+          
+          // Ocultar el mensaje después de 3 segundos
+          setTimeout(() => {
+            successMessage.style.display = 'none';
+          }, 3000);
+        }
+      });
+    }
+  });
+</script>
+
+<style>
+  .admin-settings-container {
+    display: flex;
+    gap: 2rem;
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+  
+  .admin-settings-sidebar {
+    width: 250px;
+    background-color: #f8f9fa;
+    border-right: 1px solid #e9ecef;
+    padding: 1.5rem 0;
+    flex-shrink: 0;
+  }
+  
+  .admin-settings-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .admin-settings-nav-item {
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    color: #495057;
+  }
+  
+  .admin-settings-nav-item i {
+    margin-right: 0.75rem;
+    width: 1.25rem;
+    text-align: center;
+  }
+  
+  .admin-settings-nav-item:hover {
+    background-color: #e9ecef;
+    color: #212529;
+  }
+  
+  .admin-settings-nav-item.active {
+    background-color: #e63946;
+    color: white;
+    font-weight: 500;
+  }
+  
+  .admin-settings-content {
+    flex: 1;
+    padding: 1.5rem;
+    min-width: 0;
+  }
+  
+  .admin-settings-tab {
+    display: none;
+  }
+  
+  .admin-settings-tab.active {
+    display: block;
+  }
+  
+  .admin-settings-description {
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+  }
+  
+  .admin-form-row {
+    display: flex;
+    gap: 1rem;
+  }
+  
+  .admin-form-row .admin-form-group {
+    flex: 1;
+  }
+  
+  .admin-form-checkbox {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+  
+  .admin-form-checkbox input[type="checkbox"] {
+    margin-right: 0.5rem;
+  }
+  
+  @media (max-width: 768px) {
+    .admin-settings-container {
+      flex-direction: column;
+    }
+    
+    .admin-settings-sidebar {
+      width: 100%;
+      border-right: none;
+      border-bottom: 1px solid #e9ecef;
+      padding: 1rem 0;
+    }
+    
+    .admin-form-row {
+      flex-direction: column;
+      gap: 0;
+    }
+  }
+</style>

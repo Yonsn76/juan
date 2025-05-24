@@ -1,0 +1,111 @@
+---
+const currentYear = new Date().getFullYear();
+
+const quickLinks = [
+  { href: '/', text: 'Inicio' },
+  { href: '/about', text: 'Nosotros' },
+  { href: '/services', text: 'Servicios' },
+  { href: '/catalog', text: 'Catálogo' },
+  { href: '/portfolio', text: 'Trabajos' },
+  { href: '/contact', text: 'Contacto' }
+];
+
+const socialLinks = [
+  { 
+    href: 'mailto:Gsegurityaslam@gmail.com',
+    icon: 'envelope',
+    class: 'footer-gmail-icon'
+  },
+  { 
+    href: 'https://wa.me/51917025103',
+    icon: 'whatsapp',
+    class: 'footer-whatsapp-icon'
+  },
+  { 
+    href: 'https://web.facebook.com/profile.php?id=61572324423621',
+    icon: 'facebook-f',
+    class: 'footer-facebook-icon'
+  },
+  { 
+    href: 'https://www.tiktok.com/@zona15lacasadelbiker',
+    icon: 'tiktok',
+    class: 'footer-tiktok-icon'
+  }
+];
+---
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <!-- Company Info -->
+      <div>
+        <div class="footer-logo">
+          <img src="/images/logo.png" alt="Zona Biker 15 Logo" />
+        </div>
+        <p class="footer-description">
+          Tu tienda especializada en motos y accesorios. Ofrecemos los mejores productos y servicios para los amantes de las dos ruedas.
+        </p>
+        <div class="footer-social-icons">
+          {
+            socialLinks.slice(1, 4).map(({ href, icon, class: className }) => (
+              <a 
+                href={href} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                class:list={['footer-social-icon', className]}
+              >
+                <i class={`fab fa-${icon}`} />
+              </a>
+            ))
+          }
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div>
+        <h3 class="footer-title">Enlaces Rápidos</h3>
+        <ul class="footer-links">
+          {
+            quickLinks.map(({ href, text }) => (
+              <li class="footer-link">
+                <a href={href}>{text}</a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <!-- Contact Info -->
+      <div>
+        <h3 class="footer-title">Contacto</h3>
+        <div class="contact-info">
+          <p>Huánuco, Peru</p>
+          <p>Teléfono: 917 025 103</p>
+          <p>Email: Gsegurityaslam@gmail.com</p>
+        </div>
+        <h3 class="footer-title">Síguenos</h3>
+        <div class="footer-social-icons">
+          {
+            socialLinks.map(({ href, icon, class: className }) => (
+              <a 
+                href={href} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                class:list={['footer-social-icon', className]}
+              >
+                <i class={icon === 'envelope' ? 'fas fa-envelope' : `fab fa-${icon}`} />
+              </a>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; {currentYear} Zona Biker 15. Todos los derechos reservados.</p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  /* Footer styles will be imported from footer.css */
+</style>

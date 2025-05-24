@@ -1,0 +1,1047 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import Carousel from "../components/Carousel.astro";
+import CartButton from "../components/Cart/CartButton.astro";
+import CartModal from "../components/Cart/CartModal.astro";
+import BrandsGrid from "../components/BrandsGrid.astro";
+import { supabase } from "../lib/supabase";
+
+const carouselImages = [
+  { src: "/images/promo.png", alt: "Promociones especiales" },
+  { src: "/images/lavada.png", alt: "Servicio de lavado profesional" },
+  { src: "/images/tunning.png", alt: "Servicios de tunning" },
+  { src: "/images/accesorios.png", alt: "Accesorios para motos" },
+];
+
+const services = [
+  {
+    icon: "tools",
+    title: "Mantenimiento",
+    description:
+      "Servicio técnico especializado para tu moto con los mejores mecánicos certificados",
+    video: "reparacion.mp4",
+    color: "#e30613",
+  },
+  {
+    icon: "paint-brush",
+    title: "Personalización",
+    description:
+      "Dale un toque único a tu moto con nuestros servicios de personalización premium",
+    video: "personalizacion.mp4",
+    color: "#ff9500",
+  },
+  {
+    icon: "tachometer-alt",
+    title: "Tunning",
+    description:
+      "Mejora el rendimiento de tu moto con nuestras soluciones de tunning profesional",
+    video: "tunning.mp4",
+    color: "#2563eb",
+  },
+  {
+    icon: "truck",
+    title: "Envíos",
+    description:
+      "Entrega a domicilio en toda la región con seguimiento en tiempo real",
+    video: "envio.mp4",
+    color: "#10b981",
+  },
+];
+
+// Obtener productos destacados desde Supabase
+let featuredProducts = [];
+
+try {
+  // Obtener productos destacados (featured = true) con sus categorías
+  const { data: productsData, error: productsError } = await supabase
+    .from('products')
+    .select(`
+      *,
+      categories:category_id (name)
+    `)
+    .eq('featured', true)
+    .order('created_at', { ascending: false })
+    .limit(4);
+
+  if (productsError) throw productsError;
+
+  // Transformar los datos al formato esperado por el componente
+  featuredProducts = (productsData || []).map(product => {
+    // Obtener la URL de la imagen desde Supabase si es necesario
+    let imageUrl = `/images/${product.image}`;
+
+    if (product.image && !product.image.startsWith('http')) {
+      try {
+        const { data } = supabase.storage
+          .from('productos')
+          .getPublicUrl(product.image);
+
+        if (data && data.publicUrl) {
+          imageUrl = data.publicUrl;
+        }
+      } catch (error) {
+        console.error('Error al obtener URL de imagen:', error);
+      }
+    }
+
+    return {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: imageUrl,
+      category: product.categories?.name || 'Sin categoría',
+      badge: product.discount ? `${product.discount}% OFF` : 'Destacado',
+      imageIsUrl: true // Indicar que la imagen ya es una URL completa
+    };
+  });
+
+  console.log(`Obtenidos ${featuredProducts.length} productos destacados de Supabase`);
+} catch (error) {
+  console.error('Error al obtener productos destacados de Supabase:', error);
+
+  // Si hay un error, usar productos estáticos como respaldo
+  featuredProducts = [
+    {
+      id: "casco1",
+      name: "Casco Integral",
+      price: 299.99,
+      image: "products/casco1.png",
+      category: "Cascos",
+      badge: "Nuevo",
+      imageIsUrl: false
+    },
+    {
+      id: "accesorio1",
+      name: "Kit de Luces LED",
+      price: 149.99,
+      image: "products/accesorio1.png",
+      category: "Accesorios",
+      badge: "Popular",
+      imageIsUrl: false
+    },
+    {
+      id: "ropa1",
+      name: "Chaqueta de Cuero",
+      price: 399.99,
+      image: "products/ropa1.png",
+      category: "Ropa",
+      badge: "Destacado",
+      imageIsUrl: false
+    },
+    {
+      id: "mantenimiento1",
+      name: "Kit de Mantenimiento",
+      price: 199.99,
+      image: "products/mantenimiento1.png",
+      category: "Mantenimiento",
+      badge: "Oferta",
+      imageIsUrl: false
+    },
+  ];
+}
+
+const brands = [
+  { name: "Honda", logo: "/images/brands/Honda_Logo.svg.png" },
+  { name: "Yamaha", logo: "/images/brands/Yamaha-Logo.png" },
+  { name: "Kawasaki", logo: "/images/brands/Kawasaki-logo.png" },
+  { name: "Suzuki", logo: "/images/brands/Suzuki_Motor_Corporation_logo.png" },
+  { name: "BMW", logo: "/images/brands/BMW_logo.png" },
+  { name: "Ducati", logo: "/images/brands/dukati_logo.png" },
+];
+---
+
+<Layout title="Inicio">
+  <Header slot="header" />
+
+  <!-- Hero Banner with Carousel -->
+  <section class="hero-banner">
+    <div class="hero-content">
+      <h1 class="hero-title">Zona Biker 15</h1>
+      <p class="hero-subtitle">
+        Tu destino para todo lo relacionado con motocicletas
+      </p>
+      <div class="hero-buttons">
+        <a href="/services" class="btn btn-primary btn-lg">Nuestros Servicios</a
+        >
+        <a href="/catalog" class="btn btn-outline btn-lg">Ver Catálogo</a>
+      </div>
+    </div>
+    <div class="hero-carousel-wrapper">
+      <Carousel images={carouselImages} />
+    </div>
+  </section>
+
+  <!-- Services Section -->
+  <section class="section services-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-subtitle">Lo que ofrecemos</span>
+        <h2 class="section-title">Nuestros Servicios</h2>
+        <p class="section-description">
+          Brindamos servicios especializados para mantener tu moto en óptimas
+          condiciones
+        </p>
+      </div>
+      <div class="grid grid-cols-4 services-grid">
+        {
+          services.map((service) => (
+            <div
+              class="service-card"
+              style={`--service-color: ${service.color}`}
+            >
+              <div class="service-icon">
+                <i class={`fas fa-${service.icon}`} />
+              </div>
+              <h3>{service.title}</h3>
+              <p>{service.description}</p>
+              <a href="/services" class="service-link">
+                Más información <i class="fas fa-arrow-right" />
+              </a>
+              <video
+                class="service-video"
+                muted
+                loop
+                playsinline
+                poster={`/images/${service.icon}.png`}
+              >
+                <source src={`/videos/${service.video}`} type="video/mp4" />
+              </video>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Products Section -->
+  <section class="section products-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-subtitle">Lo mejor de nuestro catálogo</span>
+        <h2 class="section-title">Productos Destacados</h2>
+        <p class="section-description">
+          Descubre nuestra selección de productos premium para motociclistas
+          exigentes
+        </p>
+      </div>
+      <div class="grid grid-cols-4 products-grid">
+        {
+          featuredProducts.map((product) => (
+            <div class="product-card">
+              {product.badge && (
+                <div class="product-badge">{product.badge}</div>
+              )}
+              <div class="product-image">
+                <img
+                  src={product.imageIsUrl ? product.image : `/images/${product.image}`}
+                  alt={product.name}
+                  loading="lazy"
+                  onerror="this.src='/images/placeholder.jpg'"
+                />
+                <div class="product-actions">
+                  <button class="product-action-btn" title="Ver detalles">
+                    <i class="fas fa-eye" />
+                  </button>
+                  <button class="product-action-btn" title="Añadir a favoritos">
+                    <i class="fas fa-heart" />
+                  </button>
+                </div>
+              </div>
+              <div class="product-info">
+                <span class="product-category">{product.category}</span>
+                <h3>{product.name}</h3>
+                <div class="product-rating">
+                  <i class="fas fa-star" />
+                  <i class="fas fa-star" />
+                  <i class="fas fa-star" />
+                  <i class="fas fa-star" />
+                  <i class="fas fa-star-half-alt" />
+                  <span>(4.5)</span>
+                </div>
+                <p class="product-price">S/ {product.price.toFixed(2)}</p>
+                <button
+                  class="btn btn-primary add-to-cart"
+                  data-id={product.id}
+                  data-name={product.name}
+                  data-price={product.price}
+                  data-image={product.image}
+                >
+                  <i class="fas fa-cart-plus" /> Agregar al carrito
+                </button>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+      <div class="products-cta">
+        <a href="/catalog" class="btn btn-outline btn-lg">
+          Ver catálogo completo <i class="fas fa-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Brands Section -->
+  <section class="brands-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-subtitle">Trabajamos con las mejores</span>
+        <h2 class="section-title">Nuestras Marcas</h2>
+        <p class="section-description">
+          Representamos las marcas más reconocidas en el mundo del motociclismo,
+          ofreciendo productos de la más alta calidad.
+        </p>
+      </div>
+
+      <BrandsGrid brands={brands} />
+    </div>
+  </section>
+
+  <CartButton />
+  <CartModal />
+
+  <Footer slot="footer" />
+</Layout>
+
+<style>
+  /* Hero Banner */
+  .hero-banner {
+    position: relative;
+    height: 80vh;
+    min-height: 600px;
+    max-height: 800px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: var(--header-height);
+    background-color: var(--gray-900);
+  }
+
+  .hero-carousel-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+  }
+
+  .hero-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    z-index: 10;
+    padding: 2rem;
+    color: white;
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .hero-title {
+    font-size: 4rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    animation: fadeInDown 1s ease-out;
+  }
+
+  .hero-subtitle {
+    font-size: 1.5rem;
+    max-width: 600px;
+    margin-bottom: 2rem;
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    animation: fadeInUp 1s ease-out 0.3s forwards;
+    opacity: 0;
+  }
+
+  .hero-buttons {
+    display: flex;
+    gap: 1rem;
+    animation: fadeInUp 1s ease-out 0.6s forwards;
+    opacity: 0;
+  }
+
+  /* Section Headers */
+  .section-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .section-subtitle {
+    display: inline-block;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--biker-red);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 0.5rem;
+    position: relative;
+  }
+
+  .section-subtitle::after {
+    content: "";
+    display: block;
+    width: 50px;
+    height: 2px;
+    background: var(--biker-red);
+    margin: 0.5rem auto 0;
+  }
+
+  .section-description {
+    color: var(--gray-600);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-top: 1rem;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Services Section */
+  .services-section {
+    background-color: var(--gray-50);
+    position: relative;
+    overflow: hidden;
+    padding: 5rem 0;
+  }
+
+  .services-section::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e5e7eb' fill-opacity='0.3'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.5;
+    z-index: 0;
+  }
+
+  .services-grid {
+    gap: 2rem;
+  }
+
+  .service-card {
+    text-align: center;
+    padding: 2.5rem 2rem;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+    border-top: 4px solid var(--service-color, var(--biker-red));
+    z-index: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .service-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+  }
+
+  .service-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      135deg,
+      var(--service-color, var(--biker-red)) 0%,
+      transparent 80%
+    );
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: -1;
+  }
+
+  .service-card:hover::before {
+    opacity: 0.05;
+  }
+
+  .service-icon {
+    font-size: 3rem;
+    color: var(--service-color, var(--biker-red));
+    margin-bottom: 1.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .service-card:hover .service-icon {
+    transform: scale(1.1);
+  }
+
+  .service-card h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--gray-900);
+  }
+
+  .service-card p {
+    color: var(--gray-600);
+    margin-bottom: 1.5rem;
+    flex-grow: 1;
+  }
+
+  .service-link {
+    display: inline-flex;
+    align-items: center;
+    color: var(--service-color, var(--biker-red));
+    font-weight: 600;
+    transition: all 0.3s ease;
+    gap: 0.5rem;
+  }
+
+  .service-link i {
+    transition: transform 0.3s ease;
+  }
+
+  .service-link:hover {
+    color: var(--biker-red-dark);
+  }
+
+  .service-link:hover i {
+    transform: translateX(5px);
+  }
+
+  .service-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    z-index: -2;
+  }
+
+  .service-card:hover .service-video {
+    opacity: 0.15;
+  }
+
+  /* Products Section */
+  .products-section {
+    padding: 5rem 0;
+    background-color: white;
+  }
+
+  .products-grid {
+    gap: 2rem;
+  }
+
+  .product-card {
+    background-color: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    transition: all 0.4s ease;
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .product-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: var(--biker-red);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    z-index: 10;
+    box-shadow: 0 4px 10px rgba(227, 6, 19, 0.3);
+  }
+
+  .product-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+  }
+
+  .product-image {
+    height: 220px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .product-actions {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: all 0.3s ease;
+  }
+
+  .product-card:hover .product-actions {
+    opacity: 1;
+  }
+
+  .product-action-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--biker-red);
+    transition: all 0.3s ease;
+    transform: translateY(20px);
+  }
+
+  .product-card:hover .product-action-btn {
+    transform: translateY(0);
+  }
+
+  .product-action-btn:hover {
+    background: var(--biker-red);
+    color: white;
+  }
+
+  .product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+
+  .product-card:hover .product-image img {
+    transform: scale(1.1);
+  }
+
+  .product-info {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+  }
+
+  .product-category {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background-color: var(--gray-200);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 0.75rem;
+  }
+
+  .product-info h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--gray-900);
+  }
+
+  .product-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 0.75rem;
+    color: #ffc107;
+  }
+
+  .product-rating span {
+    color: var(--gray-600);
+    font-size: 0.875rem;
+    margin-left: 0.5rem;
+  }
+
+  .product-price {
+    color: var(--biker-red);
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    margin-top: auto;
+  }
+
+  .add-to-cart {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .add-to-cart i {
+    transition: transform 0.3s ease;
+  }
+
+  .add-to-cart:hover i {
+    transform: translateX(3px);
+  }
+
+  .products-cta {
+    text-align: center;
+    margin-top: 3rem;
+  }
+
+  /* Brands Section */
+  .brands-section {
+    background-color: var(--gray-50);
+    position: relative;
+    overflow: hidden;
+    padding: 5rem 0;
+  }
+
+  .brands-section::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e5e7eb' fill-opacity='0.3'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.5;
+    z-index: 0;
+  }
+
+  .brands-section .container {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Testimonials Section */
+  .testimonials-section {
+    background-color: white;
+    padding: 5rem 0;
+  }
+
+  .testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .testimonial-card {
+    background-color: var(--gray-50);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .testimonial-card::before {
+    content: '"';
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    font-size: 5rem;
+    font-family: serif;
+    color: var(--biker-red);
+    opacity: 0.1;
+    line-height: 1;
+  }
+
+  .testimonial-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  }
+
+  .testimonial-rating {
+    color: #ffc107;
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .testimonial-text {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--gray-700);
+    margin-bottom: 1.5rem;
+    font-style: italic;
+  }
+
+  .testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .testimonial-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--biker-red);
+  }
+
+  .testimonial-info h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--gray-900);
+  }
+
+  .testimonial-info span {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+  }
+
+  /* Animations */
+  @keyframes fadeInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Responsive Design */
+  @media (max-width: 1200px) {
+    .hero-title {
+      font-size: 3.5rem;
+    }
+  }
+
+  @media (max-width: 992px) {
+    .services-grid,
+    .products-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .hero-title {
+      font-size: 3rem;
+    }
+
+    .hero-subtitle {
+      font-size: 1.25rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .testimonials-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .hero-title {
+      font-size: 2.5rem;
+    }
+
+    .hero-banner {
+      height: 70vh;
+      min-height: 500px;
+    }
+
+    .service-card,
+    .product-card {
+      padding: 1.5rem;
+    }
+
+    .service-icon {
+      font-size: 2.5rem;
+    }
+
+    .product-image {
+      height: 180px;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .services-grid,
+    .products-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .hero-title {
+      font-size: 2rem;
+    }
+
+    .hero-subtitle {
+      font-size: 1rem;
+    }
+
+    .hero-buttons {
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .hero-buttons .btn {
+      width: 100%;
+    }
+
+    .section-title {
+      font-size: 1.75rem;
+    }
+
+    .service-card,
+    .product-card,
+    .testimonial-card {
+      padding: 1.25rem;
+    }
+
+    .product-info {
+      padding: 1rem;
+    }
+
+    .product-price {
+      font-size: 1.25rem;
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener("astro:page-load", () => {
+    initPage();
+  });
+
+  // Also initialize on DOMContentLoaded to ensure it works on first load
+  document.addEventListener("DOMContentLoaded", () => {
+    initPage();
+  });
+
+  function initPage() {
+    // Initialize service videos
+    document.querySelectorAll(".service-card").forEach((card) => {
+      const video = card.querySelector("video");
+      if (!video) return;
+
+      card.addEventListener("mouseenter", () => {
+        video.play().catch((err) => console.log("Video play error:", err));
+      });
+
+      card.addEventListener("mouseleave", () => {
+        video.pause();
+        video.currentTime = 0;
+      });
+    });
+
+    // Initialize product action buttons
+    document.querySelectorAll(".product-action-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const action = btn.getAttribute("title");
+        if (action === "Ver detalles") {
+          // Handle view details action
+          const card = btn.closest(".product-card");
+          const productId = card
+            ?.querySelector(".add-to-cart")
+            ?.getAttribute("data-id");
+          if (productId) {
+            console.log(`Ver detalles del producto: ${productId}`);
+            // Here you would navigate to product detail page or open modal
+          }
+        } else if (action === "Añadir a favoritos") {
+          // Handle add to favorites action
+          btn.classList.toggle("active");
+          const isActive = btn.classList.contains("active");
+          if (isActive) {
+            btn
+              .querySelector("i")
+              ?.classList.replace("fa-heart", "fa-heart-broken");
+            // Here you would add to favorites in your system
+          } else {
+            btn
+              .querySelector("i")
+              ?.classList.replace("fa-heart-broken", "fa-heart");
+            // Here you would remove from favorites
+          }
+        }
+      });
+    });
+
+    // Initialize cart functionality
+    import("../scripts/cart").catch((err) =>
+      console.error("Failed to load cart script:", err),
+    );
+
+    // Add to cart functionality
+    document.querySelectorAll(".add-to-cart").forEach((button) => {
+      button.addEventListener("click", () => {
+        const { id, name, price, image } = (button as HTMLElement).dataset;
+        if (!id || !name || !price || !image) return;
+
+        const cart = (window as any).cart;
+        if (!cart) return;
+
+        // Add animation effect
+        const productCard = button.closest(".product-card");
+        if (productCard) {
+          productCard.classList.add("added-to-cart");
+          setTimeout(() => {
+            productCard.classList.remove("added-to-cart");
+          }, 1000);
+        }
+
+        cart.addItem({
+          id,
+          name,
+          price: parseFloat(price),
+          image,
+        });
+      });
+    });
+
+    // Animate elements on scroll
+    const animateOnScroll = () => {
+      const elements = document.querySelectorAll(
+        ".service-card, .product-card, .testimonial-card",
+      );
+
+      elements.forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        const isVisible =
+          rect.top <=
+            (window.innerHeight || document.documentElement.clientHeight) *
+              0.8 && rect.bottom >= 0;
+
+        if (isVisible) {
+          el.classList.add("animate-fade-in");
+        }
+      });
+    };
+
+    // Initial check
+    animateOnScroll();
+
+    // Add scroll listener
+    window.addEventListener("scroll", animateOnScroll);
+  }
+</script>

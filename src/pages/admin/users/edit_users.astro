@@ -1,0 +1,334 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { supabase } from '../../../lib/supabase';
+
+// Obtener el usuario de locals (establecido por el middleware)
+const user = Astro.locals.user;
+
+// Obtener el ID del usuario a editar de la URL
+const userIdParam = Astro.url.searchParams.get('id');
+// Convertir a número si es posible
+const userId = userIdParam ? parseInt(userIdParam) : null;
+console.log('🔍 DEBUG - ID del usuario a editar (original):', userIdParam);
+console.log('🔍 DEBUG - ID del usuario a editar (convertido):', userId);
+console.log('🔍 DEBUG - Tipo de ID:', typeof userId);
+console.log('🔍 DEBUG - URL completa:', Astro.url.toString());
+
+// Variables para almacenar los datos del usuario
+let userData: any = null;
+let error: string | null = null;
+
+// Roles disponibles
+const availableRoles = [
+  { value: 'user', label: 'Usuario' },
+  { value: 'admin', label: 'Administrador' }
+];
+
+// Obtener datos de Supabase
+if (!userIdParam) {
+  error = 'No se ha proporcionado un ID de usuario. Por favor, selecciona un usuario para editar.';
+  console.error('Error: No se ha proporcionado un ID de usuario');
+} else if (!userId) {
+  error = `ID de usuario inválido: "${userIdParam}". El ID debe ser un número.`;
+  console.error(`Error: ID de usuario inválido: "${userIdParam}"`);
+} else {
+  try {
+    // Obtener el usuario por ID
+    console.log(`🔍 DEBUG - Consultando Supabase con ID de usuario: ${userId}`);
+    const { data: userDataResult, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    console.log('🔍 DEBUG - Resultado de la consulta:', { 
+      userData: userDataResult ? JSON.stringify(userDataResult) : null, 
+      userError 
+    });
+
+    if (userError) {
+      console.error('Error al obtener el usuario:', userError);
+      error = userError.message || 'Error al obtener el usuario';
+    } else if (!userDataResult) {
+      console.error(`No se encontraron datos para el usuario con ID ${userId}`);
+      error = `No se encontraron datos para el usuario con ID ${userId}`;
+    } else {
+      console.log('Usuario encontrado:', userDataResult);
+      userData = userDataResult;
+    }
+  } catch (err) {
+    console.error('Error al obtener datos de Supabase:', err);
+    error = err.message || 'Error al obtener datos';
+  }
+}
+
+console.log('Estado final:', { userData, error, method: Astro.request.method });
+---
+
+<AdminLayout title="Editar Usuario" user={user}>
+  <div class="admin-content-header">
+    <h2>Editar Usuario: {userData?.name}</h2>
+    <a href="/admin/users" class="admin-btn admin-btn-secondary">
+      <i class="fas fa-arrow-left"></i> Volver a la lista
+    </a>
+  </div>
+  
+  <div id="error-message" class="admin-alert admin-alert-danger" style="display: none;">
+    <i class="fas fa-exclamation-circle"></i>
+    <span id="error-text"></span>
+  </div>
+  
+  <div id="success-message" class="admin-alert admin-alert-success" style="display: none;">
+    <i class="fas fa-check-circle"></i>
+    <span>Usuario actualizado correctamente. Redirigiendo...</span>
+  </div>
+  
+  {error && (
+    <div class="admin-alert admin-alert-danger">
+      <i class="fas fa-exclamation-circle"></i>
+      <span>Error: {error}</span>
+    </div>
+  )}
+  
+  {!userData && !error && (
+    <div class="admin-alert admin-alert-info">
+      <i class="fas fa-spinner fa-spin"></i>
+      <span>Cargando datos del usuario...</span>
+    </div>
+  )}
+  
+  {userData ? (
+    <form id="user-form" class="admin-form">
+      <!-- ID del usuario (oculto) -->
+      <input type="hidden" id="user-id" name="id" value={userData.id}>
+      
+      <div class="admin-form-group">
+        <label for="user-name" class="admin-form-label">Nombre</label>
+        <input
+          type="text"
+          id="user-name"
+          name="name"
+          class="admin-form-input"
+          value={userData.name}
+          required
+        >
+      </div>
+      
+      <div class="admin-form-group">
+        <label for="user-email" class="admin-form-label">Correo Electrónico</label>
+        <input
+          type="email"
+          id="user-email"
+          name="email"
+          class="admin-form-input"
+          value={userData.email}
+          required
+        >
+      </div>
+      
+      <div class="admin-form-group">
+        <label for="user-password" class="admin-form-label">Contraseña</label>
+        <input
+          type="password"
+          id="user-password"
+          name="password"
+          class="admin-form-input"
+          placeholder="Dejar en blanco para mantener la actual"
+        >
+        <small class="admin-form-help">Dejar en blanco para mantener la contraseña actual</small>
+      </div>
+      
+      <div class="admin-form-group">
+        <label for="user-role" class="admin-form-label">Rol</label>
+        <select id="user-role" name="role" class="admin-form-select" required>
+          {availableRoles.map(role => (
+            <option value={role.value} selected={userData.role === role.value}>{role.label}</option>
+          ))}
+        </select>
+        <small class="admin-form-help">Los administradores tienen acceso completo al panel</small>
+      </div>
+      
+      {/* Mostrar información de fechas */}
+      <div class="admin-form-group">
+        <label class="admin-form-label">Información adicional</label>
+        <div class="admin-info-box">
+          <p><strong>Creado:</strong> {new Date(userData.created_at).toLocaleString()}</p>
+          <p><strong>Última actualización:</strong> {new Date(userData.updated_at).toLocaleString()}</p>
+        </div>
+      </div>
+      
+      <div class="admin-form-actions">
+        <a href="/admin/users" class="admin-btn admin-btn-secondary" id="cancel-btn">
+          <i class="fas fa-times"></i> Cancelar
+        </a>
+        <button type="submit" class="admin-btn admin-btn-primary" id="save-btn">
+          <i class="fas fa-save"></i> Actualizar Usuario
+        </button>
+      </div>
+    </form>
+  ) : (
+    !error && (
+      <div class="admin-empty-state">
+        <i class="fas fa-exclamation-triangle"></i>
+        <h3>Usuario no encontrado</h3>
+        <p>El usuario que intentas editar no existe o ha sido eliminado.</p>
+        <a href="/admin/users" class="admin-btn admin-btn-primary">
+          <i class="fas fa-arrow-left"></i> Volver a la lista de usuarios
+        </a>
+      </div>
+    )
+  )}
+</AdminLayout>
+
+<script>
+  import { createClient } from '@supabase/supabase-js';
+
+  // Crear cliente de Supabase
+  const supabaseUrl = 'https://cnrhqbbquymnlquuwkbh.supabase.co';
+  const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNucmhxYmJxdXltbmxxdXV3a2JoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5NDYwNDksImV4cCI6MjA2MzUyMjA0OX0.uWq6EPQrMOq1vBif4flJVnjHhvKjIlbB-nrnxgRzCbY';
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const userForm = document.getElementById('user-form') as HTMLFormElement;
+    const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
+    
+    // Manejar el envío del formulario
+    if (userForm) {
+      userForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        
+        try {
+          // Mostrar indicador de carga
+          if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualizando...';
+          }
+          
+          // Recopilar datos del formulario
+          const formData = new FormData(userForm);
+          const userData = Object.fromEntries(formData.entries());
+          
+          console.log('Datos del formulario:', userData);
+          
+          // Obtener la fecha y hora actual
+          const now = new Date().toISOString();
+          
+          // Actualizar solo la fecha de actualización
+          userData.updated_at = now;
+          
+          // Validar que los campos requeridos no estén vacíos
+          const name = userData.name?.toString() || '';
+          const email = userData.email?.toString() || '';
+          const password = userData.password?.toString() || '';
+          
+          if (!name || name.trim() === '') {
+            throw new Error('El nombre es obligatorio');
+          }
+          
+          if (!email || email.trim() === '') {
+            throw new Error('El correo electrónico es obligatorio');
+          }
+          
+          // Si la contraseña está vacía, eliminarla del objeto para no actualizarla
+          if (!password) {
+            delete userData.password;
+          } else if (password.length < 6) {
+            throw new Error('La contraseña debe tener al menos 6 caracteres');
+          }
+          
+          console.log('Datos de usuario a actualizar:', userData);
+          
+          // Verificar si el email ya existe (excepto para el usuario actual)
+          const { data: existingUser, error: checkError } = await supabase
+            .from('users')
+            .select('id')
+            .eq('email', email)
+            .neq('id', userData.id)
+            .single();
+            
+          if (existingUser) {
+            throw new Error('Ya existe otro usuario con este correo electrónico');
+          }
+          
+          // Actualizar el usuario en Supabase
+          const { data, error } = await supabase
+            .from('users')
+            .update(userData)
+            .eq('id', userData.id)
+            .select();
+            
+          if (error) throw error;
+          
+          console.log('Usuario actualizado correctamente:', data);
+          
+          // Mostrar mensaje de éxito
+          const successMessage = document.getElementById('success-message');
+          if (successMessage) {
+            successMessage.style.display = 'flex';
+          }
+          
+          // Redirigir a la lista de usuarios después de 1 segundo
+          setTimeout(() => {
+            window.location.href = '/admin/users';
+          }, 1000);
+        } catch (error) {
+          console.error('Error al actualizar el usuario:', error);
+          
+          // Mostrar mensaje de error
+          const errorMessage = document.getElementById('error-message');
+          const errorText = document.getElementById('error-text');
+          if (errorMessage && errorText) {
+            errorText.textContent = 'Error al actualizar el usuario: ' + error.message;
+            errorMessage.style.display = 'flex';
+            
+            // Ocultar el mensaje después de 5 segundos
+            setTimeout(() => {
+              errorMessage.style.display = 'none';
+            }, 5000);
+          }
+          
+          // Restaurar el botón de guardar
+          if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> Actualizar Usuario';
+          }
+        }
+      });
+    }
+  });
+</script>
+
+<style>
+  .admin-form-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+    font-size: 1rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+  
+  .admin-form-select:focus {
+    border-color: #e63946;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(230, 57, 70, 0.25);
+  }
+  
+  .admin-info-box {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .admin-info-box p {
+    margin: 0.5rem 0;
+    color: #6c757d;
+    font-size: 0.875rem;
+  }
+  
+  .admin-info-box strong {
+    color: #495057;
+  }
+</style>

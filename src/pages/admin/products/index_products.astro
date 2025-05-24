@@ -1,0 +1,269 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { supabase } from '../../../lib/supabase';
+
+// Obtener el usuario de locals (establecido por el middleware)
+const user = Astro.locals.user;
+
+// Obtener productos y categorías desde Supabase
+let products: any[] = [];
+let categories: any[] = [];
+let error: string | null = null;
+
+try {
+  // Obtener categorías
+  const { data: categoriesData, error: categoriesError } = await supabase
+    .from('categories')
+    .select('*')
+    .order('name');
+
+  if (categoriesError) {
+    console.error('Error al obtener categorías:', categoriesError);
+    throw categoriesError;
+  }
+
+  categories = categoriesData || [];
+  console.log(`Obtenidas ${categories.length} categorías de Supabase`);
+
+  // Obtener productos con sus categorías
+  const { data: productsData, error: productsError } = await supabase
+    .from('products')
+    .select(`
+      *,
+      categories:category_id (name)
+    `)
+    .order('name');
+
+  if (productsError) {
+    console.error('Error al obtener productos:', productsError);
+    throw productsError;
+  }
+
+  // Transformar los datos al formato esperado
+  products = (productsData || []).map(product => {
+    // Obtener la URL de la imagen desde Supabase si existe
+    let imageUrl = '/images/placeholder.jpg';
+
+    if (product.image && !product.image.startsWith('http')) {
+      try {
+        const { data } = supabase.storage
+          .from('productos')
+          .getPublicUrl(product.image);
+
+        if (data && data.publicUrl) {
+          imageUrl = data.publicUrl;
+        }
+      } catch (imageError) {
+        console.error('Error al obtener URL de imagen:', imageError);
+      }
+    }
+
+    return {
+      ...product,
+      category_name: product.categories?.name || 'Sin categoría',
+      imageUrl: imageUrl
+    };
+  });
+
+  console.log(`Obtenidos ${products.length} productos de Supabase`);
+} catch (err) {
+  console.error('Error al obtener datos de Supabase:', err);
+  error = err.message || 'Error al cargar datos';
+
+  // Inicializar con arrays vacíos en caso de error
+  products = [];
+  categories = [];
+}
+---
+
+<AdminLayout title="Administrar Productos" user={user}>
+        <div class="admin-content-header">
+          <h2>Lista de Productos</h2>
+          <a href="/admin/products/new" class="admin-btn admin-btn-primary">
+            <i class="fas fa-plus"></i> Nuevo Producto
+          </a>
+        </div>
+
+        <div class="admin-filters">
+          <div class="admin-search">
+            <input
+              type="text"
+              id="product-search"
+              placeholder="Buscar productos..."
+              class="admin-search-input"
+            >
+            <button class="admin-search-btn">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+
+          <div class="admin-filter">
+            <select id="category-filter" class="admin-select">
+              <option value="">Todas las categorías</option>
+              {categories.map((category) => (
+                <option value={category.id}>{category.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {error && (
+          <div class="admin-alert admin-alert-danger">
+            <i class="fas fa-exclamation-circle"></i>
+            <p>Error al cargar los datos: {error}</p>
+            <p>Por favor, intenta recargar la página o contacta al administrador del sistema.</p>
+          </div>
+        )}
+
+        {!error && products.length === 0 && (
+          <div class="admin-alert admin-alert-info">
+            <i class="fas fa-info-circle"></i>
+            <p>No hay productos disponibles.</p>
+            <p>Haz clic en "Nuevo Producto" para agregar tu primer producto.</p>
+          </div>
+        )}
+
+        {!error && products.length > 0 && (
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Imagen</th>
+                  <th>Nombre</th>
+                  <th>Categoría</th>
+                  <th>Precio</th>
+                  <th>Destacado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="products-table-body">
+                {products.map((product) => {
+                  console.log('Producto en lista:', product);
+                  return (
+                    <tr data-id={product.id} data-category={product.category_id}>
+                      <td>{product.id}</td>
+                      <td>
+                        <div class="admin-product-image">
+                          <img
+                            src={product.imageUrl || '/images/placeholder.jpg'}
+                            alt={product.name}
+                            onerror="this.onerror=null; this.src='/images/placeholder.jpg';"
+                          />
+                        </div>
+                      </td>
+                      <td>{product.name}</td>
+                      <td>{product.category_name}</td>
+                      <td>S/ {product.price.toFixed(2)}</td>
+                      <td>
+                        <span class={`admin-badge ${product.featured ? 'admin-badge-success' : 'admin-badge-secondary'}`}>
+                          {product.featured ? 'Sí' : 'No'}
+                        </span>
+                      </td>
+                      <td>
+                        <div class="admin-actions">
+                          <a href="#" class="admin-btn admin-btn-icon admin-btn-edit" data-id={product.id}>
+                            <i class="fas fa-edit"></i>
+                          </a>
+                          <button class="admin-btn admin-btn-icon admin-btn-delete" data-id={product.id}>
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+</AdminLayout>
+
+<script>
+  import { createClient } from '@supabase/supabase-js';
+
+  // Crear cliente de Supabase
+  const supabaseUrl = 'https://cnrhqbbquymnlquuwkbh.supabase.co';
+  const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNucmhxYmJxdXltbmxxdXV3a2JoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5NDYwNDksImV4cCI6MjA2MzUyMjA0OX0.uWq6EPQrMOq1vBif4flJVnjHhvKjIlbB-nrnxgRzCbY';
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Funcionalidad de búsqueda
+    const searchInput = document.getElementById('product-search');
+    const categoryFilter = document.getElementById('category-filter');
+    const tableRows = document.querySelectorAll('#products-table-body tr');
+
+    const filterProducts = () => {
+      const searchTerm = searchInput.value.toLowerCase();
+      const categoryValue = categoryFilter.value;
+
+      tableRows.forEach(row => {
+        const productName = row.children[2].textContent.toLowerCase();
+        const productCategory = row.children[3].textContent;
+        const categoryId = row.getAttribute('data-category') || row.getAttribute('data-id').split('-')[0];
+
+        const matchesSearch = productName.includes(searchTerm);
+        const matchesCategory = !categoryValue || categoryId === categoryValue;
+
+        if (matchesSearch && matchesCategory) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    };
+
+    searchInput?.addEventListener('input', filterProducts);
+    categoryFilter?.addEventListener('change', filterProducts);
+
+    // Botones de edición
+    document.querySelectorAll('.admin-btn-edit').forEach(button => {
+      button.addEventListener('click', (event) => {
+        event.preventDefault(); // Prevenir comportamiento por defecto
+        const productId = button.getAttribute('data-id');
+        console.log('Editando producto con ID:', productId);
+
+        // Redirigir a la página de edición con el ID como parámetro
+        if (productId) {
+          console.log(`Redirigiendo a /admin/products/edit?id=${productId}`);
+          window.location.href = `/admin/products/edit?id=${productId}`;
+        } else {
+          console.error('Error: No se pudo obtener el ID del producto');
+          alert('Error: No se pudo obtener el ID del producto');
+        }
+      });
+    });
+
+    // Botones de eliminación
+    document.querySelectorAll('.admin-btn-delete').forEach(button => {
+      button.addEventListener('click', async () => {
+        const productId = button.getAttribute('data-id');
+        if (confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+          try {
+            // Eliminar el producto de Supabase
+            const { error } = await supabase
+              .from('products')
+              .delete()
+              .eq('id', productId);
+
+            if (error) throw error;
+
+            console.log(`Producto ${productId} eliminado correctamente`);
+
+            // Ocultar la fila en la tabla
+            const row = button.closest('tr');
+            if (row) {
+              row.style.display = 'none';
+            }
+
+            // Mostrar mensaje de éxito
+            alert('Producto eliminado correctamente');
+          } catch (error) {
+            console.error('Error al eliminar producto:', error);
+            alert('Error al eliminar el producto. Inténtalo de nuevo.');
+          }
+        }
+      });
+    });
+  });
+</script>

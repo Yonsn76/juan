@@ -1,0 +1,123 @@
+---
+interface Props {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  image: string;
+  categoryLabel: string;
+}
+
+const { id, title, category, description, image, categoryLabel } = Astro.props;
+---
+
+<article class="project-card" data-category={category}>
+  <div class="image-container">
+    <img src={`/images/${image}`} alt={title} onerror="this.src='/images/placeholder.jpg'">
+    <span class="category-label">{categoryLabel}</span>
+  </div>
+  <div class="content">
+    <h3>{title}</h3>
+    <p class="category">{categoryLabel}</p>
+    <p class="description">{description}</p>
+    <button class="details-btn" data-project={id}>Ver detalles</button>
+  </div>
+</article>
+
+<style>
+  .project-card {
+    background-color: white;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+  }
+
+  .project-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .image-container {
+    position: relative;
+    height: 250px;
+    background-color: #f0f0f0;
+  }
+
+  .image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .category-label {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background-color: var(--biker-red);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+  }
+
+  .content {
+    padding: 1.5rem;
+  }
+
+  .content h3 {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: var(--biker-black);
+    margin-bottom: 0.5rem;
+  }
+
+  .category {
+    color: #666;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .description {
+    color: #444;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+  }
+
+  .details-btn {
+    color: var(--biker-red);
+    font-weight: 600;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: color 0.3s ease;
+  }
+
+  .details-btn:hover {
+    text-decoration: underline;
+  }
+
+  .project-card.hidden {
+    display: none;
+  }
+
+  @media (max-width: 768px) {
+    .image-container {
+      height: 200px;
+    }
+  }
+</style>
+
+<script>
+  const detailsButtons = document.querySelectorAll('.details-btn');
+  
+  detailsButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const projectId = button.getAttribute('data-project');
+      // Dispatch custom event for showing project details
+      window.dispatchEvent(new CustomEvent('showProjectDetails', {
+        detail: { projectId }
+      }));
+    });
+  });
+</script>

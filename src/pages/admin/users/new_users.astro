@@ -1,0 +1,432 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { supabase } from '../../../lib/supabase';
+
+// Verificar si el usuario tiene permisos de administrador
+const { data: { user } } = await supabase.auth.getUser();
+if (!user) {
+  return Astro.redirect('/admin/login');
+}
+
+const roles = [
+  { value: 'admin', label: 'Administrador' },
+  { value: 'user', label: 'Usuario Regular' }
+];
+---
+
+<Layout title="Crear Usuario - Casa Biker">
+  <div class="admin-container">
+    <div class="admin-content">
+      <div class="admin-header">
+        <h1>
+          <i class="fas fa-user-plus"></i>
+          Crear Nuevo Usuario
+        </h1>
+        <a href="/admin/users/index_users" class="admin-back-btn">
+          <i class="fas fa-arrow-left"></i> Volver
+        </a>
+      </div>
+
+      <div class="admin-alert admin-alert-danger" style="display: none;">
+        <i class="fas fa-exclamation-circle"></i>
+        <span></span>
+      </div>
+
+      <div class="admin-alert admin-alert-success" style="display: none;">
+        <i class="fas fa-check-circle"></i>
+        <span>Usuario creado exitosamente</span>
+      </div>
+
+      <div class="admin-card">
+        <form id="registerForm" class="admin-form">
+          <div class="form-group">
+            <label for="name">Nombre Completo</label>
+            <div class="input-group">
+              <i class="fas fa-user input-icon"></i>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                class="form-input"
+                placeholder="Nombre del usuario"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Correo Electrónico</label>
+            <div class="input-group">
+              <i class="fas fa-envelope input-icon"></i>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                class="form-input"
+                placeholder="correo@ejemplo.com"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Contraseña</label>
+            <div class="input-group">
+              <i class="fas fa-lock input-icon"></i>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                class="form-input"
+                placeholder="••••••••"
+                required
+              />
+              <button type="button" class="password-toggle" aria-label="Mostrar contraseña">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <small class="form-help">La contraseña debe tener al menos 8 caracteres</small>
+          </div>
+
+          <div class="form-group">
+            <label for="role">Rol del Usuario</label>
+            <div class="input-group">
+              <i class="fas fa-user-shield input-icon"></i>
+              <select id="role" name="role" class="form-input" required>
+                {roles.map(role => (
+                  <option value={role.value}>{role.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="submit-btn">
+              <i class="fas fa-save"></i>
+              <span>Crear Usuario</span>
+              <div class="btn-loader" style="display: none;">
+                <i class="fas fa-spinner fa-spin"></i>
+              </div>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .admin-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f6f6f6 0%, #ffffff 100%);
+    padding: 2rem;
+  }
+
+  .admin-content {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+
+  .admin-header h1 {
+    font-size: 1.75rem;
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .admin-back-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    color: #6b7280;
+    text-decoration: none;
+    border-radius: 0.375rem;
+    transition: all 0.3s ease;
+  }
+
+  .admin-back-btn:hover {
+    color: #e30613;
+    background-color: #f3f4f6;
+  }
+
+  .admin-back-btn i {
+    margin-right: 0.5rem;
+  }
+
+  .admin-card {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    padding: 2rem;
+  }
+
+  .admin-alert {
+    display: none;
+    align-items: center;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+  }
+
+  .admin-alert-danger {
+    background-color: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+  }
+
+  .admin-alert-success {
+    background-color: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #dcfce7;
+  }
+
+  .admin-alert i {
+    margin-right: 0.75rem;
+    font-size: 1.1em;
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  .input-group {
+    position: relative;
+  }
+
+  .input-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #e30613;
+    transition: color 0.3s ease;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background-color: #f9fafb;
+  }
+
+  .form-input:focus {
+    border-color: #e30613;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(227, 6, 19, 0.1);
+    background-color: white;
+  }
+
+  .form-help {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+
+  .password-toggle {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0.25rem;
+    transition: color 0.3s ease;
+  }
+
+  .password-toggle:hover {
+    color: #e30613;
+  }
+
+  .form-actions {
+    margin-top: 2rem;
+  }
+
+  .submit-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.875rem;
+    background-color: #e30613;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .submit-btn:hover {
+    background-color: #c10510;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(227, 6, 19, 0.2);
+  }
+
+  .submit-btn i {
+    margin-right: 0.5rem;
+  }
+
+  .btn-loader {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  @media (max-width: 640px) {
+    .admin-container {
+      padding: 1rem;
+    }
+
+    .admin-card {
+      padding: 1.5rem;
+    }
+
+    .admin-header h1 {
+      font-size: 1.5rem;
+    }
+  }
+</style>
+
+<script>
+  import { supabase } from '../../../lib/supabase';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('registerForm') as HTMLFormElement;
+    const submitBtn = form?.querySelector('.submit-btn') as HTMLButtonElement;
+    const btnText = submitBtn?.querySelector('span') as HTMLSpanElement;
+    const btnLoader = submitBtn?.querySelector('.btn-loader') as HTMLDivElement;
+    const errorDiv = document.querySelector('.admin-alert-danger') as HTMLDivElement;
+    const successDiv = document.querySelector('.admin-alert-success') as HTMLDivElement;
+    const passwordInput = document.getElementById('password') as HTMLInputElement;
+    const passwordToggle = form?.querySelector('.password-toggle') as HTMLButtonElement;
+
+    // Toggle password visibility
+    const togglePasswordVisibility = () => {
+      const isVisible = passwordInput.type === 'text';
+      passwordInput.type = isVisible ? 'password' : 'text';
+      const icon = passwordToggle.querySelector('i');
+      if (icon) {
+        icon.className = isVisible ? 'fas fa-eye' : 'fas fa-eye-slash';
+      }
+      passwordToggle.setAttribute('aria-label', isVisible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+    };
+
+    if (passwordToggle) {
+      passwordToggle.addEventListener('click', togglePasswordVisibility);
+    }
+
+    const showError = (message: string) => {
+      errorDiv.style.display = 'flex';
+      successDiv.style.display = 'none';
+      const errorSpan = errorDiv.querySelector('span');
+      if (errorSpan) {
+        errorSpan.textContent = message;
+      }
+    };
+
+    const showSuccess = () => {
+      errorDiv.style.display = 'none';
+      successDiv.style.display = 'flex';
+    };
+
+    const setLoading = (loading: boolean) => {
+      if (loading) {
+        submitBtn.disabled = true;
+        btnText.style.opacity = '0';
+        btnLoader.style.display = 'block';
+      } else {
+        submitBtn.disabled = false;
+        btnText.style.opacity = '1';
+        btnLoader.style.display = 'none';
+      }
+    };
+
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(form);
+        const userData = {
+          name: formData.get('name')?.toString().trim(),
+          email: formData.get('email')?.toString().trim().toLowerCase(),
+          password: formData.get('password')?.toString(),
+          role: formData.get('role')?.toString() || 'user',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+
+        // Validaciones
+        if (!userData.name || !userData.email || !userData.password) {
+          showError('Por favor, completa todos los campos');
+          return;
+        }
+
+        if (userData.password.length < 8) {
+          showError('La contraseña debe tener al menos 8 caracteres');
+          return;
+        }
+
+        try {
+          setLoading(true);
+
+          // Verificar si el email ya existe
+          const { data: existingUser } = await supabase
+            .from('users')
+            .select('id')
+            .eq('email', userData.email)
+            .single();
+
+          if (existingUser) {
+            throw new Error('El correo electrónico ya está registrado');
+          }
+
+          // Crear el usuario
+          const { data, error } = await supabase
+            .from('users')
+            .insert([userData])
+            .select()
+            .single();
+
+          if (error) throw error;
+
+          showSuccess();
+          form.reset();
+
+          // Redirigir después de 2 segundos
+          setTimeout(() => {
+            window.location.href = '/admin/users/index_users';
+          }, 2000);
+        } catch (error) {
+          showError(error instanceof Error ? error.message : 'Error al crear el usuario');
+        } finally {
+          setLoading(false);
+        }
+      });
+    }
+  });
+</script>

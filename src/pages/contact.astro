@@ -1,0 +1,28 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import ContactForm from '../components/Contact/ContactForm.astro';
+import ContactInfo from '../components/Contact/ContactInfo.astro';
+import MapSection from '../components/Contact/MapSection.astro';
+import '../styles/contact.css';
+---
+
+<Layout title="Contacto - Zona Biker 15">
+  <Header slot="header" />
+  
+  <section class="contact-header">
+    <h1>Contacto</h1>
+  </section>
+
+  <section class="contact-container">
+    <div class="contact-grid">
+      <ContactForm />
+      <ContactInfo />
+    </div>
+  </section>
+
+  <MapSection />
+
+  <Footer slot="footer" />
+</Layout>

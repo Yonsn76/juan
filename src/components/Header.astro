@@ -1,0 +1,202 @@
+---
+const currentPath = Astro.url.pathname;
+
+const navLinks = [
+  { href: '/', text: 'Inicio', icon: 'home' },
+  { href: '/about', text: 'Nosotros', icon: 'users' },
+  { href: '/services', text: 'Servicios', icon: 'tools' },
+  { href: '/portfolio', text: 'Trabajos', icon: 'images' },
+  { href: '/catalog', text: 'Catálogo', icon: 'shopping-cart' },
+  { href: '/contact', text: 'Contacto', icon: 'envelope' }
+];
+---
+
+<header class="header" id="main-header">
+  <div class="header-container">
+    <a href="/" class="logo" aria-label="Zona Biker 15 - Inicio">
+      <img
+        src="/images/logo.png"
+        alt="Zona Biker 15 Logo"
+        width="400"
+        height="200"
+        loading="eager"
+      />
+    </a>
+
+    <!-- Desktop Navigation -->
+    <nav class="nav" aria-label="Navegación principal">
+      {
+        navLinks.map(({ href, text, icon }) => (
+          <a
+            href={href}
+            class:list={[
+              'nav-link',
+              { active: currentPath === href ||
+                (href !== '/' && currentPath.startsWith(href)) }
+            ]}
+            aria-current={currentPath === href ? 'page' : undefined}
+          >
+            <i class={`fas fa-${icon}`} aria-hidden="true"></i>
+            <span>{text}</span>
+          </a>
+        ))
+      }
+    </nav>
+
+    <!-- Mobile Menu Button -->
+    <button
+      class="mobile-menu-btn"
+      id="mobile-menu-btn"
+      aria-label="Menú de navegación"
+      aria-expanded="false"
+      aria-controls="mobile-nav"
+    >
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+
+  <!-- Mobile Navigation Overlay -->
+  <div class="mobile-nav-overlay" id="mobile-nav-overlay"></div>
+
+  <!-- Mobile Navigation -->
+  <nav
+    class="mobile-nav"
+    id="mobile-nav"
+    aria-label="Menú de navegación móvil"
+    aria-hidden="true"
+  >
+    {
+      navLinks.map(({ href, text, icon }) => (
+        <a
+          href={href}
+          class:list={[
+            'nav-link',
+            { active: currentPath === href ||
+              (href !== '/' && currentPath.startsWith(href)) }
+          ]}
+          aria-current={currentPath === href ? 'page' : undefined}
+          tabindex="-1"
+        >
+          <i class={`fas fa-${icon}`} aria-hidden="true"></i>
+          <span>{text}</span>
+        </a>
+      ))
+    }
+  </nav>
+</header>
+
+<script>
+  // Mobile menu functionality
+  document.addEventListener('astro:page-load', () => {
+    initMobileMenu();
+  });
+
+  // Also initialize on DOMContentLoaded to ensure it works on first load
+  document.addEventListener('DOMContentLoaded', () => {
+    initMobileMenu();
+  });
+
+  function initMobileMenu() {
+    // Get elements
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn') as HTMLButtonElement;
+    const mobileNav = document.getElementById('mobile-nav') as HTMLElement;
+    const mobileNavOverlay = document.getElementById('mobile-nav-overlay') as HTMLElement;
+
+    // Check if required elements exist
+    if (!mobileMenuBtn || !mobileNav || !mobileNavOverlay) {
+      console.error('Required menu elements not found');
+      return;
+    }
+
+    // State variable
+    let isMenuOpen = false;
+
+    // Toggle mobile menu
+    function toggleMobileMenu(e: Event) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      isMenuOpen = !isMenuOpen;
+
+      // Toggle menu and overlay
+      mobileNav.classList.toggle('active', isMenuOpen);
+      mobileNavOverlay.classList.toggle('active', isMenuOpen);
+      document.body.style.overflow = isMenuOpen ? 'hidden' : '';
+
+      // Update ARIA attributes
+      mobileMenuBtn.setAttribute('aria-expanded', isMenuOpen.toString());
+      mobileNav.setAttribute('aria-hidden', (!isMenuOpen).toString());
+
+      // Toggle menu icon
+      const icon = mobileMenuBtn.querySelector('i');
+      if (icon) {
+        icon.className = isMenuOpen ? 'fas fa-times' : 'fas fa-bars';
+      }
+
+      // Add click outside listener when menu is open
+      if (isMenuOpen) {
+        setTimeout(() => {
+          document.addEventListener('click', handleClickOutside);
+        }, 10);
+      }
+    }
+
+    // Handle clicks outside the menu
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+      if (target &&
+          !mobileNav.contains(target) &&
+          target !== mobileMenuBtn) {
+        closeMobileMenu();
+        document.removeEventListener('click', handleClickOutside);
+      }
+    }
+
+    // Close mobile menu
+    function closeMobileMenu() {
+      if (!isMenuOpen) return;
+
+      isMenuOpen = false;
+      mobileNav.classList.remove('active');
+      mobileNavOverlay.classList.remove('active');
+      document.body.style.overflow = '';
+
+      // Update ARIA attributes
+      mobileMenuBtn.setAttribute('aria-expanded', 'false');
+      mobileNav.setAttribute('aria-hidden', 'true');
+
+      // Reset icon
+      const icon = mobileMenuBtn.querySelector('i');
+      if (icon) {
+        icon.className = 'fas fa-bars';
+      }
+    }
+
+    // Add event listeners
+    mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+    mobileNavOverlay.addEventListener('click', closeMobileMenu);
+
+    // Close menu when clicking on links
+    document.querySelectorAll('.mobile-nav .nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        // Pequeña pausa para permitir que el enlace se active visualmente antes de cerrar el menú
+        setTimeout(() => {
+          closeMobileMenu();
+        }, 50);
+      });
+    });
+
+    // Close menu with Escape key
+    document.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isMenuOpen) {
+        closeMobileMenu();
+      }
+    });
+  }
+</script>
+
+<style>
+  /* Header styles will be imported from header.css */
+</style>

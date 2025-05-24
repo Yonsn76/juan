@@ -1,0 +1,132 @@
+---
+const testimonials = [
+  {
+    name: "Carlos Martínez",
+    role: "Propietario de Honda CBR",
+    text: "El trabajo que han hecho con mi CBR es impresionante. No solo ha mejorado estéticamente, sino que el rendimiento es mucho mejor. Totalmente recomendable.",
+    rating: 5
+  },
+  {
+    name: "Laura Gómez",
+    role: "Propietaria de Ducati Monster",
+    text: "Increíble el cambio que ha experimentado mi Ducati. El equipo de Zona Biker 15 ha sabido entender perfectamente lo que buscaba. El resultado supera mis expectativas.",
+    rating: 5
+  },
+  {
+    name: "Miguel Sánchez",
+    role: "Propietario de BMW R100",
+    text: "La transformación de mi BMW en una Café Racer ha sido espectacular. Cada detalle está cuidado al máximo y el resultado es una moto única que llama la atención por donde pasa.",
+    rating: 5
+  }
+];
+---
+
+<section class="testimonials">
+  <div class="container">
+    <h2>Lo que dicen nuestros clientes</h2>
+    <div class="testimonials-grid">
+      {testimonials.map(testimonial => (
+        <div class="testimonial-card">
+          <div class="testimonial-header">
+            <div class="testimonial-avatar"></div>
+            <div class="testimonial-info">
+              <h4>{testimonial.name}</h4>
+              <p>{testimonial.role}</p>
+            </div>
+          </div>
+          <p class="testimonial-text">{testimonial.text}</p>
+          <div class="testimonial-rating">
+            {"★".repeat(testimonial.rating)}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .testimonials {
+    padding: 4rem 0;
+    background-color: #f5f5f5;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+
+  h2 {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--biker-black);
+    margin-bottom: 3rem;
+  }
+
+  .testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+  }
+
+  .testimonial-card {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .testimonial-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .testimonial-avatar {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background-color: #ddd;
+    margin-right: 1rem;
+  }
+
+  .testimonial-info h4 {
+    font-weight: bold;
+    margin: 0;
+    color: var(--biker-black);
+  }
+
+  .testimonial-info p {
+    color: #666;
+    margin: 0;
+    font-size: 0.875rem;
+  }
+
+  .testimonial-text {
+    font-style: italic;
+    color: #444;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+
+  .testimonial-rating {
+    color: var(--biker-red);
+    font-size: 1.25rem;
+  }
+
+  @media (max-width: 768px) {
+    .testimonials-grid {
+      grid-template-columns: 1fr;
+    }
+
+    h2 {
+      font-size: 1.75rem;
+      margin-bottom: 2rem;
+    }
+
+    .testimonial-card {
+      padding: 1.5rem;
+    }
+  }
+</style>

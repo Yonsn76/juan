@@ -1,0 +1,198 @@
+---
+interface Props {
+  images: {
+    src: string;
+    alt: string;
+  }[];
+}
+
+const { images } = Astro.props;
+---
+
+<section class="carousel">
+  <div class="carousel-overlay"></div>
+  <div class="carousel-container" id="hero-carousel">
+    {
+      images.map((image, index) => (
+        <div class:list={['carousel-slide', { active: index === 0 }]}>
+          <img
+            src={image.src}
+            alt={image.alt}
+            onerror="this.src='/images/placeholder.jpg'"
+          />
+        </div>
+      ))
+    }
+  </div>
+  <div class="carousel-indicators" id="carousel-indicators">
+    {
+      images.map((_, index) => (
+        <button
+          class:list={['carousel-indicator', { active: index === 0 }]}
+          data-index={index}
+          aria-label={`Slide ${index + 1}`}
+        />
+      ))
+    }
+  </div>
+  <div class="carousel-nav">
+    <button class="carousel-button prev" id="carousel-prev" aria-label="Previous slide">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+    </button>
+    <button class="carousel-button next" id="carousel-next" aria-label="Next slide">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+      </svg>
+    </button>
+  </div>
+</section>
+
+<script>
+  class Carousel {
+    private container: HTMLElement;
+    private slides: HTMLElement[] = [];
+    private indicators: HTMLElement[] = [];
+    private currentSlide = 0;
+    private slideInterval: number | null = null;
+    private readonly slideDelay = 5000; // 5 seconds between slides
+
+    constructor(containerId: string) {
+      const container = document.getElementById(containerId);
+      if (!container) throw new Error(`Container with id '${containerId}' not found`);
+
+      this.container = container;
+      this.slides = Array.from(this.container.querySelectorAll('.carousel-slide'));
+      this.indicators = Array.from(document.querySelectorAll('.carousel-indicator'));
+
+      this.init();
+    }
+
+    private init(): void {
+      // Set up navigation buttons
+      const prevButton = document.getElementById('carousel-prev');
+      const nextButton = document.getElementById('carousel-next');
+
+      if (prevButton) {
+        prevButton.addEventListener('click', () => this.previousSlide());
+      }
+
+      if (nextButton) {
+        nextButton.addEventListener('click', () => this.nextSlide());
+      }
+
+      // Set up indicators
+      this.indicators.forEach((indicator, index) => {
+        indicator.addEventListener('click', () => this.goToSlide(index));
+      });
+
+      // Set up touch events
+      let touchStartX = 0;
+      let touchEndX = 0;
+
+      this.container.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+      }, false);
+
+      this.container.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        this.handleSwipe(touchStartX - touchEndX);
+      }, false);
+
+      // Start automatic slideshow
+      this.startSlideshow();
+
+      // Pause slideshow on hover
+      this.container.addEventListener('mouseenter', () => this.pauseSlideshow());
+      this.container.addEventListener('mouseleave', () => this.startSlideshow());
+    }
+
+    private updateSlides(): void {
+      this.slides.forEach((slide, index) => {
+        if (index === this.currentSlide) {
+          slide.classList.add('active');
+        } else {
+          slide.classList.remove('active');
+        }
+      });
+
+      this.indicators.forEach((indicator, index) => {
+        if (index === this.currentSlide) {
+          indicator.classList.add('active');
+        } else {
+          indicator.classList.remove('active');
+        }
+      });
+    }
+
+    private nextSlide(): void {
+      this.currentSlide = (this.currentSlide + 1) % this.slides.length;
+      this.updateSlides();
+    }
+
+    private previousSlide(): void {
+      this.currentSlide = (this.currentSlide - 1 + this.slides.length) % this.slides.length;
+      this.updateSlides();
+    }
+
+    private goToSlide(index: number): void {
+      this.currentSlide = index;
+      this.updateSlides();
+      this.resetSlideshow();
+    }
+
+    private startSlideshow(): void {
+      if (this.slideInterval) return;
+      this.slideInterval = window.setInterval(() => this.nextSlide(), this.slideDelay);
+    }
+
+    private pauseSlideshow(): void {
+      if (this.slideInterval) {
+        clearInterval(this.slideInterval);
+        this.slideInterval = null;
+      }
+    }
+
+    private resetSlideshow(): void {
+      this.pauseSlideshow();
+      this.startSlideshow();
+    }
+
+    private handleSwipe(difference: number): void {
+      const swipeThreshold = 50;
+      if (Math.abs(difference) > swipeThreshold) {
+        if (difference > 0) {
+          // Swipe left
+          this.nextSlide();
+        } else {
+          // Swipe right
+          this.previousSlide();
+        }
+        this.resetSlideshow();
+      }
+    }
+  }
+
+  // Initialize carousel when DOM is loaded or when Astro page loads
+  document.addEventListener('DOMContentLoaded', initCarousel);
+  document.addEventListener('astro:page-load', initCarousel);
+
+  function initCarousel() {
+    try {
+      const carouselElement = document.getElementById('hero-carousel');
+      if (carouselElement) {
+        new Carousel('hero-carousel');
+        console.log('Carousel initialized successfully');
+      } else {
+        console.warn('Carousel element not found');
+      }
+    } catch (error) {
+      console.error('Error initializing carousel:', error);
+    }
+  }
+</script>
+
+<style>
+  /* Carousel styles will be imported from carousel.css */
+</style>

@@ -1,0 +1,18 @@
+---
+import { logout, createLogoutCookie } from '../../lib/auth';
+
+// Cerrar sesión
+await logout();
+
+// Crear cookie para eliminar la sesión
+const logoutCookie = createLogoutCookie();
+
+// Redirigir a la página de login con la cookie de cierre de sesión
+return new Response('', {
+  status: 302,
+  headers: {
+    'Location': '/admin/login',
+    'Set-Cookie': logoutCookie
+  }
+});
+---

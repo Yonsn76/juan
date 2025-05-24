@@ -1,0 +1,214 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import CartButton from '../components/Cart/CartButton.astro';
+import CartModal from '../components/Cart/CartModal.astro';
+import ServiceCard from '../components/Services/ServiceCard.astro';
+
+// Import styles
+import '../styles/services.css';
+
+type ServiceColor = 'biker-red' | 'racing-blue' | 'safety-yellow' | 'mechanic-gray' | 'custom-purple' | 'collector-green';
+
+interface Service {
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  features: string[];
+  video: string;
+  buttonText: string;
+  buttonLink: string;
+  color: ServiceColor;
+  icon: string;
+}
+
+const services: Service[] = [
+  {
+    id: 'accesorios',
+    type: 'accessories',
+    title: 'Accesorios para Motos',
+    description: `
+      <p>
+        Disponemos de una amplia selección de accesorios de las mejores marcas para personalizar y mejorar tu moto. Desde sistemas de escape hasta manillares, pasando por asientos personalizados y sistemas de iluminación.
+      </p>
+      <p>
+        Nuestro catálogo incluye productos de marcas premium como <span class="brand-name">Akrapovič, Rizoma, Givi, Brembo</span> y muchas más.
+      </p>
+    `,
+    features: [
+      'Sistemas de escape',
+      'Manillares y puños',
+      'Asientos personalizados',
+      'Sistemas de iluminación',
+      'Portaequipajes',
+      'Protectores'
+    ],
+    video: 'accesorios.mp4',
+    buttonText: 'Ver catálogo de accesorios',
+    buttonLink: '/catalog?category=accesorios',
+    color: 'biker-red',
+    icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>'
+  },
+  {
+    id: 'tuning',
+    type: 'tuning',
+    title: 'Tuning de Motos',
+    description: `
+      <p>
+        Nuestro servicio de tuning te permite personalizar y mejorar el rendimiento de tu moto. Desde modificaciones estéticas hasta mejoras mecánicas.
+      </p>
+    `,
+    features: [
+      'Mejora de rendimiento',
+      'Reprogramación de centralitas',
+      'Instalación de sistemas de escape',
+      'Modificación de suspensiones',
+      'Pintura personalizada'
+    ],
+    video: 'tunning.mp4',
+    buttonText: 'Solicitar presupuesto',
+    buttonLink: '/contact?service=tuning',
+    color: 'racing-blue',
+    icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>'
+  },
+  {
+    id: 'seguridad',
+    type: 'safety',
+    title: 'Cascos y Equipamiento de Seguridad',
+    description: `
+      <p>
+        Tu seguridad es nuestra prioridad. Ofrecemos una amplia gama de cascos y equipamiento de seguridad de las mejores marcas.
+      </p>
+    `,
+    features: [
+      'Cascos integrales',
+      'Cascos modulares',
+      'Chaquetas y pantalones',
+      'Guantes',
+      'Botas',
+      'Protecciones corporales'
+    ],
+    video: 'cascos.mp4',
+    buttonText: 'Ver catálogo de seguridad',
+    buttonLink: '/catalog?category=cascos',
+    color: 'safety-yellow',
+    icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>'
+  },
+  {
+    id: 'mantenimiento',
+    type: 'maintenance',
+    title: 'Mantenimiento y Reparación',
+    description: `
+      <p>
+        Mantén tu moto en perfecto estado con nuestro servicio de mantenimiento y reparación. Nuestros técnicos especializados se encargarán de que tu moto funcione siempre a la perfección.
+      </p>
+    `,
+    features: [
+      'Mantenimiento preventivo',
+      'Reparación de motores',
+      'Diagnóstico electrónico',
+      'Cambio de aceite',
+      'Ajuste de frenos',
+      'Revisión de suspensiones'
+    ],
+    video: 'reparacion.mp4',
+    buttonText: 'Solicitar servicio',
+    buttonLink: '/contact?service=mantenimiento',
+    color: 'mechanic-gray',
+    icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>'
+  },
+  {
+    id: 'personalizados',
+    type: 'custom',
+    title: 'Personalización de Motos',
+    description: `
+      <p>
+        Convierte tu moto en una pieza única con nuestro servicio de personalización. Desde pintura personalizada hasta modificaciones estructurales.
+      </p>
+    `,
+    features: [
+      'Pintura personalizada',
+      'Modificaciones estructurales',
+      'Diseños exclusivos',
+      'Restauración de motos clásicas',
+      'Proyectos personalizados'
+    ],
+    video: 'personalizacion.mp4',
+    buttonText: 'Solicitar presupuesto',
+    buttonLink: '/contact?service=personalizacion',
+    color: 'custom-purple',
+    icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>'
+  },
+  {
+    id: 'modelos',
+    type: 'models',
+    title: 'Regalos a Escala',
+    description: `
+      <p>
+        Encuentra el regalo perfecto para los amantes de las motos con nuestra colección de modelos a escala de alta calidad.
+      </p>
+    `,
+    features: [
+      'Modelos a escala de marcas premium',
+      'Réplicas exactas con detalles minuciosos',
+      'Diferentes escalas disponibles',
+      'Ediciones limitadas',
+      'Modelos personalizables',
+      'Empaquetado para regalo'
+    ],
+    video: 'regalo.mp4',
+    buttonText: 'Ver catálogo de modelos',
+    buttonLink: '/catalog?category=modelos',
+    color: 'collector-green',
+    icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" /></svg>'
+  }
+];
+---
+
+<Layout title="Servicios - Zona Biker 15">
+  <Header slot="header" />
+  <main class="services-page">
+    <section class="intro-section">
+      <h1 class="main-title">Servicios Zona Biker 15</h1>
+      <div class="info-badge">Calidad, innovación y atención personalizada para tu moto</div>
+      <div class="info-badge info-badge-minimal">
+        Todos nuestros servicios incluyen garantía y soporte técnico
+      </div>
+    </section>
+
+    <!-- Services List -->
+    <section class="services-list">
+      <div class="container">
+        {services.map((service, index) => (
+          <ServiceCard 
+            service={service} 
+            reverse={index % 2 === 1}
+          />
+        ))}
+      </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="cta-section">
+      <div class="container">
+        <h2 class="cta-title">¿Listo para mejorar tu moto?</h2>
+        <p class="cta-text">
+          Contacta con nosotros hoy mismo y descubre todo lo que podemos hacer por ti y tu motocicleta.
+        </p>
+        <a href="/contact" class="cta-button">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <span>Contactar ahora</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <CartButton />
+  <CartModal />
+  
+  <Footer slot="footer" />
+</Layout>

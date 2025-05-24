@@ -1,0 +1,509 @@
+---
+import Layout from '../../layouts/Layout.astro';
+// No usamos AdminLayout aquí porque el login no requiere autenticación
+import '../../styles/admin.css';
+import { login, createSessionCookie, checkAuth } from '../../lib/auth';
+import { supabase } from '../../lib/supabase';
+
+// Verificar si el usuario ya está autenticado
+const { user, redirect } = await checkAuth(Astro.request);
+
+// Si el usuario ya está autenticado, redirigir al dashboard
+if (user && !redirect) {
+  return Astro.redirect('/admin');
+}
+
+// Variables para manejar el estado
+let error = null;
+let email = '';
+
+// Manejar el envío del formulario
+if (Astro.request.method === 'POST') {
+  try {
+    console.log('Procesando formulario de login...');
+    const body = await Astro.request.json();
+    email = body.email || '';
+    const password = body.password || '';
+
+    console.log('Datos recibidos:', { email, passwordLength: password?.length || 0 });
+
+    // Validar campos
+    if (!email || !password) {
+      console.log('Campos incompletos');
+      error = 'Por favor, completa todos los campos';
+    } else {
+      console.log('Intentando iniciar sesión...');
+      // Intentar iniciar sesión
+      const { user: loggedUser, error: loginError } = await login(email, password);
+
+      if (loginError) {
+        console.error('Error de login:', loginError);
+        error = loginError;
+      } else if (loggedUser) {
+        console.log('Login exitoso, creando cookie de sesión...');
+        // Crear cookie de sesión
+        const sessionCookie = createSessionCookie(loggedUser);
+
+        console.log('Redirigiendo al dashboard...');
+        // Redirigir al dashboard con la cookie de sesión
+        return new Response('', {
+          status: 302,
+          headers: {
+            'Location': '/admin/index_admin',
+            'Set-Cookie': sessionCookie
+          }
+        });
+      } else {
+        console.error('No se obtuvo usuario ni error');
+        error = 'Error inesperado al iniciar sesión';
+      }
+    }
+  } catch (err: unknown) {
+    console.error('Error al procesar el formulario:', err);
+    error = `Error al procesar la solicitud: ${err instanceof Error ? err.message : 'Error desconocido'}`;
+  }
+}
+---
+
+<Layout title="Iniciar Sesión - Casa Biker">
+  <div class="login-container">
+    <div class="login-card">
+      <div class="login-header">
+        <img src="/images/logo.png" alt="Casa Biker Logo" class="login-logo">
+        <h1>Panel de Administración</h1>
+        <p class="login-subtitle">Ingresa tus credenciales para continuar</p>
+      </div>
+
+      <div class="login-alert login-alert-danger" style="display: none;">
+        <i class="fas fa-exclamation-circle"></i>
+        <span></span>
+      </div>
+
+      <form id="loginForm" class="login-form" onsubmit="return false;">
+        <div class="login-form-group">
+          <label for="email" class="login-label">Correo Electrónico</label>
+          <div class="login-input-group">
+            <i class="fas fa-envelope login-input-icon"></i>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              class="login-input"
+              placeholder="tu@email.com"
+              value={email}
+              required
+            >
+          </div>
+        </div>
+
+        <div class="login-form-group">
+          <label for="password" class="login-label">Contraseña</label>
+          <div class="login-input-group">
+            <i class="fas fa-lock login-input-icon"></i>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="login-input"
+              placeholder="••••••••"
+              required
+            >
+            <button type="button" class="login-password-toggle" aria-label="Mostrar contraseña">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="login-btn">
+          <i class="fas fa-sign-in-alt"></i> 
+          <span>Iniciar Sesión</span>
+          <div class="login-btn-loader" style="display: none;">
+            <i class="fas fa-spinner fa-spin"></i>
+          </div>
+        </button>
+      </form>
+
+      <div class="login-actions">
+        <a href="/admin/users/new" class="login-action-link">
+          <i class="fas fa-user-plus"></i> Crear nuevo usuario
+        </a>
+      </div>
+
+      <div class="login-footer">
+        <p>© {new Date().getFullYear()} Casa Biker. Todos los derechos reservados.</p>
+        <a href="/" class="login-back-link">
+          <i class="fas fa-arrow-left"></i> Volver al sitio
+        </a>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%);
+    padding: 1rem;
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 450px;
+    background-color: white;
+    border-radius: 1rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    padding: 2.5rem;
+    transform: translateY(0);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .login-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3);
+  }
+
+  .login-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+
+  .login-logo {
+    max-width: 180px;
+    margin-bottom: 1.5rem;
+    filter: none;
+    transition: filter 0.3s ease;
+  }
+
+  .login-logo:hover {
+    filter: drop-shadow(0 0 8px rgba(227, 6, 19, 0.4));
+  }
+
+  .login-header h1 {
+    font-size: 1.75rem;
+    color: #1a1a1a;
+    margin: 0 0 0.5rem;
+    font-weight: 700;
+  }
+
+  .login-subtitle {
+    color: #666;
+    font-size: 1rem;
+    margin: 0;
+  }
+
+  .login-form {
+    margin-bottom: 2rem;
+  }
+
+  .login-form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .login-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    font-size: 0.9rem;
+  }
+
+  .login-input-group {
+    position: relative;
+  }
+
+  .login-input-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #e30613;
+    transition: color 0.3s ease;
+  }
+
+  .login-input {
+    width: 100%;
+    padding: 0.875rem 1rem 0.875rem 2.75rem;
+    border: 2px solid #e1e1e1;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+  }
+
+  .login-input:focus {
+    border-color: #e30613;
+    outline: 0;
+    box-shadow: 0 0 0 4px rgba(227, 6, 19, 0.15);
+    background-color: white;
+  }
+
+  .login-input:focus + .login-input-icon {
+    color: #e30613;
+  }
+
+  .login-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 1rem;
+    background-color: #e30613;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .login-btn:hover {
+    background-color: #c10510;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(227, 6, 19, 0.3);
+  }
+
+  .login-btn i {
+    margin-right: 0.5rem;
+    font-size: 1.1em;
+  }
+
+  .login-btn-loader {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .login-alert {
+    display: none;
+    align-items: center;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+  }
+
+  .login-alert-danger {
+    background-color: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+  }
+
+  .login-alert i {
+    margin-right: 0.75rem;
+    font-size: 1.1em;
+  }
+
+  .login-footer {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e9ecef;
+  }
+
+  .login-footer p {
+    color: #666;
+    font-size: 0.875rem;
+    margin: 0 0 0.75rem;
+  }
+
+  .login-back-link {
+    display: inline-flex;
+    align-items: center;
+    color: #e30613;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+  }
+
+  .login-back-link:hover {
+    color: #c10510;
+    transform: translateX(-3px);
+  }
+
+  .login-back-link i {
+    margin-right: 0.5rem;
+  }
+
+  @media (max-width: 576px) {
+    .login-card {
+      padding: 1.5rem;
+    }
+
+    .login-logo {
+      max-width: 150px;
+    }
+
+    .login-header h1 {
+      font-size: 1.5rem;
+    }
+  }
+
+  .login-password-toggle {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.3s ease;
+  }
+
+  .login-password-toggle:hover {
+    color: #e30613;
+  }
+
+  .login-actions {
+    margin-top: 1rem;
+    text-align: center;
+    padding: 1rem 0;
+    border-top: 1px solid #e9ecef;
+  }
+
+  .login-action-link {
+    display: inline-flex;
+    align-items: center;
+    color: #e30613;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    transition: all 0.3s ease;
+  }
+
+  .login-action-link:hover {
+    background-color: #fef2f2;
+    color: #c10510;
+    text-decoration: none;
+  }
+
+  .login-action-link i {
+    margin-right: 0.5rem;
+  }
+</style>
+
+<script>
+  import { supabase } from '../../lib/supabase';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('loginForm') as HTMLFormElement;
+    const submitBtn = form?.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const btnText = submitBtn?.querySelector('span') as HTMLSpanElement;
+    const btnLoader = submitBtn?.querySelector('.login-btn-loader') as HTMLDivElement;
+    const errorDiv = document.querySelector('.login-alert-danger') as HTMLDivElement;
+    const passwordInput = document.getElementById('password') as HTMLInputElement;
+    const passwordToggle = form?.querySelector('.login-password-toggle') as HTMLButtonElement;
+    
+    // Función para alternar la visibilidad de la contraseña
+    const togglePasswordVisibility = () => {
+      const isVisible = passwordInput.type === 'text';
+      passwordInput.type = isVisible ? 'password' : 'text';
+      const icon = passwordToggle.querySelector('i');
+      if (icon) {
+        icon.className = isVisible ? 'fas fa-eye' : 'fas fa-eye-slash';
+      }
+      passwordToggle.setAttribute('aria-label', isVisible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+    };
+
+    // Agregar evento al botón de mostrar/ocultar contraseña
+    if (passwordToggle) {
+      passwordToggle.addEventListener('click', togglePasswordVisibility);
+    }
+
+    const showError = (message: string) => {
+      const errorSpan = errorDiv?.querySelector('span');
+      if (errorSpan) {
+        errorSpan.textContent = message;
+        errorDiv.style.display = 'flex';
+      }
+    };
+
+    const hideError = () => {
+      errorDiv.style.display = 'none';
+    };
+
+    const setLoading = (loading: boolean) => {
+      if (loading) {
+        submitBtn.disabled = true;
+        btnText.style.opacity = '0';
+        btnLoader.style.display = 'block';
+      } else {
+        submitBtn.disabled = false;
+        btnText.style.opacity = '1';
+        btnLoader.style.display = 'none';
+      }
+    };
+
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        hideError();
+        
+        const formData = new FormData(form);
+        const email = formData.get('email')?.toString() || '';
+        const password = formData.get('password')?.toString() || '';
+
+        if (!email || !password) {
+          showError('Por favor, completa todos los campos');
+          return;
+        }
+
+        try {
+          setLoading(true);
+          
+          const { data, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', email)
+            .single();
+
+          if (error) {
+            throw new Error('Error al verificar credenciales');
+          }
+
+          if (!data) {
+            throw new Error('Usuario no encontrado');
+          }
+
+          if (data.password !== password) {
+            throw new Error('Contraseña incorrecta');
+          }
+
+          // Crear sesión
+          const response = await fetch('/admin/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password }),
+          });
+
+          if (response.ok || response.redirected) {
+            window.location.href = '/admin/index_admin';
+          } else {
+            const responseData = await response.text();
+            throw new Error(responseData);
+          }
+        } catch (error) {
+          showError(error instanceof Error ? error.message : 'Error al iniciar sesión');
+        } finally {
+          setLoading(false);
+        }
+      });
+    }
+  });
+</script>

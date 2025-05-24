@@ -1,0 +1,88 @@
+---
+---
+
+<section class="filter-section">
+  <div class="container">
+    <div class="filter-buttons">
+      <button class="filter-btn active" data-filter="all">Todos</button>
+      <button class="filter-btn" data-filter="personalizacion">Personalizaciones</button>
+      <button class="filter-btn" data-filter="restauracion">Restauraciones</button>
+      <button class="filter-btn" data-filter="rendimiento">Mejoras de Rendimiento</button>
+    </div>
+  </div>
+</section>
+
+<style>
+  .filter-section {
+    padding: 2rem 0;
+    background-color: white;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+
+  .filter-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .filter-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #f0f0f0;
+    color: var(--biker-black);
+  }
+
+  .filter-btn:hover {
+    background-color: #e0e0e0;
+  }
+
+  .filter-btn.active {
+    background-color: var(--biker-red);
+    color: white;
+  }
+
+  @media (max-width: 768px) {
+    .filter-buttons {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .filter-btn {
+      width: 100%;
+      text-align: center;
+    }
+  }
+</style>
+
+<script>
+  const filterButtons = document.querySelectorAll('.filter-btn');
+  
+  filterButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      // Remove active class from all buttons
+      filterButtons.forEach(btn => btn.classList.remove('active'));
+      
+      // Add active class to clicked button
+      button.classList.add('active');
+      
+      // Get filter value
+      const filter = button.getAttribute('data-filter');
+      
+      // Dispatch custom event for filtering
+      window.dispatchEvent(new CustomEvent('portfolioFilter', {
+        detail: { filter }
+      }));
+    });
+  });
+</script>

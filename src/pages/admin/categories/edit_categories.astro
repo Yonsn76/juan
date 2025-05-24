@@ -1,0 +1,465 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import '../../../styles/admin.css';
+import { supabase } from '../../../lib/supabase';
+
+// Lista de iconos disponibles de Font Awesome
+const availableIcons = [
+  'motorcycle', 'hard-hat', 'tshirt', 'cogs', 'tools', 'gift',
+  'shield-alt', 'bolt', 'oil-can', 'wrench', 'cog', 'helmet-safety',
+  'screwdriver', 'car-battery', 'gas-pump', 'key', 'map-marker-alt',
+  'road', 'tachometer-alt', 'truck', 'user-shield', 'shopping-cart'
+];
+
+// Obtener el ID de la categoría de la URL
+const categoryIdParam = Astro.url.searchParams.get('id');
+// Convertir a número si es posible
+const categoryId = categoryIdParam ? parseInt(categoryIdParam) : null;
+console.log('🔍 DEBUG - ID de la categoría a editar (original):', categoryIdParam);
+console.log('🔍 DEBUG - ID de la categoría a editar (convertido):', categoryId);
+console.log('🔍 DEBUG - Tipo de ID:', typeof categoryId);
+console.log('🔍 DEBUG - URL completa:', Astro.url.toString());
+
+// Variables para almacenar los datos de la categoría
+let category: any = null;
+let error: string | null = null;
+
+// Obtener datos de Supabase
+if (!categoryIdParam) {
+  error = 'No se ha proporcionado un ID de categoría. Por favor, selecciona una categoría para editar.';
+  console.error('Error: No se ha proporcionado un ID de categoría');
+} else if (!categoryId) {
+  error = `ID de categoría inválido: "${categoryIdParam}". El ID debe ser un número.`;
+  console.error(`Error: ID de categoría inválido: "${categoryIdParam}"`);
+} else {
+  try {
+    // Obtener la categoría por ID
+    console.log(`🔍 DEBUG - Consultando Supabase con ID de categoría: ${categoryId}`);
+    const { data: categoryData, error: categoryError } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('id', categoryId)
+      .single();
+
+    console.log('🔍 DEBUG - Resultado de la consulta:', {
+      categoryData: categoryData ? JSON.stringify(categoryData) : null,
+      categoryError
+    });
+
+    if (categoryError) {
+      console.error('Error al obtener la categoría:', categoryError);
+      error = categoryError.message || 'Error al obtener la categoría';
+    } else if (!categoryData) {
+      console.error(`No se encontraron datos para la categoría con ID ${categoryId}`);
+      error = `No se encontraron datos para la categoría con ID ${categoryId}`;
+    } else {
+      console.log('Categoría encontrada:', categoryData);
+      category = categoryData;
+    }
+  } catch (err) {
+    console.error('Error al obtener datos de Supabase:', err);
+    error = err.message || 'Error al obtener datos';
+  }
+}
+
+// Manejar el envío del formulario
+if (Astro.request.method === 'POST') {
+  try {
+    // Obtener los datos del cuerpo de la solicitud
+    const formData = await Astro.request.text();
+    console.log('Datos del formulario (raw):', formData);
+
+    // Parsear los datos del formulario
+    const params = new URLSearchParams(formData);
+
+    // Imprimir los parámetros para depuración
+    console.log('Parámetros del formulario:');
+    for (const [key, value] of params.entries()) {
+      console.log(`${key}: ${value}`);
+    }
+
+    // Actualizar solo la fecha de actualización
+    const now = new Date().toISOString();
+
+    const categoryData = {
+      name: params.get('name') || '',
+      description: params.get('description') || '',
+      icon: params.get('icon') || 'tag',
+      updated_at: now
+    };
+
+    console.log('Datos de categoría a actualizar:', categoryData);
+
+    // Validar que el nombre no esté vacío
+    if (!categoryData.name || categoryData.name.trim() === '') {
+      error = 'El nombre de la categoría es obligatorio';
+      console.log('Error de validación: Nombre vacío');
+    } else {
+      // Actualizar la categoría en Supabase
+      const { data: updatedData, error: updateError } = await supabase
+        .from('categories')
+        .update(categoryData)
+        .eq('id', categoryId)
+        .select();
+
+      if (updateError) {
+        console.error('Error al actualizar la categoría:', updateError);
+        error = updateError.message || 'Error al actualizar la categoría';
+      } else {
+        console.log('Categoría actualizada correctamente:', updatedData);
+        // Redirigir a la lista de categorías
+        return Astro.redirect('/admin/categories');
+      }
+    }
+
+    // El código de manejo de errores ya está en el bloque else anterior
+  } catch (err) {
+    console.error('Error al procesar el formulario:', err);
+    error = err.message || 'Error al procesar el formulario';
+  }
+}
+
+console.log('Estado final:', { category, error, method: Astro.request.method });
+---
+
+<Layout title="Editar Categoría - Casa Biker">
+  <div class="admin-container">
+    <header class="admin-header">
+      <div class="admin-header-content">
+        <h1>Editar Categoría</h1>
+        <div class="admin-user-info">
+          <span class="admin-username">Admin</span>
+          <button id="logout-btn" class="admin-logout-btn">
+            <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="admin-content">
+      <aside class="admin-sidebar">
+        <nav class="admin-nav">
+          <ul>
+            <li class="admin-nav-item">
+              <a href="/admin" class="admin-nav-link">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+              </a>
+            </li>
+            <li class="admin-nav-item">
+              <a href="/admin/products" class="admin-nav-link">
+                <i class="fas fa-box"></i>
+                <span>Productos</span>
+              </a>
+            </li>
+            <li class="admin-nav-item active">
+              <a href="/admin/categories" class="admin-nav-link">
+                <i class="fas fa-tags"></i>
+                <span>Categorías</span>
+              </a>
+            </li>
+            <li class="admin-nav-item">
+              <a href="/admin/settings" class="admin-nav-link">
+                <i class="fas fa-cog"></i>
+                <span>Configuración</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      <main class="admin-main">
+        <div class="admin-content-header">
+          <h2>Editar Categoría: {category?.name}</h2>
+          <a href="/admin/categories" class="admin-btn admin-btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver a la lista
+          </a>
+        </div>
+
+        <div id="error-message" class="admin-alert admin-alert-danger" style="display: none;">
+          <i class="fas fa-exclamation-circle"></i>
+          <span id="error-text"></span>
+        </div>
+
+        <div id="success-message" class="admin-alert admin-alert-success" style="display: none;">
+          <i class="fas fa-check-circle"></i>
+          <span>Categoría actualizada correctamente. Redirigiendo...</span>
+        </div>
+
+        {error && (
+          <div class="admin-alert admin-alert-danger">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Error: {error}</span>
+          </div>
+        )}
+
+        {!category && !error && (
+          <div class="admin-alert admin-alert-info">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Cargando datos de la categoría...</span>
+          </div>
+        )}
+
+        {category ? (
+          <form id="category-form" class="admin-form" action={`/admin/categories/edit?id=${category.id}`} method="POST">
+            <!-- ID de la categoría (solo lectura) -->
+            <div class="admin-form-group">
+              <label for="category-id" class="admin-form-label">ID de la Categoría</label>
+              <input
+                type="text"
+                id="category-id"
+                name="id"
+                class="admin-form-input"
+                value={category.id}
+                readonly
+              >
+              <small class="admin-form-help">El ID no se puede modificar</small>
+            </div>
+
+            <div class="admin-form-group">
+              <label for="category-name" class="admin-form-label">Nombre de la Categoría</label>
+              <input
+                type="text"
+                id="category-name"
+                name="name"
+                class="admin-form-input"
+                value={category.name}
+                required
+              >
+            </div>
+
+            <div class="admin-form-group">
+              <label for="category-description" class="admin-form-label">Descripción</label>
+              <textarea
+                id="category-description"
+                name="description"
+                class="admin-form-textarea"
+                rows="3"
+              >{category.description}</textarea>
+              <small class="admin-form-help">Descripción breve de la categoría</small>
+            </div>
+
+            <div class="admin-form-group">
+              <label class="admin-form-label">Icono</label>
+              <div class="admin-icon-selector">
+                <input type="hidden" id="selected-icon" name="icon" value={category.icon}>
+                <div class="admin-icon-grid">
+                  {availableIcons.map(icon => (
+                    <div
+                      class={`admin-icon-option ${icon === category.icon ? 'selected' : ''}`}
+                      data-icon={icon}
+                    >
+                      <i class={`fas fa-${icon}`}></i>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <small class="admin-form-help">Selecciona un icono para representar la categoría</small>
+            </div>
+
+            {/* Mostrar información de fechas */}
+            <div class="admin-form-group">
+              <label class="admin-form-label">Información adicional</label>
+              <div class="admin-info-box">
+                <p><strong>Creado:</strong> {new Date(category.created_at).toLocaleString()}</p>
+                <p><strong>Última actualización:</strong> {new Date(category.updated_at).toLocaleString()}</p>
+              </div>
+            </div>
+
+            <div class="admin-form-actions">
+              <a href="/admin/categories" class="admin-btn admin-btn-secondary" id="cancel-btn">
+                <i class="fas fa-times"></i> Cancelar
+              </a>
+              <button type="submit" class="admin-btn admin-btn-primary" id="save-btn">
+                <i class="fas fa-save"></i> Actualizar Categoría
+              </button>
+            </div>
+          </form>
+        ) : (
+          !error && (
+            <div class="admin-empty-state">
+              <i class="fas fa-exclamation-triangle"></i>
+              <h3>Categoría no encontrada</h3>
+              <p>La categoría que intentas editar no existe o ha sido eliminada.</p>
+              <a href="/admin/categories" class="admin-btn admin-btn-primary">
+                <i class="fas fa-arrow-left"></i> Volver a la lista de categorías
+              </a>
+            </div>
+          )
+        )}
+      </main>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import { createClient } from '@supabase/supabase-js';
+
+  // Crear cliente de Supabase
+  const supabaseUrl = 'https://cnrhqbbquymnlquuwkbh.supabase.co';
+  const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNucmhxYmJxdXltbmxxdXV3a2JoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5NDYwNDksImV4cCI6MjA2MzUyMjA0OX0.uWq6EPQrMOq1vBif4flJVnjHhvKjIlbB-nrnxgRzCbY';
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const categoryForm = document.getElementById('category-form') as HTMLFormElement;
+    const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
+    const iconOptions = document.querySelectorAll('.admin-icon-option');
+    const selectedIconInput = document.getElementById('selected-icon') as HTMLInputElement;
+
+    // Manejar la selección de iconos
+    iconOptions.forEach(option => {
+      option.addEventListener('click', () => {
+        // Quitar la clase seleccionada de todas las opciones
+        iconOptions.forEach(opt => opt.classList.remove('selected'));
+
+        // Añadir la clase seleccionada a la opción actual
+        option.classList.add('selected');
+
+        // Actualizar el valor del input oculto
+        const iconName = option.getAttribute('data-icon') || 'tag';
+        if (selectedIconInput) {
+          selectedIconInput.value = iconName;
+        }
+      });
+    });
+
+    // Manejar el envío del formulario
+    if (categoryForm) {
+      categoryForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        try {
+          // Mostrar indicador de carga
+          if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualizando...';
+          }
+
+          // Recopilar datos del formulario
+          const formData = new FormData(categoryForm);
+          const categoryData = Object.fromEntries(formData.entries());
+
+          console.log('Datos del formulario:', categoryData);
+
+          // Obtener la fecha y hora actual
+          const now = new Date().toISOString();
+
+          // Actualizar solo la fecha de actualización
+          categoryData.updated_at = now;
+
+          // Validar que el nombre no esté vacío
+          const name = categoryData.name?.toString() || '';
+          if (!name || name.trim() === '') {
+            throw new Error('El nombre de la categoría es obligatorio');
+          }
+
+          console.log('Datos de categoría a actualizar:', categoryData);
+
+          // Actualizar la categoría en Supabase
+          const { data, error } = await supabase
+            .from('categories')
+            .update(categoryData)
+            .eq('id', categoryData.id)
+            .select();
+
+          if (error) throw error;
+
+          console.log('Categoría actualizada correctamente:', data);
+
+          // Mostrar mensaje de éxito
+          const successMessage = document.getElementById('success-message');
+          if (successMessage) {
+            successMessage.style.display = 'flex';
+          }
+
+          // Redirigir a la lista de categorías después de 1 segundo
+          setTimeout(() => {
+            window.location.href = '/admin/categories';
+          }, 1000);
+        } catch (error) {
+          console.error('Error al actualizar la categoría:', error);
+
+          // Mostrar mensaje de error
+          const errorMessage = document.getElementById('error-message');
+          const errorText = document.getElementById('error-text');
+          if (errorMessage && errorText) {
+            errorText.textContent = 'Error al actualizar la categoría: ' + error.message;
+            errorMessage.style.display = 'flex';
+
+            // Ocultar el mensaje después de 5 segundos
+            setTimeout(() => {
+              errorMessage.style.display = 'none';
+            }, 5000);
+          }
+
+          // Restaurar el botón de guardar
+          if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> Actualizar Categoría';
+          }
+        }
+      });
+    }
+  });
+</script>
+
+<style>
+  .admin-icon-selector {
+    margin-bottom: 1rem;
+  }
+
+  .admin-icon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .admin-icon-option {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .admin-icon-option i {
+    font-size: 1.25rem;
+    color: #4b5563;
+  }
+
+  .admin-icon-option:hover {
+    background-color: #f3f4f6;
+  }
+
+  .admin-icon-option.selected {
+    background-color: #e63946;
+    border-color: #e63946;
+  }
+
+  .admin-icon-option.selected i {
+    color: white;
+  }
+
+  .admin-info-box {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .admin-info-box p {
+    margin: 0.5rem 0;
+    color: #6c757d;
+    font-size: 0.875rem;
+  }
+
+  .admin-info-box strong {
+    color: #495057;
+  }
+</style>

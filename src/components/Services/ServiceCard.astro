@@ -1,0 +1,99 @@
+---
+interface Props {
+  service: {
+    id: string;
+    type: string;
+    title: string;
+    description: string;
+    features: string[];
+    video: string;
+    buttonText: string;
+    buttonLink: string;
+    color: 'biker-red' | 'racing-blue' | 'safety-yellow' | 'mechanic-gray' | 'custom-purple' | 'collector-green';
+    icon: string;
+  };
+  reverse?: boolean;
+}
+
+const { service, reverse = false } = Astro.props;
+
+// Map color names to card classes
+const colorClasses: Record<Props['service']['color'], string> = {
+  'biker-red': 'biker-red-card',
+  'racing-blue': 'racing-blue-card',
+  'safety-yellow': 'safety-yellow-card',
+  'mechanic-gray': 'mechanic-gray-card',
+  'custom-purple': 'custom-purple-card',
+  'collector-green': 'collector-green-card'
+};
+---
+
+<article 
+  id={service.id}
+  class={`service-card ${colorClasses[service.color]}${reverse ? ' reverse' : ''}`}
+  style={`--service-color: var(--${service.color})`}
+  role="region"
+  aria-labelledby={`service-title-${service.id}`}
+>
+  <div class="card-content">
+    <section class="media-section" aria-label="Video de servicio">
+      <video class="service-video" autoplay muted loop playsinline poster="/images/services-placeholder.jpg">
+        <source src={`/videos/${service.video}`} type="video/mp4" />
+        Tu navegador no soporta videos HTML5.
+      </video>
+      <div class="video-overlay"></div>
+    </section>
+
+    <section class="content-section">
+      <header class="service-header">
+        <span class="icon-container" aria-hidden="true">
+          <Fragment set:html={service.icon} />
+        </span>
+        <h3 class="service-title" id={`service-title-${service.id}`}>{service.title}</h3>
+      </header>
+      <section class="service-description" set:html={service.description} aria-label="Descripción del servicio" />
+
+      <div class="features-grid" aria-label="Características principales">
+        {service.features.map(feature => (
+          <div class="feature-item" key={feature}>
+            <svg 
+              class="feature-icon"
+              xmlns="http://www.w3.org/2000/svg" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path 
+                stroke-linecap="round" 
+                stroke-linejoin="round" 
+                stroke-width="2" 
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            <span>{feature}</span>
+          </div>
+        ))}
+      </div>
+
+      <a href={service.buttonLink} class="service-button" aria-label={service.buttonText}>
+        <span>{service.buttonText}</span>
+        <svg 
+          class="button-icon"
+          xmlns="http://www.w3.org/2000/svg" 
+          fill="none" 
+          viewBox="0 0 24 24" 
+          stroke="currentColor"
+          aria-hidden="true"
+        >
+          <path 
+            stroke-linecap="round" 
+            stroke-linejoin="round" 
+            stroke-width="2" 
+            d="M14 5l7 7m0 0l-7 7m7-7H3"
+          />
+        </svg>
+      </a>
+    </section>
+  </div>
+</article>

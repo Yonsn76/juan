@@ -1,0 +1,111 @@
+---
+import '../../styles/quick-request.css';
+---
+
+<section class="quick-request-section">
+  <div class="quick-request-container">
+    <div class="quick-request-content">
+      <div class="quick-request-info">
+        <h2>¿No encuentras lo que buscas?</h2>
+        <p>
+          Contáctanos y te ayudaremos a encontrar el producto perfecto para ti y tu moto. 
+          Trabajamos con las mejores marcas y podemos conseguir piezas específicas para tu modelo.
+        </p>
+        <div class="quick-request-actions">
+          <a href="/contact" class="quick-request-btn quick-request-btn-primary">
+            <i class="fas fa-envelope"></i> Contactar ahora
+          </a>
+          <a href="https://wa.me/51917025103" target="_blank" class="quick-request-btn quick-request-btn-whatsapp">
+            <i class="fab fa-whatsapp"></i> WhatsApp
+          </a>
+        </div>
+      </div>
+
+      <div class="quick-request-form-container">
+        <div class="quick-request-form-wrapper">
+          <form id="quick-request-form" class="quick-request-form">
+            <h3>Solicitud Rápida</h3>
+            <p>Déjanos saber qué estás buscando y te contactaremos a la brevedad.</p>
+            
+            <div class="form-group">
+              <input 
+                type="text" 
+                name="name"
+                placeholder="Nombre" 
+                required
+                aria-label="Tu nombre"
+              >
+            </div>
+            
+            <div class="form-group">
+              <input 
+                type="email" 
+                name="email"
+                placeholder="Email" 
+                required
+                aria-label="Tu correo electrónico"
+              >
+            </div>
+            
+            <div class="form-group">
+              <textarea 
+                name="message"
+                placeholder="¿Qué producto estás buscando?" 
+                rows="3" 
+                required
+                aria-label="Mensaje con los detalles de lo que buscas"
+              ></textarea>
+            </div>
+            
+            <button type="submit">
+              Enviar Solicitud
+            </button>
+            
+            <div id="request-success" class="request-success">
+              ¡Gracias! Hemos recibido tu solicitud y te contactaremos pronto.
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('quick-request-form');
+    const successMessage = document.getElementById('request-success');
+
+    if (form && successMessage) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        // Obtener datos del formulario
+        const formData = new FormData(form);
+        const name = formData.get('name');
+        const email = formData.get('email');
+        const message = formData.get('message');
+
+        // Validación simple
+        if (!name || !email || !message) {
+          alert('Por favor, completa todos los campos del formulario.');
+          return;
+        }
+
+        // Aquí podrías agregar el código para enviar el formulario a un servidor
+        // Por ahora, solo mostramos el mensaje de éxito
+        
+        // Mostrar mensaje de éxito
+        successMessage.classList.add('show');
+
+        // Limpiar formulario
+        form.reset();
+
+        // Ocultar mensaje después de 5 segundos
+        setTimeout(() => {
+          successMessage.classList.remove('show');
+        }, 5000);
+      });
+    }
+  });
+</script>

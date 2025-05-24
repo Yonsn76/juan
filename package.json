@@ -1,0 +1,23 @@
+{
+  "name": "casa-biker-astro",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "setup": "node scripts/copy-assets.js",
+    "postinstall": "npm run setup"
+  },
+  "dependencies": {
+    "astro": "^4.0.3",
+    "@supabase/supabase-js": "^2.39.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.4",
+    "typescript": "^5.3.3"
+  }
+}
