@@ -1,8 +1,8 @@
 /* Lamborghini-Inspired Design System */
 :root {
   /* Primary Brand Colors - Lamborghini Inspired */
-  --lambo-black: #0a0a0a;
-  --lambo-dark: #1a1a1a;
+  --lambo-black: #ff1515;
+  --lambo-dark: #ff0000;
   --lambo-gray: #2a2a2a;
   --lambo-light-gray: #f5f5f5;
   --lambo-white: #ffffff;
@@ -11,7 +11,7 @@
   --lambo-orange: #ff8c42;
 
   /* Background Colors */
-  --bg-primary: #ff0101;
+  --bg-primary: #ffffff;
   --bg-secondary: #0a0a0a;
   --bg-tertiary: #1a1a1a;
   --bg-card: #ffffff;

@@ -26,15 +26,6 @@ const footerLinks = [
       { text: 'Accesorios', url: '/services#accesorios' },
       { text: 'Seguridad', url: '/services#seguridad' }
     ]
-  },
-  {
-    title: 'Legal',
-    links: [
-      { text: 'Términos y Condiciones', url: '/terms' },
-      { text: 'Política de Privacidad', url: '/privacy' },
-      { text: 'Política de Cookies', url: '/cookies' },
-      { text: 'Libro de Reclamaciones', url: '/complaints' }
-    ]
   }
 ];
 ---
@@ -112,13 +103,19 @@ const footerLinks = [
 
 <style>
   .footer {
-    background: var(--lambo-black);
-    color: var(--text-light);
-    border-top: 1px solid var(--lambo-gray);
-  }
-
-  .footer-top {
-    padding: var(--spacing-2xl) 0;
+    background: #1a1a1a;
+    background-image: 
+      linear-gradient(45deg, #2a2a2a 25%, transparent 25%),
+      linear-gradient(-45deg, #2a2a2a 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #2a2a2a 75%),
+      linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    color: #e0e0e0;
+    border-top: 4px solid #d4af37;
+    padding: 4rem 0 0;
+    position: relative;
+    overflow: hidden;
   }
 
   .footer-grid {
@@ -152,7 +149,7 @@ const footerLinks = [
 
   .footer-description {
     margin-bottom: var(--spacing-lg);
-    color: rgba(255, 255, 255, 0.7);
+    color: #d4d4d4;
     font-size: var(--text-sm);
     line-height: 1.6;
   }
@@ -168,25 +165,29 @@ const footerLinks = [
     justify-content: center;
     width: 40px;
     height: 40px;
-    border-radius: 0;
-    background: var(--lambo-gray);
-    color: var(--text-light);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 1px solid transparent;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .social-link:hover {
-    background: var(--lambo-gold);
-    color: var(--lambo-black);
+    background: var(--lambo-red);
     transform: translateY(-3px);
-    border-color: var(--lambo-gold);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
   }
 
   .footer-title {
-    color: var(--text-primary);
-    font-size: var(--text-lg);
-    font-weight: 600;
+    color: #ffffff; /* Blanco puro */
+    font-size: 1.25rem;
+    font-weight: 700; /* Más grueso */
     margin-bottom: var(--spacing-md);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 2px solid #ffffff; /* Borde blanco */
+    display: inline-block;
+    padding-bottom: 5px;
   }
 
   .footer-list {
@@ -197,14 +198,18 @@ const footerLinks = [
 
   .footer-link {
     display: block;
-    color: var(--text-secondary);
+    color: #ffffff; /* Blanco puro */
     text-decoration: none;
     padding: var(--spacing-xs) 0;
-    transition: color var(--transition-normal);
+    transition: all 0.3s ease;
+    font-weight: 500; /* Peso normal */
   }
 
   .footer-link:hover {
-    color: var(--text-primary);
+    color: #ffffff; /* Blanco puro */
+    transform: translateX(5px);
+    text-decoration: underline; /* Subrayado al pasar el mouse */
+    opacity: 0.9; /* Ligera transparencia al hacer hover */
   }
 
   .contact-info p {
@@ -212,19 +217,27 @@ const footerLinks = [
     align-items: center;
     gap: var(--spacing-sm);
     margin-bottom: var(--spacing-sm);
-    color: var(--text-secondary);
+    color: #e0e0e0;
+    transition: all 0.3s ease;
+  }
+  
+  .contact-info p:hover {
+    color: #ff6b35;
   }
 
   .contact-info i {
-    color: var(--primary);
+    color: #ff6b35;
     width: 16px;
   }
 
   .footer-bottom {
-    background-color: var(--bg-tertiary);
-    padding: var(--spacing-md) 0;
+    padding: 1.5rem 0;
     text-align: center;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.875rem;
+    color: #a0a0a0;
+    background: rgba(0, 0, 0, 0.5);
+    position: relative;
+    z-index: 1;
   }
 
   .copyright {

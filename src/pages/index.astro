@@ -112,17 +112,24 @@ const brands = [
   <section class="hero-banner" id="hero-banner">
     <!-- Promo Box (fuera del carrusel) -->
     <div class="promo-box">
-      <h3 class="promo-title">¡Oferta Especial!</h3>
-      <div class="promo-deal">Descuento <span class="promo-percentage">30%<span class="promo-upto">HASTA</span></span></div>
-      <p class="promo-details">*Accesorios, Repuestos, Tunning, Mantenimiento</p>
-      <a href="/catalog" class="promo-button">Comprar Ahora</a>
+      <div class="promo-bg">
+        <div class="promo-bg-item" style="background-image: url('/images/promo1.png'); animation-delay: 0s;"></div>
+        <div class="promo-bg-item" style="background-image: url('/images/lavada.png'); animation-delay: 4s;"></div>
+        <div class="promo-bg-item" style="background-image: url('/images/promo.png'); animation-delay: 8s;"></div>
+        <div class="promo-bg-item" style="background-image: url('/images/promo2.jpg'); animation-delay: 12s;"></div>
+        <div class="promo-bg-item" style="background-image: url('/images/promo3.jpg'); animation-delay: 16s;"></div>
+        <div class="promo-bg-item" style="background-image: url('/images/promo4.jpg'); animation-delay: 20s;"></div>
+      </div>
+      <div class="promo-content">
+        <a href="/catalog" class="promo-button">Preguntar</a>
+      </div>
     </div>
     
     <div class="hero-slides-container">
       <!-- Slide 1: Repuestos -->
       <div class="hero-slide active" data-index="0">
         <div class="hero-overlay" style="background: linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.5))"></div>
-        <div class="hero-background" style="background-image: url('/images/promo.png')"></div>
+        <div class="hero-background" style="background-image: url('/images/maintent_hero.png')"></div>
         <div class="hero-content">
           <div class="hero-text">
             <span class="hero-subtitle">PREMIUM MOTORCYCLE EXPERIENCE</span>
@@ -140,7 +147,7 @@ const brands = [
       <!-- Slide 2: Personalización -->
       <div class="hero-slide" data-index="1">
         <div class="hero-overlay" style="background: linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.5))"></div>
-        <div class="hero-background" style="background-image: url('/images/tunning.png')"></div>
+        <div class="hero-background" style="background-image: url('/images/personalisation_hero.png')"></div>
         <div class="hero-content">
           <div class="hero-text">
             <span class="hero-subtitle">PREMIUM MOTORCYCLE EXPERIENCE</span>
@@ -482,21 +489,122 @@ const brands = [
     opacity: 0;
   }
   
-  /* Promo Box Styles */
+  /* Promo Box - Versión Móvil (por defecto) */
   .promo-box {
-    position: absolute;
-    right: 8%;
-    bottom: -35%;
-    background-color: #d00;
-    color: white;
-    padding: 15px 20px;
-    border-radius: 5px;
-    max-width: 250px;
-    text-align: center;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    animation: fadeIn 1s ease-out;
-    z-index: 10;
+    display: none; /* Ocultar por defecto en móviles */
   }
+  
+  /* Versión Móvil */
+  @media (max-width: 1023px) {
+    .promo-box {
+      display: flex !important;
+      position: absolute;
+      right: 5%;
+      top: 85%;
+      transform: translateY(20%);
+      max-width: 90%;
+      width: 280px;
+      min-height: 100px;
+      height: 35%;
+      padding: 15px 20px;
+      border-radius: 10px;
+      border: 2px solid #fff;
+      text-align: center;
+      box-shadow: 0 5px 25px rgba(0,0,0,0.5);
+      overflow: hidden;
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+    
+    .promo-button {
+      padding: 12px 20px;
+      font-size: 1rem;
+      width: 100%;
+    }
+    
+    .promo-bg-item {
+      opacity: 0.6 !important;
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      background-size: cover !important;
+      background-position: center !important;
+      animation: changeImage 24s infinite ease-in-out !important;
+    }
+  }
+  
+  /* Versión Desktop */
+  @media (min-width: 1024px) {
+    .promo-box {
+      display: block;
+      position: absolute;
+      right: 8%;
+      bottom: -35%;
+      background-color: rgba(0, 0, 0, 0.85);
+      color: white;
+      padding: 25px 30px;
+      border-radius: 10px;
+      max-width: 280px;
+      border: 2px solid #fff;
+      text-align: center;
+      box-shadow: 0 5px 25px rgba(0,0,0,0.5);
+      animation: fadeIn 1s ease-out;
+      z-index: 10;
+      overflow: hidden;
+    }
+    
+    .promo-box {
+      position: absolute;
+      right: 8%;
+      bottom: -35%;
+      max-width: 280px;
+      width: 100%;
+      height: 60%; /* Aumentada la altura */
+      padding: 25px 30px;
+      border-radius: 10px;
+      border: 2px solid #fff;
+      text-align: center;
+      box-shadow: 0 5px 25px rgba(0,0,0,0.5);
+      overflow: hidden;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .promo-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: -1;
+    }
+    
+    .promo-bg-item {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0;
+      animation: changeImage 24s infinite ease-in-out;
+    }
+    
+    .promo-content {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+    }
+    }
+  
   
   .promo-title {
     font-size: 1.4rem;
@@ -549,8 +657,9 @@ const brands = [
   }
   
   .promo-button:hover {
-    background-color: #333;
-    transform: translateY(-2px);
+    background-color: #cc0000;
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
   }
 
   /* Section Headers */
@@ -721,8 +830,8 @@ const brands = [
 
   /* Products Section */
   .products-section {
-    padding: 5rem 0;
-    background-color: white;
+    padding: 6rem 0;
+    background-color: #fff;
   }
 
   .products-grid {
@@ -1032,6 +1141,23 @@ const brands = [
     }
   }
 
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes changeImage {
+    0%, 13% {
+      opacity: 0.7;
+    }
+    16.6%, 95% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 0.7;
+    }
+  }
+
   /* Responsive Design */
   @media (max-width: 1200px) {
     .hero-title {
@@ -1055,6 +1181,10 @@ const brands = [
   }
 
   @media (max-width: 768px) {
+    .products-section {
+      margin-top: 80px; /* Añadido margen superior para móviles */
+    }
+    
     .testimonials-grid {
       grid-template-columns: 1fr;
     }
@@ -1064,8 +1194,47 @@ const brands = [
     }
 
     .hero-banner {
-      height: 70vh;
-      min-height: 500px;
+      height: auto;
+      min-height: 60vh;
+      width: 100%;
+      margin: 0;
+      padding: 0 0 60px 0;
+      position: relative;
+      overflow: visible;
+    }
+    
+    .hero-background {
+      width: 100%;
+      min-height: 60vh;
+      background-size: cover !important;
+      background-position: center !important;
+    }
+    
+    .hero-slides-container,
+    .hero-slide {
+      width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    
+    /* Versión Móvil */
+    .promo-box {
+      display: block;
+      position: absolute;
+      left: 50%;
+      bottom: -90px;
+      transform: translateX(-50%);
+      width: 85%;
+      max-width: 300px;
+      margin: 0 auto;
+      z-index: 100;
+      background-color: #d00;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 5px;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      animation: fadeIn 1s ease-out;
     }
 
     .service-card,

@@ -37,7 +37,16 @@ const colorClasses: Record<Props['service']['color'], string> = {
 >
   <div class="card-content">
     <section class="media-section" aria-label="Video de servicio">
-      <video class="service-video" autoplay muted loop playsinline poster="/images/services-placeholder.jpg">
+      <video 
+        class="service-video" 
+        autoplay 
+        muted 
+        loop 
+        playsinline 
+        preload="auto"
+        poster="/images/services-placeholder.jpg"
+        aria-hidden="true"
+      >
         <source src={`/videos/${service.video}`} type="video/mp4" />
         Tu navegador no soporta videos HTML5.
       </video>
@@ -46,34 +55,41 @@ const colorClasses: Record<Props['service']['color'], string> = {
 
     <section class="content-section">
       <header class="service-header">
-        <span class="icon-container" aria-hidden="true">
+        <div class="icon-container" aria-hidden="true">
           <Fragment set:html={service.icon} />
-        </span>
-        <h3 class="service-title" id={`service-title-${service.id}`}>{service.title}</h3>
+        </div>
+        <h2 class="service-title" id={`service-title-${service.id}`}>
+          {service.title}
+        </h2>
       </header>
       <section class="service-description" set:html={service.description} aria-label="Descripción del servicio" />
 
       <div class="features-grid" aria-label="Características principales">
-        {service.features.map(feature => (
-          <div class="feature-item" key={feature}>
-            <svg 
-              class="feature-icon"
-              xmlns="http://www.w3.org/2000/svg" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path 
-                stroke-linecap="round" 
-                stroke-linejoin="round" 
-                stroke-width="2" 
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            <span>{feature}</span>
-          </div>
-        ))}
+        {
+          service.features.map((feature, index) => {
+            const featureId = `feature-${service.id}-${index}`;
+            return (
+              <div class="feature-item" data-feature-id={featureId}>
+                <svg 
+                  class="feature-icon"
+                  xmlns="http://www.w3.org/2000/svg" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round" 
+                    stroke-width="2" 
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                <span>{feature}</span>
+              </div>
+            );
+          })
+        }
       </div>
 
       <a href={service.buttonLink} class="service-button" aria-label={service.buttonText}>

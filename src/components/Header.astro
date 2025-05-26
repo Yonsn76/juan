@@ -5,7 +5,7 @@ const navItems = [
   { href: '/', text: 'INICIO' },
   { href: '/services', text: 'SERVICIOS' },
   { href: '/catalog', text: 'CATÁLOGO' },
-  { href: '/nosotros', text: 'NOSOTROS' },
+  { href: '/about', text: 'NOSOTROS' },
   { href: '/contact', text: 'CONTACTO' }
 ];
 
@@ -21,7 +21,7 @@ const logoPath = '/images/logo.png';
       <ul class="nav-list">
         {navItems.map(item => (
           <li class="nav-item">
-            <a href={item.href} class={`nav-link ${item.href === '/catalog' ? 'active' : ''}`}>
+            <a href={item.href} class="nav-link">
               <span>{item.text}</span>
               <span class="nav-link-indicator"></span>
             </a>
