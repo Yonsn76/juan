@@ -193,6 +193,108 @@ const { images } = Astro.props;
   }
 </script>
 
-<style>
-  /* Carousel styles will be imported from carousel.css */
+<style is:global>
+  .carousel {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0;
+    background: var(--lambo-black);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .carousel-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(10, 10, 10, 0.4), transparent);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .carousel-container {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+  }
+
+  .carousel-slide {
+    min-width: 100%;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+  }
+
+  .carousel-slide.active {
+    opacity: 1;
+  }
+
+  .carousel-slide img {
+    width: 100%;
+    height: 100vh;
+    object-fit: cover;
+    display: block;
+  }
+
+  .carousel-indicators {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    display: flex;
+    gap: 1rem;
+    transform: translateX(-50%);
+    z-index: 10;
+  }
+
+  .carousel-indicator {
+    width: 3px;
+    height: 40px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 0;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+  }
+
+  .carousel-indicator.active {
+    background-color: var(--lambo-gold);
+    transform: scaleY(1.2);
+  }
+
+  .carousel-nav {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    transform: translateY(-50%);
+    padding: 0 2rem;
+    z-index: 10;
+  }
+
+  .carousel-button {
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text-light);
+    padding: 1rem;
+    border-radius: 0;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .carousel-button svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .carousel-button:hover {
+    background-color: var(--lambo-gold);
+    color: var(--lambo-black);
+    border-color: var(--lambo-gold);
+    transform: scale(1.1);
+  }
 </style>

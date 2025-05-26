@@ -1,171 +1,103 @@
+// auth.js - Funciones de autenticación simplificadas
 import { supabase } from './supabase';
+import { parse } from 'cookie';
 
-/**
- * Intenta autenticar a un usuario con email y contraseña
- * @param {string} email - Email del usuario
- * @param {string} password - Contraseña del usuario
- * @returns {Promise<{user: Object|null, error: string|null}>} - Usuario autenticado o error
- */
+// Nombre de la cookie de sesión
+const SESSION_COOKIE_NAME = 'admin-session';
+
+// Función para iniciar sesión (simplificada para proyecto de fin de semana)
 export async function login(email, password) {
   try {
-    console.log('Intentando iniciar sesión con:', { email });
-
-    // Primero, verificar si el usuario existe por email
-    console.log('Verificando si el usuario existe...');
-    const { data: userData, error: userError } = await supabase
+    // Buscar el usuario en la tabla 'users'
+    const { data: user, error } = await supabase
       .from('users')
       .select('*')
       .eq('email', email)
-      .maybeSingle();
+      .single();
 
-    if (userError) {
-      console.error('Error al buscar usuario:', userError);
-      return { user: null, error: 'Error al buscar usuario: ' + userError.message };
+    if (error) {
+      console.error('Error al buscar usuario:', error);
+      return { user: null, error: 'Error al buscar usuario' };
     }
 
-    console.log('Resultado de búsqueda de usuario:', userData ? 'Usuario encontrado' : 'Usuario no encontrado');
-
-    // Si no se encuentra el usuario, devolver error
-    if (!userData) {
+    if (!user) {
       return { user: null, error: 'Usuario no encontrado' };
     }
 
-    // Verificar la contraseña
-    console.log('Verificando contraseña...');
-    if (userData.password !== password) {
-      console.log('Contraseña incorrecta');
+    // Verificar la contraseña (sin hash para simplicidad)
+    if (user.password !== password) {
       return { user: null, error: 'Contraseña incorrecta' };
     }
 
-    console.log('Inicio de sesión exitoso para:', userData.email);
-
-    // No devolver la contraseña al cliente
-    const { password: _, ...userWithoutPassword } = userData;
-
-    return { user: userWithoutPassword, error: null };
+    return { user, error: null };
   } catch (err) {
-    console.error('Error inesperado al iniciar sesión:', err);
-    return { user: null, error: 'Error al iniciar sesión' };
+    console.error('Error en login:', err);
+    return { user: null, error: err instanceof Error ? err.message : 'Error desconocido' };
   }
 }
 
-/**
- * Cierra la sesión del usuario actual
- * @returns {Promise<{success: boolean, error: string|null}>}
- */
-export async function logout() {
-  // En una implementación real con supabase auth, usaríamos:
-  // return await supabase.auth.signOut();
+// Función para crear una cookie de sesión (simplificada)
+export function createSessionCookie(user) {
+  // Crear un objeto de sesión simple
+  const session = {
+    id: user.id,
+    email: user.email,
+    name: user.name || 'Admin',
+    timestamp: new Date().toISOString()
+  };
 
-  // Para nuestro ejemplo simplificado, solo devolvemos éxito
-  return { success: true, error: null };
+  // Convertir a base64 para un almacenamiento simple
+  const sessionValue = Buffer.from(JSON.stringify(session)).toString('base64');
+  
+  // Configurar la cookie con opciones básicas
+  return `${SESSION_COOKIE_NAME}=${sessionValue}; Path=/; HttpOnly; SameSite=Strict; Max-Age=86400`;
 }
 
-/**
- * Verifica si hay un usuario autenticado en la sesión
- * @param {Object} request - Objeto de solicitud de Astro
- * @returns {Promise<{user: Object|null, redirect: boolean}>}
- */
+// Función para verificar la autenticación
 export async function checkAuth(request) {
   try {
-    console.log('Verificando autenticación...');
+    // Obtener las cookies de la solicitud
+    const cookies = parse(request.headers.get('Cookie') || '');
+    const sessionCookie = cookies[SESSION_COOKIE_NAME];
 
-    // Obtener la cookie de sesión
-    const cookies = request.headers.get('cookie') || '';
-    console.log('Cookies recibidas:', cookies);
-
-    const sessionCookie = cookies
-      .split(';')
-      .find(c => c.trim().startsWith('session='));
-
+    // Si no hay cookie de sesión, redirigir al login
     if (!sessionCookie) {
-      console.log('No se encontró cookie de sesión');
       return { user: null, redirect: true };
     }
 
-    console.log('Cookie de sesión encontrada:', sessionCookie);
+    // Decodificar la cookie de sesión
+    const sessionStr = Buffer.from(sessionCookie, 'base64').toString('utf8');
+    const session = JSON.parse(sessionStr);
 
-    try {
-      // Decodificar la cookie (en formato JSON)
-      const sessionValue = sessionCookie.split('=')[1].trim();
-      console.log('Valor de la cookie:', sessionValue);
-
-      const sessionData = decodeURIComponent(sessionValue);
-      console.log('Datos decodificados:', sessionData);
-
-      const session = JSON.parse(sessionData);
-      console.log('Sesión parseada:', session);
-
-      if (!session || !session.userId) {
-        console.log('Sesión inválida: no contiene userId');
-        return { user: null, redirect: true };
-      }
-
-      console.log('ID de usuario en sesión:', session.userId);
-
-      // Verificar que el usuario existe en la base de datos
-      const { data: user, error } = await supabase
-        .from('users')
-        .select('id, email, name, role, created_at, updated_at')
-        .eq('id', session.userId)
-        .single();
-
-      if (error) {
-        console.error('Error al obtener usuario de la base de datos:', error);
-        return { user: null, redirect: true };
-      }
-
-      if (!user) {
-        console.log('Usuario no encontrado en la base de datos');
-        return { user: null, redirect: true };
-      }
-
-      console.log('Usuario autenticado:', user.email);
-      return { user, redirect: false };
-    } catch (parseErr) {
-      console.error('Error al parsear la cookie de sesión:', parseErr);
+    // Verificar que la sesión tenga los datos necesarios
+    if (!session.id || !session.email) {
       return { user: null, redirect: true };
     }
+
+    // Devolver el usuario de la sesión (sin verificar en base de datos para simplicidad)
+    return { user: session, redirect: false };
   } catch (err) {
     console.error('Error al verificar autenticación:', err);
     return { user: null, redirect: true };
   }
 }
 
-/**
- * Crea una cookie de sesión para el usuario
- * @param {Object} user - Datos del usuario
- * @returns {string} - String de cookie para establecer en la respuesta
- */
-export function createSessionCookie(user) {
-  try {
-    console.log('Creando cookie de sesión para usuario:', user.id);
+// Middleware para proteger rutas (simplificado)
+export async function authMiddleware(request) {
+  const { user, redirect } = await checkAuth(request);
 
-    const session = {
-      userId: user.id,
-      role: user.role,
-      expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 horas
-    };
-
-    const sessionJson = JSON.stringify(session);
-    console.log('Datos de sesión:', sessionJson);
-
-    const cookieValue = encodeURIComponent(sessionJson);
-    const cookie = `session=${cookieValue}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${24 * 60 * 60}`;
-
-    console.log('Cookie generada correctamente');
-    return cookie;
-  } catch (err) {
-    console.error('Error al crear cookie de sesión:', err);
-    // Devolver una cookie básica en caso de error
-    return `session=error; Path=/; HttpOnly; SameSite=Strict; Max-Age=3600`;
+  // Si no hay usuario y se requiere redirección, redirigir al login
+  if (!user && redirect) {
+    return new Response('', {
+      status: 302,
+      headers: {
+        'Location': '/admin/login'
+      }
+    });
   }
-}
 
-/**
- * Crea una cookie para eliminar la sesión
- * @returns {string} - String de cookie para establecer en la respuesta
- */
-export function createLogoutCookie() {
-  return 'session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0';
+  // Si hay usuario, establecerlo en locals para que esté disponible en las páginas
+  request.locals = request.locals || {};
+  request.locals.user = user;
+  return null; // Continuar con la solicitud
 }

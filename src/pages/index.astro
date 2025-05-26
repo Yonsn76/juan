@@ -3,10 +3,11 @@ import Layout from "../layouts/Layout.astro";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import Carousel from "../components/Carousel.astro";
-import CartButton from "../components/Cart/CartButton.astro";
-import CartModal from "../components/Cart/CartModal.astro";
+// Cart functionality has been removed
 import BrandsGrid from "../components/BrandsGrid.astro";
+import ProductCard from "../components/Catalog/ProductCard.astro";
 import { supabase } from "../lib/supabase";
+import type { Product } from "../types/catalog";
 
 const carouselImages = [
   { src: "/images/promo.png", alt: "Promociones especiales" },
@@ -51,7 +52,7 @@ const services = [
 ];
 
 // Obtener productos destacados desde Supabase
-let featuredProducts = [];
+let featuredProducts: Product[] = [];
 
 try {
   // Obtener productos destacados (featured = true) con sus categorías
@@ -70,76 +71,28 @@ try {
   // Transformar los datos al formato esperado por el componente
   featuredProducts = (productsData || []).map(product => {
     // Obtener la URL de la imagen desde Supabase si es necesario
-    let imageUrl = `/images/${product.image}`;
+const imageUrl = product.image?.startsWith('http') 
+  ? product.image 
+  : supabase.storage.from('productos').getPublicUrl(product.image).data.publicUrl;
 
-    if (product.image && !product.image.startsWith('http')) {
-      try {
-        const { data } = supabase.storage
-          .from('productos')
-          .getPublicUrl(product.image);
+return {
+  id: product.id,
+  name: product.name,
+  description: product.name,
+  price: product.price,
+  image: imageUrl,
+  featured: product.featured,
+  details: product.name,
+  discount: product.discount,
+  category_id: product.category_id,
+  categories: product.categories
+};
 
-        if (data && data.publicUrl) {
-          imageUrl = data.publicUrl;
-        }
-      } catch (error) {
-        console.error('Error al obtener URL de imagen:', error);
-      }
-    }
-
-    return {
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image: imageUrl,
-      category: product.categories?.name || 'Sin categoría',
-      badge: product.discount ? `${product.discount}% OFF` : 'Destacado',
-      imageIsUrl: true // Indicar que la imagen ya es una URL completa
-    };
   });
 
   console.log(`Obtenidos ${featuredProducts.length} productos destacados de Supabase`);
 } catch (error) {
   console.error('Error al obtener productos destacados de Supabase:', error);
-
-  // Si hay un error, usar productos estáticos como respaldo
-  featuredProducts = [
-    {
-      id: "casco1",
-      name: "Casco Integral",
-      price: 299.99,
-      image: "products/casco1.png",
-      category: "Cascos",
-      badge: "Nuevo",
-      imageIsUrl: false
-    },
-    {
-      id: "accesorio1",
-      name: "Kit de Luces LED",
-      price: 149.99,
-      image: "products/accesorio1.png",
-      category: "Accesorios",
-      badge: "Popular",
-      imageIsUrl: false
-    },
-    {
-      id: "ropa1",
-      name: "Chaqueta de Cuero",
-      price: 399.99,
-      image: "products/ropa1.png",
-      category: "Ropa",
-      badge: "Destacado",
-      imageIsUrl: false
-    },
-    {
-      id: "mantenimiento1",
-      name: "Kit de Mantenimiento",
-      price: 199.99,
-      image: "products/mantenimiento1.png",
-      category: "Mantenimiento",
-      badge: "Oferta",
-      imageIsUrl: false
-    },
-  ];
 }
 
 const brands = [
@@ -155,17 +108,21 @@ const brands = [
 <Layout title="Inicio">
   <Header slot="header" />
 
-  <!-- Hero Banner with Carousel -->
+  <!-- Hero Banner with Carousel - Lamborghini Style -->
   <section class="hero-banner">
+    <div class="hero-overlay"></div>
     <div class="hero-content">
-      <h1 class="hero-title">Zona Biker 15</h1>
-      <p class="hero-subtitle">
-        Tu destino para todo lo relacionado con motocicletas
-      </p>
-      <div class="hero-buttons">
-        <a href="/services" class="btn btn-primary btn-lg">Nuestros Servicios</a
-        >
-        <a href="/catalog" class="btn btn-outline btn-lg">Ver Catálogo</a>
+      <div class="hero-text">
+        <span class="hero-subtitle">PREMIUM MOTORCYCLE EXPERIENCE</span>
+        <h1 class="hero-title">ZONA BIKER 15</h1>
+        <p class="hero-description">
+          Donde la pasión por las motocicletas se encuentra con la excelencia.
+          Descubre un mundo de velocidad, estilo y adrenalina.
+        </p>
+        <div class="hero-buttons">
+          <a href="/services" class="btn btn-primary">EXPLORAR SERVICIOS</a>
+          <a href="/catalog" class="btn btn-secondary">VER CATÁLOGO</a>
+        </div>
       </div>
     </div>
     <div class="hero-carousel-wrapper">
@@ -226,55 +183,17 @@ const brands = [
           exigentes
         </p>
       </div>
-      <div class="grid grid-cols-4 products-grid">
+      <div class="products-grid">
         {
           featuredProducts.map((product) => (
-            <div class="product-card">
-              {product.badge && (
-                <div class="product-badge">{product.badge}</div>
-              )}
-              <div class="product-image">
-                <img
-                  src={product.imageIsUrl ? product.image : `/images/${product.image}`}
-                  alt={product.name}
-                  loading="lazy"
-                  onerror="this.src='/images/placeholder.jpg'"
-                />
-                <div class="product-actions">
-                  <button class="product-action-btn" title="Ver detalles">
-                    <i class="fas fa-eye" />
-                  </button>
-                  <button class="product-action-btn" title="Añadir a favoritos">
-                    <i class="fas fa-heart" />
-                  </button>
-                </div>
-              </div>
-              <div class="product-info">
-                <span class="product-category">{product.category}</span>
-                <h3>{product.name}</h3>
-                <div class="product-rating">
-                  <i class="fas fa-star" />
-                  <i class="fas fa-star" />
-                  <i class="fas fa-star" />
-                  <i class="fas fa-star" />
-                  <i class="fas fa-star-half-alt" />
-                  <span>(4.5)</span>
-                </div>
-                <p class="product-price">S/ {product.price.toFixed(2)}</p>
-                <button
-                  class="btn btn-primary add-to-cart"
-                  data-id={product.id}
-                  data-name={product.name}
-                  data-price={product.price}
-                  data-image={product.image}
-                >
-                  <i class="fas fa-cart-plus" /> Agregar al carrito
-                </button>
-              </div>
-            </div>
+            <ProductCard 
+              product={product}
+              categoryName={product.categories?.name || 'Sin categoría'}
+            />
           ))
         }
       </div>
+
       <div class="products-cta">
         <a href="/catalog" class="btn btn-outline btn-lg">
           Ver catálogo completo <i class="fas fa-arrow-right"></i>
@@ -284,7 +203,7 @@ const brands = [
   </section>
 
   <!-- Brands Section -->
-  <section class="brands-section">
+  <section class="brands-section" id="brands">
     <div class="container">
       <div class="section-header">
         <span class="section-subtitle">Trabajamos con las mejores</span>
@@ -299,25 +218,31 @@ const brands = [
     </div>
   </section>
 
-  <CartButton />
-  <CartModal />
-
   <Footer slot="footer" />
 </Layout>
 
 <style>
-  /* Hero Banner */
+  /* Hero Banner - Lamborghini Style */
   .hero-banner {
     position: relative;
-    height: 80vh;
-    min-height: 600px;
-    max-height: 800px;
+    height: 100vh;
+    min-height: 700px;
     overflow: hidden;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     margin-top: var(--header-height);
-    background-color: var(--gray-900);
+    background: var(--lambo-black);
+  }
+
+  .hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--gradient-hero);
+    z-index: 2;
   }
 
   .hero-carousel-wrapper {
@@ -331,42 +256,56 @@ const brands = [
 
   .hero-content {
     position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
     z-index: 10;
-    padding: 2rem;
-    color: white;
+    padding: 0 5%;
+    color: var(--text-light);
     width: 100%;
-    max-width: 1000px;
+    max-width: 1400px;
     margin: 0 auto;
   }
 
-  .hero-title {
-    font-size: 4rem;
-    font-weight: 800;
-    margin-bottom: 1rem;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-    animation: fadeInDown 1s ease-out;
+  .hero-text {
+    max-width: 600px;
   }
 
   .hero-subtitle {
-    font-size: 1.5rem;
-    max-width: 600px;
-    margin-bottom: 2rem;
-    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    font-family: var(--font-accent);
+    font-size: 0.9rem;
+    font-weight: 400;
+    letter-spacing: 3px;
+    color: var(--lambo-gold);
+    margin-bottom: 1rem;
+    text-transform: uppercase;
     animation: fadeInUp 1s ease-out 0.3s forwards;
+    opacity: 0;
+  }
+
+  .hero-title {
+    font-family: var(--font-heading);
+    font-size: clamp(3rem, 8vw, 6rem);
+    font-weight: 900;
+    line-height: 0.9;
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    color: var(--text-light);
+    animation: fadeInDown 1s ease-out;
+  }
+
+  .hero-description {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 3rem;
+    color: rgba(255, 255, 255, 0.8);
+    max-width: 500px;
+    animation: fadeInUp 1s ease-out 0.5s forwards;
     opacity: 0;
   }
 
   .hero-buttons {
     display: flex;
-    gap: 1rem;
-    animation: fadeInUp 1s ease-out 0.6s forwards;
+    gap: 1.5rem;
+    animation: fadeInUp 1s ease-out 0.7s forwards;
     opacity: 0;
   }
 
@@ -543,7 +482,23 @@ const brands = [
   }
 
   .products-grid {
-    gap: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.5rem;
+  }
+
+  @media (max-width: 768px) {
+    .products-grid {
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .products-grid {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 0.75rem;
+    }
   }
 
   .product-card {
@@ -556,20 +511,21 @@ const brands = [
     height: 100%;
     display: flex;
     flex-direction: column;
+    border: 1px solid rgba(0, 0, 0, 0.1);
   }
 
   .product-badge {
     position: absolute;
     top: 1rem;
     right: 1rem;
-    background: var(--biker-red);
+    background: #00bcd4; /* Color celeste */
     color: white;
     padding: 0.5rem 1rem;
     border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 700;
     z-index: 10;
-    box-shadow: 0 4px 10px rgba(227, 6, 19, 0.3);
+    box-shadow: 0 4px 10px rgba(0, 188, 212, 0.3);
   }
 
   .product-card:hover {
@@ -882,45 +838,136 @@ const brands = [
     }
   }
 
-  @media (max-width: 576px) {
-    .services-grid,
+@media (max-width: 576px) {
     .products-grid {
       grid-template-columns: 1fr;
+      gap: 0.75rem;
     }
 
-    .hero-title {
-      font-size: 2rem;
-    }
-
-    .hero-subtitle {
-      font-size: 1rem;
-    }
-
-    .hero-buttons {
-      flex-direction: column;
-      width: 100%;
-    }
-
-    .hero-buttons .btn {
-      width: 100%;
-    }
-
-    .section-title {
-      font-size: 1.75rem;
-    }
-
-    .service-card,
-    .product-card,
-    .testimonial-card {
-      padding: 1.25rem;
+    .product-card {
+      padding: 0.5rem;
     }
 
     .product-info {
-      padding: 1rem;
+      padding: 0.75rem;
     }
 
     .product-price {
       font-size: 1.25rem;
+    }
+}
+
+
+  /* Lamborghini Style Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 2.5rem;
+    font-family: var(--font-heading);
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-decoration: none;
+    border: 2px solid transparent;
+    border-radius: 0;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    min-width: 200px;
+  }
+
+  .btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+
+  .btn:hover::before {
+    left: 100%;
+  }
+
+  .btn-primary {
+    background: var(--lambo-gold);
+    color: var(--lambo-black);
+    border-color: var(--lambo-gold);
+  }
+
+  .btn-primary:hover {
+    background: transparent;
+    color: var(--lambo-gold);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--text-light);
+    border-color: var(--text-light);
+  }
+
+  .btn-secondary:hover {
+    background: var(--text-light);
+    color: var(--lambo-black);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
+  }
+
+  /* Animations */
+  @keyframes fadeInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .hero-banner {
+      height: 80vh;
+      min-height: 600px;
+    }
+
+    .hero-content {
+      padding: 0 1rem;
+      text-align: center;
+    }
+
+    .hero-text {
+      max-width: 100%;
+    }
+
+    .hero-buttons {
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .btn {
+      width: 100%;
+      max-width: 280px;
     }
   }
 </style>
@@ -987,37 +1034,7 @@ const brands = [
       });
     });
 
-    // Initialize cart functionality
-    import("../scripts/cart").catch((err) =>
-      console.error("Failed to load cart script:", err),
-    );
-
-    // Add to cart functionality
-    document.querySelectorAll(".add-to-cart").forEach((button) => {
-      button.addEventListener("click", () => {
-        const { id, name, price, image } = (button as HTMLElement).dataset;
-        if (!id || !name || !price || !image) return;
-
-        const cart = (window as any).cart;
-        if (!cart) return;
-
-        // Add animation effect
-        const productCard = button.closest(".product-card");
-        if (productCard) {
-          productCard.classList.add("added-to-cart");
-          setTimeout(() => {
-            productCard.classList.remove("added-to-cart");
-          }, 1000);
-        }
-
-        cart.addItem({
-          id,
-          name,
-          price: parseFloat(price),
-          image,
-        });
-      });
-    });
+    // Cart functionality has been removed
 
     // Animate elements on scroll
     const animateOnScroll = () => {

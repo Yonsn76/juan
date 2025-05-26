@@ -58,7 +58,7 @@ if (!userIdParam) {
     }
   } catch (err) {
     console.error('Error al obtener datos de Supabase:', err);
-    error = err.message || 'Error al obtener datos';
+    error = err instanceof Error ? err.message : 'Error al obtener datos';
   }
 }
 
@@ -67,38 +67,256 @@ console.log('Estado final:', { userData, error, method: Astro.request.method });
 
 <AdminLayout title="Editar Usuario" user={user}>
   <div class="admin-content-header">
-    <h2>Editar Usuario: {userData?.name}</h2>
-    <a href="/admin/users" class="admin-btn admin-btn-secondary">
+    <h2>Editar Usuario: {userData?.name || 'Cargando...'}</h2>
+    <a href="/admin/users/index_users" class="admin-btn admin-btn-secondary">
       <i class="fas fa-arrow-left"></i> Volver a la lista
     </a>
   </div>
   
-  <div id="error-message" class="admin-alert admin-alert-danger" style="display: none;">
+  {/* Mensajes de estado */}
+  <div id="error-message" class="admin-alert admin-alert-danger" style="display: none; margin-bottom: 1.5rem;">
     <i class="fas fa-exclamation-circle"></i>
     <span id="error-text"></span>
   </div>
   
-  <div id="success-message" class="admin-alert admin-alert-success" style="display: none;">
+  <div id="success-message" class="admin-alert admin-alert-success" style="display: none; margin-bottom: 1.5rem;">
     <i class="fas fa-check-circle"></i>
-    <span>Usuario actualizado correctamente. Redirigiendo...</span>
+    <span>¡Usuario actualizado correctamente! Redirigiendo...</span>
   </div>
   
+  {/* Mensaje de error general */}
   {error && (
-    <div class="admin-alert admin-alert-danger">
+    <div class="admin-alert admin-alert-danger" style="margin-bottom: 1.5rem;">
       <i class="fas fa-exclamation-circle"></i>
-      <span>Error: {error}</span>
+      <p>Error: {error}</p>
     </div>
   )}
   
+  {/* Estado de carga */}
   {!userData && !error && (
-    <div class="admin-alert admin-alert-info">
+    <div class="admin-alert admin-alert-info" style="margin-bottom: 1.5rem;">
       <i class="fas fa-spinner fa-spin"></i>
-      <span>Cargando datos del usuario...</span>
+      <p>Cargando datos del usuario...</p>
     </div>
   )}
   
   {userData ? (
     <form id="user-form" class="admin-form">
+      <input type="hidden" name="id" value={userData.id} />
+      
+      <div class="admin-form-row">
+        <div class="admin-form-group" style="flex: 1;">
+          <label for="user-name" class="admin-form-label">
+            Nombre completo <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            id="user-name"
+            name="name"
+            class="admin-form-input"
+            value={userData.name || ''}
+            required
+            placeholder="Nombre del usuario"
+          />
+          <small class="admin-form-help">Nombre completo del usuario</small>
+        </div>
+        
+        <div class="admin-form-group" style="flex: 1;">
+          <label for="user-email" class="admin-form-label">
+            Correo electrónico <span class="required">*</span>
+          </label>
+          <input
+            type="email"
+            id="user-email"
+            name="email"
+            class="admin-form-input"
+            value={userData.email || ''}
+            required
+            placeholder="correo@ejemplo.com"
+          />
+          <small class="admin-form-help">Correo electrónico del usuario</small>
+        </div>
+      </div>
+      
+      <div class="admin-form-row">
+        <div class="admin-form-group" style="flex: 1;">
+          <label for="user-phone" class="admin-form-label">
+            Teléfono
+          </label>
+          <input
+            type="tel"
+            id="user-phone"
+            name="phone"
+            class="admin-form-input"
+            value={userData.phone || ''}
+            placeholder="+56 9 1234 5678"
+          />
+          <small class="admin-form-help">Número de teléfono (opcional)</small>
+        </div>
+        
+        <div class="admin-form-group" style="flex: 1;">
+          <label for="user-role" class="admin-form-label">
+            Rol <span class="required">*</span>
+          </label>
+          <select 
+            id="user-role" 
+            name="role" 
+            class="admin-form-select"
+            required
+          >
+            <option value="">Seleccionar rol</option>
+            {availableRoles.map(role => (
+              <option 
+                value={role.value} 
+                selected={role.value === userData.role}
+              >
+                {role.label}
+              </option>
+            ))}
+          </select>
+          <small class="admin-form-help">Selecciona el rol del usuario</small>
+        </div>
+      </div>
+      
+      <div class="admin-form-group">
+        <label for="user-address" class="admin-form-label">
+          Dirección
+        </label>
+        <textarea
+          id="user-address"
+          name="address"
+          class="admin-form-textarea"
+          rows="2"
+          placeholder="Calle, número, comuna, región"
+        >{userData.address || ''}</textarea>
+        <small class="admin-form-help">Dirección completa (opcional)</small>
+      </div>
+      
+      <div class="admin-form-actions">
+        <button type="submit" class="admin-btn admin-btn-primary" id="save-btn">
+          <i class="fas fa-save"></i> Guardar Cambios
+        </button>
+        <a href="/admin/users/index_users" class="admin-btn admin-btn-outline">
+          <i class="fas fa-times"></i> Cancelar
+        </a>
+      </div>
+      
+      <style>
+        /* Estilos para la sección de información */
+        .admin-form-section {
+          margin-top: 2rem;
+          padding-top: 1.5rem;
+          border-top: 1px solid var(--border-color);
+        }
+        
+        .admin-form-section-title {
+          font-size: 1.1rem;
+          margin-bottom: 1rem;
+          color: var(--text-color);
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+        
+        .admin-form-section-title i {
+          color: var(--primary-color);
+        }
+        
+        .admin-form-info {
+          margin-top: 2rem;
+          padding: 1rem;
+          background-color: var(--card-background);
+          border-radius: var(--border-radius);
+          border: 1px solid var(--border-color);
+          font-size: 0.9rem;
+        }
+        
+        .admin-info-item {
+          display: flex;
+          margin-bottom: 0.5rem;
+          line-height: 1.5;
+        }
+        
+        .info-label {
+          font-weight: 500;
+          color: var(--text-secondary);
+          min-width: 150px;
+        }
+        
+        .info-value {
+          color: var(--text-color);
+        }
+        
+        /* Mejoras para móviles */
+        @media (max-width: 640px) {
+          .admin-form-row {
+            flex-direction: column;
+          }
+          
+          .admin-form-group {
+            width: 100%;
+          }
+          
+          .info-label {
+            min-width: 120px;
+          }
+        }
+      </style>
+      
+      <div class="admin-form-section">
+        <h3 class="admin-form-section-title">
+          <i class="fas fa-key"></i> Cambiar contraseña
+        </h3>
+        <p class="admin-form-help">
+          Deja estos campos en blanco si no deseas cambiar la contraseña.
+        </p>
+        
+        <div class="admin-form-row">
+          <div class="admin-form-group" style="flex: 1;">
+            <label for="user-password" class="admin-form-label">
+              Nueva contraseña
+            </label>
+            <input
+              type="password"
+              id="user-password"
+              name="password"
+              class="admin-form-input"
+              placeholder="••••••••"
+              minlength="6"
+            />
+            <small class="admin-form-help">Mínimo 6 caracteres</small>
+          </div>
+          
+          <div class="admin-form-group" style="flex: 1;">
+            <label for="user-confirm-password" class="admin-form-label">
+              Confirmar contraseña
+            </label>
+            <input
+              type="password"
+              id="user-confirm-password"
+              name="confirmPassword"
+              class="admin-form-input"
+              placeholder="••••••••"
+              minlength="6"
+            />
+          </div>
+        </div>
+      </div>
+      
+      <div class="admin-form-info">
+        <div class="admin-info-item">
+          <span class="info-label">Creado:</span>
+          <span class="info-value">
+            {userData.created_at ? new Date(userData.created_at).toLocaleString() : 'N/A'}
+          </span>
+        </div>
+        <div class="admin-info-item">
+          <span class="info-label">Última actualización:</span>
+          <span class="info-value">
+            {userData.updated_at ? new Date(userData.updated_at).toLocaleString() : 'N/A'}
+          </span>
+        </div>
+      </div>
       <!-- ID del usuario (oculto) -->
       <input type="hidden" id="user-id" name="id" value={userData.id}>
       
@@ -158,7 +376,7 @@ console.log('Estado final:', { userData, error, method: Astro.request.method });
       </div>
       
       <div class="admin-form-actions">
-        <a href="/admin/users" class="admin-btn admin-btn-secondary" id="cancel-btn">
+        <a href="/admin/users/index_users" class="admin-btn admin-btn-secondary" id="cancel-btn">
           <i class="fas fa-times"></i> Cancelar
         </a>
         <button type="submit" class="admin-btn admin-btn-primary" id="save-btn">
@@ -172,7 +390,7 @@ console.log('Estado final:', { userData, error, method: Astro.request.method });
         <i class="fas fa-exclamation-triangle"></i>
         <h3>Usuario no encontrado</h3>
         <p>El usuario que intentas editar no existe o ha sido eliminado.</p>
-        <a href="/admin/users" class="admin-btn admin-btn-primary">
+        <a href="/admin/users/index_users" class="admin-btn admin-btn-primary">
           <i class="fas fa-arrow-left"></i> Volver a la lista de usuarios
         </a>
       </div>

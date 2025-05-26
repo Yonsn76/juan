@@ -1,5 +1,5 @@
 ---
-import Layout from '../../../layouts/Layout.astro';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
 import '../../../styles/admin.css';
 import { supabase } from '../../../lib/supabase';
 
@@ -21,8 +21,11 @@ console.log('🔍 DEBUG - Tipo de ID:', typeof categoryId);
 console.log('🔍 DEBUG - URL completa:', Astro.url.toString());
 
 // Variables para almacenar los datos de la categoría
-let category: any = null;
-let error: string | null = null;
+let category = null;
+let error = null;
+
+// Obtener el usuario de locals (establecido por el middleware)
+const user = Astro.locals.user || { name: 'Admin' };
 
 // Obtener datos de Supabase
 if (!categoryIdParam) {
@@ -58,7 +61,7 @@ if (!categoryIdParam) {
     }
   } catch (err) {
     console.error('Error al obtener datos de Supabase:', err);
-    error = err.message || 'Error al obtener datos';
+    error = err instanceof Error ? err.message : 'Error al obtener datos';
   }
 }
 
@@ -108,198 +111,138 @@ if (Astro.request.method === 'POST') {
       } else {
         console.log('Categoría actualizada correctamente:', updatedData);
         // Redirigir a la lista de categorías
-        return Astro.redirect('/admin/categories');
+        return Astro.redirect('/admin/categories/index_categories');
       }
     }
-
-    // El código de manejo de errores ya está en el bloque else anterior
   } catch (err) {
     console.error('Error al procesar el formulario:', err);
-    error = err.message || 'Error al procesar el formulario';
+    error = err instanceof Error ? err.message : 'Error al procesar el formulario';
   }
 }
 
 console.log('Estado final:', { category, error, method: Astro.request.method });
 ---
 
-<Layout title="Editar Categoría - Casa Biker">
-  <div class="admin-container">
-    <header class="admin-header">
-      <div class="admin-header-content">
-        <h1>Editar Categoría</h1>
-        <div class="admin-user-info">
-          <span class="admin-username">Admin</span>
-          <button id="logout-btn" class="admin-logout-btn">
-            <i class="fas fa-sign-out-alt"></i> Cerrar sesión
-          </button>
+<AdminLayout title="Editar Categoría" user={user}>
+  <div class="admin-content-header">
+    <h1>Editar Categoría</h1>
+    <a href="/admin/categories/index_categories" class="admin-btn admin-btn-secondary">
+      <i class="fas fa-arrow-left"></i> Volver a Categorías
+    </a>
+  </div>
+
+  <div id="error-message" class="admin-alert admin-alert-danger" style="display: none;">
+    <i class="fas fa-exclamation-circle"></i>
+    <span id="error-text"></span>
+  </div>
+
+  <div id="success-message" class="admin-alert admin-alert-success" style="display: none;">
+    <i class="fas fa-check-circle"></i>
+    <span>Categoría actualizada correctamente. Redirigiendo...</span>
+  </div>
+
+  {error && (
+    <div class="admin-alert admin-alert-danger">
+      <i class="fas fa-exclamation-circle"></i>
+      <span>Error: {error}</span>
+    </div>
+  )}
+
+  {!category && !error && (
+    <div class="admin-alert admin-alert-info">
+      <i class="fas fa-spinner fa-spin"></i>
+    </div>
+  )}
+
+  {category ? (
+    <form id="category-form" class="admin-form" method="POST">
+      <div class="admin-form-row">
+        <div class="admin-form-group" style="flex: 2;">
+          <label for="category-name" class="admin-form-label">
+            Nombre de la Categoría <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            id="category-name"
+            name="name"
+            class="admin-form-input"
+            value={category.name}
+            required
+            placeholder="Ej: Cascos y Protección"
+          />
+          <small class="admin-form-help">Nombre descriptivo para la categoría</small>
+        </div>
+
+        <div class="admin-form-group" style="flex: 1;">
+          <label class="admin-form-label">
+            Icono <span class="required">*</span>
+          </label>
+          <div class="icon-selector-container">
+            <div class="icon-preview">
+              <i class={`fas fa-${category.icon || 'tag'}`}></i>
+            </div>
+            <select 
+              name="icon" 
+              class="admin-form-select"
+              id="category-icon"
+              required
+            >
+              <option value="">Seleccionar icono</option>
+              {availableIcons.map(icon => (
+                <option 
+                  value={icon} 
+                  data-icon={icon}
+                  selected={icon === category.icon}
+                >
+                  {icon.replace(/-/g, ' ')}
+                </option>
+              ))}
+            </select>
+          </div>
+          <small class="admin-form-help">Icono que representa la categoría</small>
         </div>
       </div>
-    </header>
 
-    <div class="admin-content">
-      <aside class="admin-sidebar">
-        <nav class="admin-nav">
-          <ul>
-            <li class="admin-nav-item">
-              <a href="/admin" class="admin-nav-link">
-                <i class="fas fa-tachometer-alt"></i>
-                <span>Dashboard</span>
-              </a>
-            </li>
-            <li class="admin-nav-item">
-              <a href="/admin/products" class="admin-nav-link">
-                <i class="fas fa-box"></i>
-                <span>Productos</span>
-              </a>
-            </li>
-            <li class="admin-nav-item active">
-              <a href="/admin/categories" class="admin-nav-link">
-                <i class="fas fa-tags"></i>
-                <span>Categorías</span>
-              </a>
-            </li>
-            <li class="admin-nav-item">
-              <a href="/admin/settings" class="admin-nav-link">
-                <i class="fas fa-cog"></i>
-                <span>Configuración</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
-      </aside>
+      <div class="admin-form-group">
+        <label for="category-description" class="admin-form-label">
+          Descripción
+        </label>
+        <textarea
+          id="category-description"
+          name="description"
+          class="admin-form-textarea"
+          rows="3"
+          placeholder="Proporciona una descripción detallada de la categoría"
+        >{category.description || ''}</textarea>
+        <small class="admin-form-help">
+          Esta descripción puede mostrarse en la página de la categoría (opcional)
+        </small>
+      </div>
 
-      <main class="admin-main">
-        <div class="admin-content-header">
-          <h2>Editar Categoría: {category?.name}</h2>
-          <a href="/admin/categories" class="admin-btn admin-btn-secondary">
-            <i class="fas fa-arrow-left"></i> Volver a la lista
-          </a>
-        </div>
-
-        <div id="error-message" class="admin-alert admin-alert-danger" style="display: none;">
-          <i class="fas fa-exclamation-circle"></i>
-          <span id="error-text"></span>
-        </div>
-
-        <div id="success-message" class="admin-alert admin-alert-success" style="display: none;">
-          <i class="fas fa-check-circle"></i>
-          <span>Categoría actualizada correctamente. Redirigiendo...</span>
-        </div>
-
-        {error && (
-          <div class="admin-alert admin-alert-danger">
-            <i class="fas fa-exclamation-circle"></i>
-            <span>Error: {error}</span>
-          </div>
-        )}
-
-        {!category && !error && (
-          <div class="admin-alert admin-alert-info">
-            <i class="fas fa-spinner fa-spin"></i>
-            <span>Cargando datos de la categoría...</span>
-          </div>
-        )}
-
-        {category ? (
-          <form id="category-form" class="admin-form" action={`/admin/categories/edit?id=${category.id}`} method="POST">
-            <!-- ID de la categoría (solo lectura) -->
-            <div class="admin-form-group">
-              <label for="category-id" class="admin-form-label">ID de la Categoría</label>
-              <input
-                type="text"
-                id="category-id"
-                name="id"
-                class="admin-form-input"
-                value={category.id}
-                readonly
-              >
-              <small class="admin-form-help">El ID no se puede modificar</small>
-            </div>
-
-            <div class="admin-form-group">
-              <label for="category-name" class="admin-form-label">Nombre de la Categoría</label>
-              <input
-                type="text"
-                id="category-name"
-                name="name"
-                class="admin-form-input"
-                value={category.name}
-                required
-              >
-            </div>
-
-            <div class="admin-form-group">
-              <label for="category-description" class="admin-form-label">Descripción</label>
-              <textarea
-                id="category-description"
-                name="description"
-                class="admin-form-textarea"
-                rows="3"
-              >{category.description}</textarea>
-              <small class="admin-form-help">Descripción breve de la categoría</small>
-            </div>
-
-            <div class="admin-form-group">
-              <label class="admin-form-label">Icono</label>
-              <div class="admin-icon-selector">
-                <input type="hidden" id="selected-icon" name="icon" value={category.icon}>
-                <div class="admin-icon-grid">
-                  {availableIcons.map(icon => (
-                    <div
-                      class={`admin-icon-option ${icon === category.icon ? 'selected' : ''}`}
-                      data-icon={icon}
-                    >
-                      <i class={`fas fa-${icon}`}></i>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <small class="admin-form-help">Selecciona un icono para representar la categoría</small>
-            </div>
-
-            {/* Mostrar información de fechas */}
-            <div class="admin-form-group">
-              <label class="admin-form-label">Información adicional</label>
-              <div class="admin-info-box">
-                <p><strong>Creado:</strong> {new Date(category.created_at).toLocaleString()}</p>
-                <p><strong>Última actualización:</strong> {new Date(category.updated_at).toLocaleString()}</p>
-              </div>
-            </div>
-
-            <div class="admin-form-actions">
-              <a href="/admin/categories" class="admin-btn admin-btn-secondary" id="cancel-btn">
-                <i class="fas fa-times"></i> Cancelar
-              </a>
-              <button type="submit" class="admin-btn admin-btn-primary" id="save-btn">
-                <i class="fas fa-save"></i> Actualizar Categoría
-              </button>
-            </div>
-          </form>
-        ) : (
-          !error && (
-            <div class="admin-empty-state">
-              <i class="fas fa-exclamation-triangle"></i>
-              <h3>Categoría no encontrada</h3>
-              <p>La categoría que intentas editar no existe o ha sido eliminada.</p>
-              <a href="/admin/categories" class="admin-btn admin-btn-primary">
-                <i class="fas fa-arrow-left"></i> Volver a la lista de categorías
-              </a>
-            </div>
-          )
-        )}
-      </main>
-    </div>
-  </div>
-</Layout>
+      <div class="admin-form-actions">
+        <a href="/admin/categories/index_categories" class="admin-btn admin-btn-secondary" id="cancel-btn">
+          <i class="fas fa-times"></i> Cancelar
+        </a>
+        <button type="submit" class="admin-btn admin-btn-primary" id="save-btn">
+          <i class="fas fa-save"></i> Actualizar Categoría
+        </button>
+      </div>
+    </form>
+  ) : (
+    !error && (
+      <div class="admin-empty-state">
+        <i class="fas fa-exclamation-triangle"></i>
+        <h3>Categoría no encontrada</h3>
+        <p>La categoría que intentas editar no existe o ha sido eliminada.</p>
+        <a href="/admin/categories/index_categories" class="admin-btn admin-btn-primary">
+          <i class="fas fa-arrow-left"></i> Volver a la lista de categorías
+        </a>
+      </div>
+    )
+  )}
+</AdminLayout>
 
 <script>
-  import { createClient } from '@supabase/supabase-js';
-
-  // Crear cliente de Supabase
-  const supabaseUrl = 'https://cnrhqbbquymnlquuwkbh.supabase.co';
-  const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNucmhxYmJxdXltbmxxdXV3a2JoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5NDYwNDksImV4cCI6MjA2MzUyMjA0OX0.uWq6EPQrMOq1vBif4flJVnjHhvKjIlbB-nrnxgRzCbY';
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
   document.addEventListener('DOMContentLoaded', () => {
     const categoryForm = document.getElementById('category-form') as HTMLFormElement;
     const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
@@ -331,13 +274,13 @@ console.log('Estado final:', { category, error, method: Astro.request.method });
         try {
           // Mostrar indicador de carga
           if (saveBtn) {
-            saveBtn.disabled = true;
+            saveBtn.setAttribute('disabled', 'disabled');
             saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualizando...';
           }
 
           // Recopilar datos del formulario
           const formData = new FormData(categoryForm);
-          const categoryData = Object.fromEntries(formData.entries());
+          const categoryData: Record<string, any> = Object.fromEntries(formData.entries());
 
           console.log('Datos del formulario:', categoryData);
 
@@ -345,24 +288,31 @@ console.log('Estado final:', { category, error, method: Astro.request.method });
           const now = new Date().toISOString();
 
           // Actualizar solo la fecha de actualización
-          categoryData.updated_at = now;
+          categoryData['updated_at'] = now;
 
           // Validar que el nombre no esté vacío
-          const name = categoryData.name?.toString() || '';
-          if (!name || name.trim() === '') {
+          const name = categoryData['name'] || '';
+          if (!name || name.toString().trim() === '') {
             throw new Error('El nombre de la categoría es obligatorio');
           }
 
           console.log('Datos de categoría a actualizar:', categoryData);
 
+
+          // Importar supabase dinámicamente para evitar problemas de TypeScript
+          const { createClient } = await import('@supabase/supabase-js');
+          const supabaseUrl = 'https://cnrhqbbquymnlquuwkbh.supabase.co';
+          const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNucmhxYmJxdXltbmxxdXV3a2JoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5NDYwNDksImV4cCI6MjA2MzUyMjA0OX0.uWq6EPQrMOq1vBif4flJVnjHhvKjIlbB-nrnxgRzCbY';
+          const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
           // Actualizar la categoría en Supabase
           const { data, error } = await supabase
             .from('categories')
             .update(categoryData)
-            .eq('id', categoryData.id)
+            .eq('id', categoryData['id'])
             .select();
 
-          if (error) throw error;
+          if (error) throw new Error(error.message || 'Error al actualizar la categoría');
 
           console.log('Categoría actualizada correctamente:', data);
 
@@ -374,7 +324,7 @@ console.log('Estado final:', { category, error, method: Astro.request.method });
 
           // Redirigir a la lista de categorías después de 1 segundo
           setTimeout(() => {
-            window.location.href = '/admin/categories';
+            window.location.href = '/admin/categories/index_categories';
           }, 1000);
         } catch (error) {
           console.error('Error al actualizar la categoría:', error);
@@ -383,7 +333,7 @@ console.log('Estado final:', { category, error, method: Astro.request.method });
           const errorMessage = document.getElementById('error-message');
           const errorText = document.getElementById('error-text');
           if (errorMessage && errorText) {
-            errorText.textContent = 'Error al actualizar la categoría: ' + error.message;
+            errorText.textContent = 'Error al actualizar la categoría: ' + (error instanceof Error ? error.message : 'Error desconocido');
             errorMessage.style.display = 'flex';
 
             // Ocultar el mensaje después de 5 segundos
@@ -394,12 +344,21 @@ console.log('Estado final:', { category, error, method: Astro.request.method });
 
           // Restaurar el botón de guardar
           if (saveBtn) {
-            saveBtn.disabled = false;
+            saveBtn.removeAttribute('disabled');
             saveBtn.innerHTML = '<i class="fas fa-save"></i> Actualizar Categoría';
           }
+
         }
       });
     }
+
+    // Resaltar el elemento del menú activo
+    const navItems = document.querySelectorAll('.admin-nav-item');
+    navItems.forEach(item => {
+      if (item.getAttribute('data-page') === 'categories') {
+        item.classList.add('active');
+      }
+    });
   });
 </script>
 

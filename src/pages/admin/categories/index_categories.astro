@@ -5,8 +5,18 @@ import { supabase } from '../../../lib/supabase';
 // Obtener el usuario de locals (establecido por el middleware)
 const user = Astro.locals.user;
 
+interface Category {
+  id: number;
+  name: string;
+  description?: string;
+  icon?: string;
+  created_at?: string;
+  updated_at?: string;
+  productCount?: number;
+}
+
 // Obtener categorías de Supabase
-let categories: any[] = [];
+let categories: Category[] = [];
 let error: string | null = null;
 
 try {
@@ -34,10 +44,12 @@ try {
     console.error('Error al obtener productos:', productsError);
   } else {
     // Contar productos por categoría
-    const productCounts = {};
+    const productCounts: Record<number, number> = {};
     productsData.forEach(product => {
-      const categoryId = product.category_id;
-      productCounts[categoryId] = (productCounts[categoryId] || 0) + 1;
+      const categoryId = product.category_id as number;
+      if (categoryId !== undefined && categoryId !== null) {
+        productCounts[categoryId] = (productCounts[categoryId] || 0) + 1;
+      }
     });
 
     // Añadir el conteo a cada categoría
@@ -46,100 +58,95 @@ try {
       productCount: productCounts[category.id] || 0
     }));
   }
-} catch (err) {
+} catch (err: unknown) {
   console.error('Error al obtener datos:', err);
-  error = err.message;
+  error = err instanceof Error ? err.message : 'Error desconocido';
 }
 ---
 
 <AdminLayout title="Administrar Categorías" user={user}>
-        <div class="admin-content-header">
-          <h2>Lista de Categorías</h2>
-          <a href="/admin/categories/new" class="admin-btn admin-btn-primary">
-            <i class="fas fa-plus"></i> Nueva Categoría
-          </a>
-        </div>
+  <div class="admin-content-header">
+    <h2>Lista de Categorías</h2>
+    <a href="/admin/categories/new_categories" class="admin-btn admin-btn-primary">
+      <i class="fas fa-plus"></i> Nueva Categoría
+    </a>
+  </div>
 
-        {error && (
-          <div class="admin-alert admin-alert-danger">
-            <i class="fas fa-exclamation-circle"></i>
-            <span>Error: {error}</span>
-          </div>
-        )}
+  {error && (
+    <div class="admin-alert admin-alert-danger">
+      <i class="fas fa-exclamation-circle"></i>
+      <span>Error: {error}</span>
+    </div>
+  )}
 
-        {categories.length === 0 && !error ? (
-          <div class="admin-empty-state">
-            <i class="fas fa-tags"></i>
-            <h3>No hay categorías</h3>
-            <p>Aún no has creado ninguna categoría. Haz clic en "Nueva Categoría" para comenzar.</p>
-          </div>
-        ) : (
-          <div class="admin-table-container">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Icono</th>
-                  <th>Nombre</th>
-                  <th>Descripción</th>
-                  <th>Productos</th>
-                  <th>Creado</th>
-                  <th>Actualizado</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="categories-table-body">
-                {categories.map((category) => (
-                  <tr data-id={category.id}>
-                    <td>#{category.id} <small style="color: #999;">(tipo: {typeof category.id})</small></td>
-                    <td>
-                      <div class="admin-category-icon">
-                        <i class={`fas fa-${category.icon || 'tag'}`}></i>
-                      </div>
-                    </td>
-                    <td>{category.name}</td>
-                    <td>{category.description || ''}</td>
-                    <td>
-                      <span class="admin-badge admin-badge-info">
-                        {category.productCount || 0}
-                      </span>
-                    </td>
-                    <td class="admin-date-cell">
-                      {category.created_at ? new Date(category.created_at).toLocaleDateString() : '-'}
-                    </td>
-                    <td class="admin-date-cell">
-                      {category.updated_at ? new Date(category.updated_at).toLocaleDateString() : '-'}
-                    </td>
-                    <td>
-                      <div class="admin-actions">
-                        <a href={`/admin/categories/edit?id=${category.id}`} class="admin-btn admin-btn-icon admin-btn-edit" title={`Editar categoría: ${category.name} (ID: ${category.id})`}>
-                          <i class="fas fa-edit"></i>
-                        </a>
-                        <button
-                          class="admin-btn admin-btn-icon admin-btn-delete"
-                          data-id={category.id}
-                          disabled={category.productCount > 0}
-                          title={category.productCount > 0 ? "No se puede eliminar una categoría con productos" : "Eliminar categoría"}
-                        >
-                          <i class="fas fa-trash"></i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+  {categories.length === 0 && !error ? (
+    <div class="admin-empty-state">
+      <i class="fas fa-tags"></i>
+      <h3>No hay categorías</h3>
+      <p>Aún no has creado ninguna categoría. Haz clic en "Nueva Categoría" para comenzar.</p>
+    </div>
+  ) : (
+    <div class="admin-table-container">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Icono</th>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Productos</th>
+            <th>Creado</th>
+            <th>Actualizado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="categories-table-body">
+          {categories.map((category) => (
+            <tr data-id={category.id}>
+              <td>#{category.id}</td>
+              <td>
+                <div class="admin-category-icon">
+                  <i class={`fas fa-${category.icon || 'tag'}`}></i>
+                </div>
+              </td>
+              <td>{category.name}</td>
+              <td>{category.description || ''}</td>
+              <td>
+                <span class="admin-badge admin-badge-info">
+                  {category.productCount || 0}
+                </span>
+              </td>
+              <td class="admin-date-cell">
+                {category.created_at ? new Date(category.created_at).toLocaleDateString() : '-'}
+              </td>
+              <td class="admin-date-cell">
+                {category.updated_at ? new Date(category.updated_at).toLocaleDateString() : '-'}
+              </td>
+              <td>
+                <div class="admin-actions">
+                  <a href={`/admin/categories/edit_categories?id=${category.id}`} class="admin-btn admin-btn-icon admin-btn-edit" title={`Editar categoría: ${category.name} (ID: ${category.id})`}>
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  <button
+                    class="admin-btn admin-btn-icon admin-btn-delete"
+                    data-id={category.id}
+                    disabled={category.productCount !== undefined && category.productCount > 0}
+                    title={category.productCount !== undefined && category.productCount > 0 ? "No se puede eliminar una categoría con productos" : "Eliminar categoría"}
+                  >
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
 </AdminLayout>
 
 <script>
-  import { createClient } from '@supabase/supabase-js';
-
-  // Crear cliente de Supabase
-  const supabaseUrl = 'https://cnrhqbbquymnlquuwkbh.supabase.co';
-  const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNucmhxYmJxdXltbmxxdXV3a2JoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5NDYwNDksImV4cCI6MjA2MzUyMjA0OX0.uWq6EPQrMOq1vBif4flJVnjHhvKjIlbB-nrnxgRzCbY';
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  import { supabase } from '../../../lib/supabase';
 
   document.addEventListener('DOMContentLoaded', () => {
     // Los botones de edición ahora son enlaces directos
@@ -184,6 +191,14 @@ try {
           }
         }
       });
+    });
+
+    // Resaltar el elemento del menú activo
+    const navItems = document.querySelectorAll('.admin-nav-item');
+    navItems.forEach(item => {
+      if (item.getAttribute('data-page') === 'categories') {
+        item.classList.add('active');
+      }
     });
   });
 </script>

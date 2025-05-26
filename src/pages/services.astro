@@ -2,8 +2,6 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import CartButton from '../components/Cart/CartButton.astro';
-import CartModal from '../components/Cart/CartModal.astro';
 import ServiceCard from '../components/Services/ServiceCard.astro';
 
 // Import styles
@@ -206,9 +204,6 @@ const services: Service[] = [
       </div>
     </section>
   </main>
-
-  <CartButton />
-  <CartModal />
   
   <Footer slot="footer" />
 </Layout>

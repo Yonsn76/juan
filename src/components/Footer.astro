@@ -1,111 +1,282 @@
 ---
 const currentYear = new Date().getFullYear();
 
-const quickLinks = [
-  { href: '/', text: 'Inicio' },
-  { href: '/about', text: 'Nosotros' },
-  { href: '/services', text: 'Servicios' },
-  { href: '/catalog', text: 'Catálogo' },
-  { href: '/portfolio', text: 'Trabajos' },
-  { href: '/contact', text: 'Contacto' }
+const socialLinks = [
+  { icon: 'facebook-f', url: 'https://facebook.com/zonabiker15' },
+  { icon: 'instagram', url: 'https://instagram.com/zonabiker15' },
+  { icon: 'whatsapp', url: 'https://wa.me/51123456789' },
+  { icon: 'tiktok', url: 'https://tiktok.com/@zonabiker15' }
 ];
 
-const socialLinks = [
-  { 
-    href: 'mailto:Gsegurityaslam@gmail.com',
-    icon: 'envelope',
-    class: 'footer-gmail-icon'
+const footerLinks = [
+  {
+    title: 'Empresa',
+    links: [
+      { text: 'Nosotros', url: '/about' },
+      { text: 'Servicios', url: '/services' },
+      { text: 'Catálogo', url: '/catalog' },
+      { text: 'Contacto', url: '/contact' }
+    ]
   },
-  { 
-    href: 'https://wa.me/51917025103',
-    icon: 'whatsapp',
-    class: 'footer-whatsapp-icon'
+  {
+    title: 'Servicios',
+    links: [
+      { text: 'Mantenimiento', url: '/services#mantenimiento' },
+      { text: 'Personalización', url: '/services#personalizacion' },
+      { text: 'Accesorios', url: '/services#accesorios' },
+      { text: 'Seguridad', url: '/services#seguridad' }
+    ]
   },
-  { 
-    href: 'https://web.facebook.com/profile.php?id=61572324423621',
-    icon: 'facebook-f',
-    class: 'footer-facebook-icon'
-  },
-  { 
-    href: 'https://www.tiktok.com/@zona15lacasadelbiker',
-    icon: 'tiktok',
-    class: 'footer-tiktok-icon'
+  {
+    title: 'Legal',
+    links: [
+      { text: 'Términos y Condiciones', url: '/terms' },
+      { text: 'Política de Privacidad', url: '/privacy' },
+      { text: 'Política de Cookies', url: '/cookies' },
+      { text: 'Libro de Reclamaciones', url: '/complaints' }
+    ]
   }
 ];
 ---
 
 <footer class="footer">
-  <div class="container">
-    <div class="footer-grid">
-      <!-- Company Info -->
-      <div>
-        <div class="footer-logo">
-          <img src="/images/logo.png" alt="Zona Biker 15 Logo" />
-        </div>
-        <p class="footer-description">
-          Tu tienda especializada en motos y accesorios. Ofrecemos los mejores productos y servicios para los amantes de las dos ruedas.
-        </p>
-        <div class="footer-social-icons">
-          {
-            socialLinks.slice(1, 4).map(({ href, icon, class: className }) => (
-              <a 
-                href={href} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                class:list={['footer-social-icon', className]}
-              >
-                <i class={`fab fa-${icon}`} />
+  <div class="footer-top">
+    <div class="container">
+      <div class="footer-grid">
+        <!-- Brand Column -->
+        <div class="footer-brand">
+          <a href="/" class="footer-logo">
+            <span class="logo-text">ZONA<span class="accent">15</span></span>
+          </a>
+          <p class="footer-description">
+            Tu destino premium para todo lo relacionado con motocicletas en Huánuco.
+            Calidad, innovación y pasión por las dos ruedas.
+          </p>
+          <div class="social-links">
+            {socialLinks.map(({ icon, url }) => (
+              <a href={url} class="social-link" target="_blank" rel="noopener noreferrer">
+                <i class={`fab fa-${icon}`} aria-hidden="true"></i>
               </a>
-            ))
-          }
+            ))}
+          </div>
         </div>
-      </div>
 
-      <!-- Quick Links -->
-      <div>
-        <h3 class="footer-title">Enlaces Rápidos</h3>
-        <ul class="footer-links">
-          {
-            quickLinks.map(({ href, text }) => (
-              <li class="footer-link">
-                <a href={href}>{text}</a>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
+        <!-- Links Columns -->
+        {footerLinks.map(({ title, links }) => (
+          <div class="footer-links">
+            <h3 class="footer-title">{title}</h3>
+            <ul class="footer-list">
+              {links.map(({ text, url }) => (
+                <li>
+                  <a href={url} class="footer-link">{text}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
 
-      <!-- Contact Info -->
-      <div>
-        <h3 class="footer-title">Contacto</h3>
-        <div class="contact-info">
-          <p>Huánuco, Peru</p>
-          <p>Teléfono: 917 025 103</p>
-          <p>Email: Gsegurityaslam@gmail.com</p>
-        </div>
-        <h3 class="footer-title">Síguenos</h3>
-        <div class="footer-social-icons">
-          {
-            socialLinks.map(({ href, icon, class: className }) => (
-              <a 
-                href={href} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                class:list={['footer-social-icon', className]}
-              >
-                <i class={icon === 'envelope' ? 'fas fa-envelope' : `fab fa-${icon}`} />
-              </a>
-            ))
-          }
+        <!-- Contact Column -->
+        <div class="footer-contact">
+          <h3 class="footer-title">Contacto</h3>
+          <div class="contact-info">
+            <p>
+              <i class="fas fa-map-marker-alt"></i>
+              Jr. Huánuco 123, Huánuco
+            </p>
+            <p>
+              <i class="fas fa-phone"></i>
+              +51 123 456 789
+            </p>
+            <p>
+              <i class="fas fa-envelope"></i>
+              info@zonabiker15.com
+            </p>
+            <p>
+              <i class="fas fa-clock"></i>
+              Lun - Sáb: 9:00 - 18:00
+            </p>
+          </div>
         </div>
       </div>
     </div>
-    <div class="footer-bottom">
-      <p>&copy; {currentYear} Zona Biker 15. Todos los derechos reservados.</p>
+  </div>
+
+  <div class="footer-bottom">
+    <div class="container">
+      <p class="copyright">
+        © {currentYear} Zona Biker 15. Todos los derechos reservados.
+      </p>
     </div>
   </div>
 </footer>
 
 <style>
-  /* Footer styles will be imported from footer.css */
+  .footer {
+    background: var(--lambo-black);
+    color: var(--text-light);
+    border-top: 1px solid var(--lambo-gray);
+  }
+
+  .footer-top {
+    padding: var(--spacing-2xl) 0;
+  }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 2fr repeat(3, 1fr) 1.5fr;
+    gap: var(--spacing-xl);
+  }
+
+  .footer-brand {
+    max-width: 400px;
+  }
+
+  .footer-logo {
+    display: inline-block;
+    margin-bottom: var(--spacing-md);
+    text-decoration: none;
+  }
+
+  .logo-text {
+    font-family: var(--font-heading);
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: var(--text-light);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .accent {
+    color: var(--lambo-gold);
+  }
+
+  .footer-description {
+    margin-bottom: var(--spacing-lg);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: var(--text-sm);
+    line-height: 1.6;
+  }
+
+  .social-links {
+    display: flex;
+    gap: var(--spacing-sm);
+  }
+
+  .social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 0;
+    background: var(--lambo-gray);
+    color: var(--text-light);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+  }
+
+  .social-link:hover {
+    background: var(--lambo-gold);
+    color: var(--lambo-black);
+    transform: translateY(-3px);
+    border-color: var(--lambo-gold);
+  }
+
+  .footer-title {
+    color: var(--text-primary);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    margin-bottom: var(--spacing-md);
+  }
+
+  .footer-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .footer-link {
+    display: block;
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: var(--spacing-xs) 0;
+    transition: color var(--transition-normal);
+  }
+
+  .footer-link:hover {
+    color: var(--text-primary);
+  }
+
+  .contact-info p {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-secondary);
+  }
+
+  .contact-info i {
+    color: var(--primary);
+    width: 16px;
+  }
+
+  .footer-bottom {
+    background-color: var(--bg-tertiary);
+    padding: var(--spacing-md) 0;
+    text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .copyright {
+    color: var(--text-tertiary);
+    font-size: var(--text-sm);
+    margin: 0;
+  }
+
+  @media (max-width: 1200px) {
+    .footer-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .footer-brand {
+      grid-column: span 4;
+      max-width: 100%;
+      text-align: center;
+      margin-bottom: var(--spacing-xl);
+    }
+
+    .social-links {
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .footer-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--spacing-lg);
+    }
+
+    .footer-brand {
+      grid-column: span 2;
+    }
+
+    .footer-contact {
+      grid-column: span 2;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .footer-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .footer-brand,
+    .footer-contact {
+      grid-column: span 1;
+    }
+
+    .footer-top {
+      padding: var(--spacing-xl) 0;
+    }
+  }
 </style>

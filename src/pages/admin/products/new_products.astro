@@ -2,7 +2,6 @@
 import Layout from '../../../layouts/Layout.astro';
 import '../../../styles/admin.css';
 import { supabase } from '../../../lib/supabase';
-import { catalogData } from '../../../data/catalog'; // Como respaldo
 
 // Obtener categorías desde Supabase
 let categories = [];
@@ -13,17 +12,18 @@ try {
     .select('*')
     .order('name');
 
-  if (error) throw error;
+  if (error) {
+    console.error('Error al obtener categorías de Supabase:', error);
+    // Mostrar un mensaje de error al usuario
+    throw new Error('No se pudieron cargar las categorías. Por favor, inténtalo de nuevo más tarde.');
+  }
+  
   categories = data || [];
 } catch (error) {
-  console.error('Error al obtener categorías de Supabase:', error);
-
-  // Si hay un error, usar los datos estáticos como respaldo
-  categories = Object.entries(catalogData).map(([key, category]) => ({
-    id: key,
-    name: category.category,
-    description: category.description
-  }));
+  console.error('Error al obtener categorías:', error);
+  // Mostrar un mensaje de error en la interfaz
+  categories = [];
+  // No hay datos de respaldo, se mostrará un mensaje de error en la interfaz
 }
 ---
 
@@ -52,19 +52,19 @@ try {
               </a>
             </li>
             <li class="admin-nav-item active">
-              <a href="/admin/products" class="admin-nav-link">
+              <a href="/admin/products/index_products" class="admin-nav-link">
                 <i class="fas fa-box"></i>
                 <span>Productos</span>
               </a>
             </li>
             <li class="admin-nav-item">
-              <a href="/admin/categories" class="admin-nav-link">
+              <a href="/admin/categories/index_categories" class="admin-nav-link">
                 <i class="fas fa-tags"></i>
                 <span>Categorías</span>
               </a>
             </li>
             <li class="admin-nav-item">
-              <a href="/admin/settings" class="admin-nav-link">
+              <a href="/admin/settings/index_setting" class="admin-nav-link">
                 <i class="fas fa-cog"></i>
                 <span>Configuración</span>
               </a>
@@ -76,7 +76,7 @@ try {
       <main class="admin-main">
         <div class="admin-content-header">
           <h2>Añadir Nuevo Producto</h2>
-          <a href="/admin/products" class="admin-btn admin-btn-secondary">
+          <a href="/admin/products/index_products" class="admin-btn admin-btn-secondary">
             <i class="fas fa-arrow-left"></i> Volver a la lista
           </a>
         </div>

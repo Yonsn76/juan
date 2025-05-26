@@ -18,7 +18,7 @@ const { title, user } = Astro.props;
     <header class="admin-header">
       <div class="admin-header-content">
         <div class="admin-logo">
-          <img src="/logo.png" alt="Casa Biker Logo" class="admin-logo-img">
+          <img src="/images/logo.png" alt="Casa Biker Logo" class="admin-logo-img">
           <h1>Panel de Administración</h1>
         </div>
         <div class="admin-user-info">
@@ -26,6 +26,9 @@ const { title, user } = Astro.props;
             <i class="fas fa-user-circle"></i>
             {user?.name || 'Admin'}
           </span>
+          <button type="button" id="theme-toggle" class="admin-theme-toggle-btn" aria-label="Toggle theme" aria-pressed="false">
+            <i class="fas fa-moon"></i>
+          </button>
           <a href="/admin/logout" class="admin-logout-btn">
             <i class="fas fa-sign-out-alt"></i> Cerrar sesión
           </a>
@@ -37,32 +40,32 @@ const { title, user } = Astro.props;
       <aside class="admin-sidebar">
         <nav class="admin-nav">
           <ul>
-            <li class="admin-nav-item">
+            <li class="admin-nav-item" data-page="dashboard">
               <a href="/admin" class="admin-nav-link">
                 <i class="fas fa-tachometer-alt"></i>
                 <span>Dashboard</span>
               </a>
             </li>
-            <li class="admin-nav-item">
-              <a href="/admin/products" class="admin-nav-link">
+            <li class="admin-nav-item" data-page="products">
+              <a href="/admin/products/index_products" class="admin-nav-link">
                 <i class="fas fa-box"></i>
                 <span>Productos</span>
               </a>
             </li>
-            <li class="admin-nav-item">
-              <a href="/admin/categories" class="admin-nav-link">
+            <li class="admin-nav-item" data-page="categories">
+              <a href="/admin/categories/index_categories" class="admin-nav-link">
                 <i class="fas fa-tags"></i>
                 <span>Categorías</span>
               </a>
             </li>
-            <li class="admin-nav-item">
-              <a href="/admin/users" class="admin-nav-link">
+            <li class="admin-nav-item" data-page="users">
+              <a href="/admin/users/index_users" class="admin-nav-link">
                 <i class="fas fa-users"></i>
                 <span>Usuarios</span>
               </a>
             </li>
-            <li class="admin-nav-item">
-              <a href="/admin/settings" class="admin-nav-link">
+            <li class="admin-nav-item" data-page="settings">
+              <a href="/admin/settings/index_setting" class="admin-nav-link">
                 <i class="fas fa-cog"></i>
                 <span>Configuración</span>
               </a>
@@ -71,19 +74,42 @@ const { title, user } = Astro.props;
         </nav>
       </aside>
 
-      <main class="admin-main">
-        <slot />
-      </main>
+  <main class="admin-main">
+    <slot />
+  </main>
+
     </div>
 
     <footer class="admin-footer">
       <p>&copy; {new Date().getFullYear()} Casa Biker. Todos los derechos reservados.</p>
     </footer>
   </div>
+  <script src="/src/scripts/theme-toggle.js"></script>
 </body>
 </html>
 
 <style>
+  .admin-theme-toggle-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.5rem;
+    margin-right: 1rem;
+    font-size: 1.1rem;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+  }
+
+  .admin-theme-toggle-btn:hover {
+    color: var(--primary-color);
+    background-color: rgba(0,0,0,0.05); /* Subtle background on hover */
+  }
+
+  [data-theme="dark"] .admin-theme-toggle-btn:hover {
+    background-color: rgba(255,255,255,0.1); /* Subtle background on hover for dark theme */
+  }
+
   .admin-logo {
     display: flex;
     align-items: center;
@@ -92,15 +118,5 @@ const { title, user } = Astro.props;
   .admin-logo-img {
     height: 40px;
     margin-right: 1rem;
-  }
-
-  .admin-footer {
-    text-align: center;
-    padding: 1rem;
-    background-color: #f8f9fa;
-    border-top: 1px solid #e9ecef;
-    color: #6c757d;
-    font-size: 0.875rem;
-    margin-top: auto;
   }
 </style>

@@ -25,7 +25,7 @@ try {
   }
 } catch (err) {
   console.error('Error al obtener datos:', err);
-  error = err.message;
+  error = err instanceof Error ? err.message : 'Error desconocido al obtener datos';
 }
 ---
 
@@ -93,30 +93,19 @@ try {
 </AdminLayout>
 
 <script>
-  import { createClient } from '@supabase/supabase-js';
-
-  // Crear cliente de Supabase
-  const supabaseUrl = 'https://cnrhqbbquymnlquuwkbh.supabase.co';
-  const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNucmhxYmJxdXltbmxxdXV3a2JoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5NDYwNDksImV4cCI6MjA2MzUyMjA0OX0.uWq6EPQrMOq1vBif4flJVnjHhvKjIlbB-nrnxgRzCbY';
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  import { supabase } from '../../../lib/supabase';
 
   document.addEventListener('DOMContentLoaded', () => {
+    // Los botones de edición ahora son enlaces directos
+
     // Botones de eliminación
     document.querySelectorAll('.admin-btn-delete').forEach(button => {
       button.addEventListener('click', async () => {
-        // Verificar si el botón está deshabilitado
-        if (button.hasAttribute('disabled')) {
-          alert('No puedes eliminar tu propio usuario.');
-          return;
-        }
-        
         const userId = button.getAttribute('data-id');
-        const userName = button.getAttribute('data-name');
-        
-        if (confirm(`¿Estás seguro de que deseas eliminar al usuario "${userName}"? Esta acción no se puede deshacer.`)) {
+        if (confirm('¿Estás seguro de que deseas eliminar este usuario? Esta acción no se puede deshacer.')) {
           try {
             console.log(`Eliminando usuario ${userId}...`);
-            
+
             // Eliminar el usuario de Supabase
             const { error } = await supabase
               .from('users')
@@ -128,13 +117,13 @@ try {
             }
 
             console.log(`Usuario ${userId} eliminado correctamente`);
-            
+
             // Ocultar la fila en la tabla
             const row = button.closest('tr');
             if (row) {
               row.style.display = 'none';
             }
-            
+
             // Mostrar mensaje de éxito
             alert('Usuario eliminado correctamente');
           } catch (error) {
@@ -144,8 +133,17 @@ try {
         }
       });
     });
+
+    // Resaltar el elemento del menú activo
+    const navItems = document.querySelectorAll('.admin-nav-item');
+    navItems.forEach(item => {
+      if (item.getAttribute('data-page') === 'users') {
+        item.classList.add('active');
+      }
+    });
   });
 </script>
+
 
 <style>
   .admin-date-cell {

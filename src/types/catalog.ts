@@ -6,8 +6,13 @@ export interface Product {
   image: string;
   featured: boolean;
   details: string;
+  category_id: string;
   discount?: number; // Porcentaje de descuento (opcional)
+  categories?: {
+    name: string;
+  };
 }
+
 
 export interface CategoryData {
   category: string;

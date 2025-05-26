@@ -7,25 +7,21 @@ import ProductCard from '../components/Catalog/ProductCard.astro';
 import ProductModal from '../components/Catalog/ProductModal.astro';
 import QuickRequestForm from '../components/Catalog/QuickRequestForm.astro';
 import { supabase } from '../lib/supabase';
-import { catalogData } from '../data/catalog'; // Mantenemos esto como respaldo
 import type { Product } from '../types/catalog';
 import '../styles/catalog.css';
 
-type DisplayProduct = Product & {
+// Extender la interfaz Product con campos adicionales necesarios para el catálogo
+interface DisplayProduct extends Product {
   categoryKey: string;
   categoryName: string;
-};
+}
 
-// Get category from URL params or default to 'all'
 const category = Astro.url.searchParams.get('category') || 'all';
-console.log("Selected category:", category);
-
-// Get products based on category
 let displayProducts: DisplayProduct[] = [];
-let allCategories = [];
+let allCategories: any[] = [];
 
 try {
-  // Obtener todas las categorías de Supabase
+  // Obtener todas las categorías
   const { data: categoriesData, error: categoriesError } = await supabase
     .from('categories')
     .select('*')
@@ -34,123 +30,68 @@ try {
   if (categoriesError) throw categoriesError;
   allCategories = categoriesData || [];
 
-  if (category === 'all') {
-    // Para "all", obtener todos los productos con sus categorías
-    const { data: productsData, error: productsError } = await supabase
-      .from('products')
-      .select(`
-        *,
-        categories:category_id (name)
-      `)
-      .order('name');
+  // Construir la consulta de productos
+  let productsQuery = supabase
+    .from('products')
+    .select(`
+      *,
+      categories:category_id (name)
+    `)
+    .order('created_at', { ascending: false });
 
-    if (productsError) throw productsError;
-
-    // Transformar los datos al formato esperado por el componente ProductCard
-    displayProducts = (productsData || []).map(product => ({
-      id: product.id,
-      name: product.name,
-      description: product.description,
-      price: product.price,
-      image: product.image,
-      featured: product.featured,
-      details: product.details,
-      discount: product.discount,
-      categoryKey: product.category_id,
-      categoryName: product.categories?.name || 'Sin categoría'
-    }));
-  } else {
-    // Para una categoría específica, obtener solo los productos de esa categoría
-    const { data: productsData, error: productsError } = await supabase
-      .from('products')
-      .select(`
-        *,
-        categories:category_id (name)
-      `)
-      .eq('category_id', category)
-      .order('name');
-
-    if (productsError) throw productsError;
-
-    // Transformar los datos al formato esperado por el componente ProductCard
-    displayProducts = (productsData || []).map(product => ({
-      id: product.id,
-      name: product.name,
-      description: product.description,
-      price: product.price,
-      image: product.image,
-      featured: product.featured,
-      details: product.details,
-      discount: product.discount,
-      categoryKey: product.category_id,
-      categoryName: product.categories?.name || 'Sin categoría'
-    }));
+  // Aplicar filtro de categoría si no es 'all'
+  if (category !== 'all') {
+    productsQuery = productsQuery.eq('category_id', category);
   }
 
-  console.log(`Found ${displayProducts.length} products in category ${category}`);
+  // Ejecutar la consulta
+  const { data: productsData, error: productsError } = await productsQuery;
+
+  if (productsError) throw productsError;
+
+  // Transformar los datos al formato esperado por el componente ProductCard
+  displayProducts = (productsData || []).map(product => {
+    // Obtener la URL de la imagen
+    const imageUrl = product.image?.startsWith('http') 
+      ? product.image 
+      : product.image 
+        ? supabase.storage.from('productos').getPublicUrl(product.image).data.publicUrl
+        : '/images/placeholder-product.jpg';
+
+    return {
+      id: product.id,
+      name: product.name,
+      description: product.name, // Usar name como descripción temporal
+      price: product.price,
+      image: imageUrl,
+      featured: product.featured,
+      details: product.name, // Usar name como detalles temporales
+      discount: product.discount || 0,
+      category_id: product.category_id,
+      categories: product.categories || { name: 'Sin categoría' },
+      // Agregar categoryName para compatibilidad
+      categoryName: product.categories?.name || 'Sin categoría',
+      // Agregar categoryKey para compatibilidad
+      categoryKey: product.category_id
+    };
+  });
+
+  console.log(`Encontrados ${displayProducts.length} productos en la categoría ${category}`);
+  console.log('Productos cargados:', displayProducts);
 } catch (error) {
   console.error('Error al obtener datos de Supabase:', error);
-
-  // Si hay un error, usar los datos estáticos como respaldo
-  if (category === 'all') {
-    // For "all", show all products from each category
-    for (const [categoryKey, categoryData] of Object.entries(catalogData)) {
-      const categoryProducts = categoryData.products
-        .map(product => ({
-          ...product,
-          categoryKey,
-          categoryName: categoryData.category
-        }));
-      displayProducts.push(...categoryProducts);
-    }
-  } else {
-    // For specific category, show all products from that category
-    const categoryExists = Object.keys(catalogData).includes(category);
-    if (categoryExists) {
-      const categoryData = catalogData[category];
-      const categoryProducts = categoryData.products.map(product => ({
-        ...product,
-        categoryKey: category,
-        categoryName: categoryData.category
-      }));
-      displayProducts.push(...categoryProducts);
-    }
-  }
+  displayProducts = [];
 }
+
 ---
 
-<Layout title={`${category !== 'all' ? `${allCategories.find(c => c.id === category)?.name || catalogData[category]?.category} - ` : ''}Catálogo - Zona Biker 15`}>
-  <Header slot="header" />
-
-  <!-- Catalog Header -->
-  <section class="catalog-header">
+<Layout title="Catálogo">
+  <Header />
+  <main class="catalog-page">
     <div class="catalog-container">
-      <h1>
-        {category === 'all' ? 'Catálogo de Productos' :
-          <span>
-            Catálogo: <span class="catalog-category-title">
-              {allCategories.find(c => c.id === category)?.name || catalogData[category]?.category || 'Productos'}
-            </span>
-          </span>
-        }
-      </h1>
-      <p>
-        {category === 'all'
-          ? 'Descubre nuestra amplia selección de productos para motociclistas: cascos, accesorios, ropa, piezas de rendimiento y mucho más.'
-          : allCategories.find(c => c.id === category)?.description || catalogData[category]?.description || 'Productos seleccionados para los amantes de las motos.'}
-      </p>
-    </div>
-  </section>
+      <h1 class="catalog-title">Nuestro Catálogo</h1>
+      <NewCategoryFilter activeCategory={category} categories={allCategories} />
 
-  <!-- Category Filters -->
-  <NewCategoryFilter activeCategory={category} />
-
-  <!-- Products Grid -->
-  <section class="products-section">
-    <div class="catalog-container">
-      <div class="price-note">
-        <p>Todos los precios están expresados en Soles Peruanos (S/)</p>
-      </div>
       {displayProducts.length > 0 ? (
         <div class="products-grid">
           {displayProducts.map((product) => (
@@ -161,236 +102,163 @@ try {
           ))}
         </div>
       ) : (
-        <div class="no-products-message">
-          <i class="fas fa-search"></i>
-          <h3>No se encontraron productos</h3>
-          <p>No hay productos disponibles en esta categoría en este momento.</p>
-          <a href="/catalog?category=all" class="btn btn-primary">Ver todos los productos</a>
+        <div class="no-products">
+          <p>No se encontraron productos en esta categoría.</p>
         </div>
       )}
     </div>
-  </section>
+  </main>
 
-  <!-- Product Modal -->
   <ProductModal />
-
-  <!-- Quick Request Form -->
   <QuickRequestForm />
-
-  <Footer slot="footer" />
+  <Footer />
 </Layout>
 
-<script>
-  // Handle product card clicks
-  document.querySelectorAll('.view-product-details').forEach(button => {
-    button.addEventListener('click', () => {
-      const productData = (button as HTMLElement).getAttribute('data-product');
-      if (productData) {
-        const product = JSON.parse(productData);
-        // Use type assertion since updateProductModal is added by ProductModal component
-        (window as any).updateProductModal?.(product);
-      }
-    });
-  });
+<style is:global>
+:root {
+  /* Colores base */
+  --color-white: #ffffff;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  
+  /* Colores primarios */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+  
+  /* Colores de estado */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+  
+  /* Variables de tema */
+  --text-primary: var(--color-gray-900);
+  --text-secondary: var(--color-gray-600);
+  --text-tertiary: var(--color-gray-400);
+  --bg-primary: var(--color-white);
+  --bg-secondary: var(--color-gray-50);
+  --border-color: var(--color-gray-200);
+  --primary-color: var(--color-primary-600);
+  --primary-hover: var(--color-primary-700);
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+  --border-radius-sm: 0.25rem;
+  --border-radius-md: 0.375rem;
+  --border-radius-lg: 0.5rem;
+  --border-radius-xl: 0.75rem;
+  --border-radius-2xl: 1rem;
+  --transition-colors: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  --transition-transform: transform 0.2s ease-in-out;
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
 
-  // Debug script to check category filtering
-  document.addEventListener('DOMContentLoaded', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const categoryParam = urlParams.get('category') || 'all';
-    console.log("Current category from URL:", categoryParam);
+.catalog-page {
+  background-color: var(--bg-primary);
+  min-height: calc(100vh - 120px);
+  padding: 2rem 0 4rem;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
 
-    // Log the number of products displayed
-    const productsGrid = document.querySelector('.products-grid');
-    if (productsGrid) {
-      const productCards = productsGrid.querySelectorAll('article.card');
-      console.log(`Displaying ${productCards.length} products`);
-    } else {
-      console.log("No products grid found");
-    }
+.catalog-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
 
-    // Check if the category filter is working
-    const activeFilter = document.querySelector('.filter-link.active');
-    if (activeFilter) {
-      console.log("Active filter:", activeFilter.getAttribute('data-category'));
-    } else {
-      console.log("No active filter found");
-    }
-  });
-</script>
+.catalog-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 2.5rem;
+  text-align: center;
+  position: relative;
+  padding-bottom: 1rem;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
 
-<style>
-  .catalog-header {
-    background-color: #1a1a1a;
-    color: white;
-    padding: 3rem 0;
-    margin-bottom: 2rem;
-    position: relative;
-    overflow: hidden;
+.catalog-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  background-color: var(--primary-color);
+  opacity: 0.8;
+}
+
+.no-products {
+  text-align: center;
+  padding: 4rem 0;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.75rem;
+  margin: 0;
+  padding: 0.5rem 0 2rem;
+}
+
+/* Efecto sutil en hover para las tarjetas */
+.products-grid > * {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.products-grid > *:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+@media (max-width: 1024px) {
+  .products-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
   }
+}
 
-  .catalog-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: url('/images/header-bg.jpg') center/cover no-repeat;
-    opacity: 0.2;
-    z-index: 0;
+@media (max-width: 768px) {
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
   }
+}
 
+@media (max-width: 480px) {
   .catalog-container {
-    position: relative;
-    z-index: 1;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1.5rem;
+    padding: 0 1.25rem;
   }
-
-  .catalog-header h1 {
-    font-size: 2.5rem;
-    font-weight: 800;
-    margin-bottom: 1rem;
-    text-align: center;
-    position: relative;
-    display: inline-block;
-    margin-left: auto;
-    margin-right: auto;
-    width: 100%;
+  
+  .products-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
-
-  .catalog-header p {
-    font-size: 1.1rem;
-    max-width: 800px;
-    margin: 0 auto;
-    text-align: center;
-    color: rgba(255, 255, 255, 0.9);
-    line-height: 1.6;
-  }
-
-  .catalog-category-title {
-    color: #e63946;
-    font-weight: 700;
-    position: relative;
-    display: inline-block;
-  }
-
-  .catalog-category-title::after {
-    content: '';
-    position: absolute;
-    bottom: -5px;
-    left: 0;
-    width: 100%;
-    height: 3px;
-    background-color: #e63946;
-  }
-
-  .no-products-message {
-    text-align: center;
-    padding: 3rem 1.5rem;
-    background-color: white;
-    border-radius: 8px;
-    margin: 2rem auto;
-    max-width: 800px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  }
-
-  .no-products-message i {
-    font-size: 3.5rem;
-    color: #e63946;
-    margin-bottom: 1.5rem;
-    display: block;
-  }
-
-  .no-products-message h3 {
-    font-size: 1.75rem;
-    margin-bottom: 1rem;
-    color: #333;
-    font-weight: 700;
-  }
-
-  .no-products-message p {
-    color: #666;
-    margin-bottom: 1.5rem;
-    font-size: 1.1rem;
-    line-height: 1.6;
-  }
-
-  .btn-primary {
-    background-color: #e63946;
-    color: white;
-    padding: 0.75rem 1.75rem;
-    border-radius: 6px;
-    text-decoration: none;
-    display: inline-block;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    border: none;
-    font-size: 1rem;
-    box-shadow: 0 4px 6px rgba(230, 57, 70, 0.2);
-  }
-
-  .btn-primary:hover {
-    background-color: #c1121f;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 8px rgba(230, 57, 70, 0.3);
-  }
-
-  @media (max-width: 768px) {
-    .catalog-header {
-      padding: 2.5rem 0;
-    }
-
-    .catalog-header h1 {
-      font-size: 2rem;
-    }
-
-    .catalog-header p {
-      font-size: 1rem;
-    }
-
-    .no-products-message {
-      padding: 2.5rem 1.25rem;
-    }
-
-    .no-products-message i {
-      font-size: 3rem;
-    }
-
-    .no-products-message h3 {
-      font-size: 1.5rem;
-    }
-  }
-
-  @media (max-width: 576px) {
-    .catalog-header {
-      padding: 2rem 0;
-    }
-
-    .catalog-header h1 {
-      font-size: 1.75rem;
-    }
-
-    .catalog-header p {
-      font-size: 0.9rem;
-    }
-
-    .no-products-message {
-      padding: 2rem 1rem;
-    }
-
-    .no-products-message i {
-      font-size: 2.5rem;
-    }
-
-    .no-products-message h3 {
-      font-size: 1.25rem;
-    }
-
-    .btn-primary {
-      padding: 0.6rem 1.5rem;
-      font-size: 0.9rem;
-    }
-  }
+}
 </style>

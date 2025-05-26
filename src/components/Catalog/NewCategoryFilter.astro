@@ -1,260 +1,111 @@
 ---
-import { supabase } from '../../lib/supabase';
-import { categories as staticCategories } from '../../data/catalog'; // Como respaldo
+interface Category {
+  id: string;
+  name: string;
+}
 
 interface Props {
   activeCategory: string;
+  categories: Category[];
 }
 
-const { activeCategory } = Astro.props;
+const { activeCategory, categories } = Astro.props;
 
-// Obtener categorías desde Supabase
-let categories = [];
-
-try {
-  const { data, error } = await supabase
-    .from('categories')
-    .select('*')
-    .order('name');
-
-  if (error) throw error;
-
-  // Transformar los datos al formato esperado
-  categories = data.map(category => ({
-    id: category.id,
-    name: category.name,
-    icon: category.icon
-  }));
-
-  // Añadir la categoría "Todos los productos" al principio
-  categories.unshift({
-    id: 'all',
-    name: 'Todos los productos',
-    icon: 'th-large'
-  });
-} catch (error) {
-  console.error('Error al obtener categorías de Supabase:', error);
-  // Usar categorías estáticas como respaldo
-  categories = staticCategories;
-}
+// Asegurarse de que 'all' esté presente en las categorías
+const allCategories = [
+  { id: 'all', name: 'Todos los productos' },
+  ...categories
+];
 ---
 
-<div class="filter-container">
-  <div class="filter-header">
-    <h3>Categorías</h3>
-    <div class="filter-line"></div>
-  </div>
-
-  <ul class="filter-list">
-    {categories.map(({ id, name, icon }) => {
-      const isActive = id === activeCategory;
-      return (
-        <li class="filter-item">
-          <a
-            href={`/catalog?category=${id}`}
-            class={`filter-link ${isActive ? 'active' : ''}`}
-            data-category={id}
-            data-testid={`category-${id}`}
-          >
-            <span class="filter-icon">
-              <i class={`fas fa-${icon}`}></i>
-            </span>
-            <span class="filter-text">{name}</span>
-            {isActive && (
-              <span class="active-indicator">
-                <i class="fas fa-check"></i>
-              </span>
-            )}
-          </a>
-        </li>
-      );
-    })}
-  </ul>
+<div class="category-filters">
+  {allCategories.map((category) => (
+    <a
+      href={`/catalog?category=${category.id}`}
+      class={`filter-link ${activeCategory === category.id ? 'active' : ''}`}
+      aria-current={activeCategory === category.id ? 'page' : undefined}
+    >
+      {category.name}
+    </a>
+  ))}
 </div>
 
-<script>
-  // Add client-side active class handling
-  document.addEventListener('DOMContentLoaded', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const categoryParam = urlParams.get('category') || 'all';
-    console.log("NewCategoryFilter - Current category:", categoryParam);
-
-    // Remove active class from all links
-    document.querySelectorAll('.filter-link').forEach(link => {
-      const linkCategory = link.getAttribute('data-category');
-      console.log(`Link category: ${linkCategory}, isActive: ${linkCategory === categoryParam}`);
-
-      link.classList.remove('active');
-
-      // Remove any existing active indicators
-      const indicator = link.querySelector('.active-indicator');
-      if (indicator) {
-        indicator.remove();
-      }
-    });
-
-    // Add active class to the current category
-    const activeLink = document.querySelector(`.filter-link[data-category="${categoryParam}"]`);
-    if (activeLink) {
-      console.log(`Found active link for category: ${categoryParam}`);
-      activeLink.classList.add('active');
-
-      // Add active indicator
-      if (!activeLink.querySelector('.active-indicator')) {
-        const indicator = document.createElement('span');
-        indicator.className = 'active-indicator';
-        indicator.innerHTML = '<i class="fas fa-check"></i>';
-        activeLink.appendChild(indicator);
-      }
-    } else {
-      console.log(`No active link found for category: ${categoryParam}`);
-      console.log("Available categories:", Array.from(document.querySelectorAll('.filter-link')).map(link => link.getAttribute('data-category')));
-    }
-
-    // Add click event listeners to ensure proper navigation
-    document.querySelectorAll('.filter-link').forEach(link => {
-      link.addEventListener('click', (e) => {
-        const category = link.getAttribute('data-category');
-        console.log(`Clicked on category: ${category}`);
-
-        // Update URL and reload page
-        window.location.href = `/catalog?category=${category}`;
-
-        // Prevent default to ensure our navigation takes precedence
-        e.preventDefault();
-      });
-    });
-  });
-</script>
-
 <style>
-  .filter-container {
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    max-width: 1200px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .filter-header {
-    margin-bottom: 1.25rem;
-    position: relative;
-  }
-
-  .filter-header h3 {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #333;
-    margin: 0;
-    padding-bottom: 0.5rem;
-  }
-
-  .filter-line {
-    height: 3px;
-    width: 50px;
-    background-color: #e63946;
-    margin-top: 0.5rem;
-  }
-
-  .filter-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+  .category-filters {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-  }
-
-  .filter-item {
-    margin: 0;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    margin: 0 0 2.5rem;
+    padding: 0.25rem;
+    background-color: var(--color-gray-50);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--color-gray-200);
+    width: fit-content;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
   }
 
   .filter-link {
-    display: flex;
-    align-items: center;
-    padding: 0.75rem 1.25rem;
-    border-radius: 6px;
     text-decoration: none;
-    color: #555;
+    color: var(--color-gray-600);
+    padding: 0.5rem 1.25rem;
+    border-radius: var(--border-radius-md);
+    background-color: transparent;
+    transition: var(--transition-colors);
+    font-size: 0.8125rem;
     font-weight: 500;
-    transition: all 0.2s ease;
-    background-color: #f5f5f5;
-    border: 1px solid transparent;
+    white-space: nowrap;
+    line-height: 1.25;
+    border: none;
   }
 
   .filter-link:hover {
-    background-color: #f0f0f0;
-    color: #e63946;
-    transform: translateY(-2px);
+    background-color: var(--color-white);
+    color: var(--color-primary-700);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
 
   .filter-link.active {
-    background-color: #e63946;
-    color: white;
-    border-color: #e63946;
+    background-color: var(--color-white);
+    color: var(--color-primary-700);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
     font-weight: 600;
-    box-shadow: 0 4px 8px rgba(230, 57, 70, 0.2);
   }
 
-  .filter-icon {
-    margin-right: 0.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.9rem;
+  /* Estilos para la barra de desplazamiento */
+  .category-filters::-webkit-scrollbar {
+    height: 6px;
   }
 
-  .active-indicator {
-    margin-left: 0.75rem;
-    font-size: 0.8rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .category-filters::-webkit-scrollbar-track {
+    background: var(--color-gray-100);
+    border-radius: 3px;
   }
 
-  .filter-link:not(.active) .active-indicator {
-    display: none;
+  .category-filters::-webkit-scrollbar-thumb {
+    background-color: var(--color-gray-300);
+    border-radius: 3px;
   }
 
-  /* Responsive styles */
+  .category-filters::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-gray-400);
+  }
+
   @media (max-width: 768px) {
-    .filter-container {
-      padding: 1.25rem;
+    .category-filters {
+      margin-left: -1.25rem;
+      margin-right: -1.25rem;
+      border-radius: 0;
+      border-left: none;
+      border-right: none;
+      padding: 0.25rem 1.25rem;
     }
-
-    .filter-list {
-      gap: 0.5rem;
-    }
-
+    
     .filter-link {
-      padding: 0.6rem 1rem;
-      font-size: 0.9rem;
-    }
-  }
-
-  @media (max-width: 576px) {
-    .filter-container {
-      padding: 1rem;
-    }
-
-    .filter-list {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.5rem;
-    }
-
-    .filter-link {
-      padding: 0.5rem 0.75rem;
-      font-size: 0.85rem;
-      width: 100%;
-    }
-
-    .filter-icon {
-      margin-right: 0.5rem;
-      font-size: 0.8rem;
+      font-size: 0.8125rem;
+      padding: 0.5rem 1rem;
     }
   }
 </style>

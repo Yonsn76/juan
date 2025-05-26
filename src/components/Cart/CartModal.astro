@@ -1,11 +1,282 @@
 ---
----
+import cart from '../../scripts/cart';
 
-<div class="cart-overlay" id="cart-overlay"></div>
-<div class="cart-modal" id="cart-modal" role="dialog" aria-modal="true" aria-labelledby="cart-title">
-  <!-- Cart content will be dynamically loaded by client-side JS -->
-</div>
+let cartItems = cart.getItems();
+
+function formatPrice(price) {
+  return new Intl.NumberFormat('es-PE', {
+    style: 'currency',
+    currency: 'PEN',
+    minimumFractionDigits: 2,
+  }).format(price);
+}
+
+/** @param {Event} e */
+function updateQuantity(e) {
+  const input = /** @type {HTMLInputElement} */ (e.target);
+  const id = parseInt(input.getAttribute('data-id'));
+  const quantity = parseInt(input.value);
+  if (!isNaN(quantity) && quantity >= 0) {
+    cart.updateQuantity(id, quantity);
+    cartItems = cart.getItems();
+    updateCartUI();
+  }
+}
+
+/** @param {Event} e */
+function removeItem(e) {
+  const button = /** @type {HTMLButtonElement} */ (e.target);
+  const id = parseInt(button.getAttribute('data-id'));
+  cart.removeItem(id);
+  cartItems = cart.getItems();
+  updateCartUI();
+}
+
+function clearCart() {
+  cart.clear();
+  cartItems = [];
+  updateCartUI();
+}
+
+function updateCartUI() {
+  const cartItemsContainer = document.getElementById('cart-items');
+  const cartTotalElement = document.getElementById('cart-total');
+  if (cartItemsContainer && cartTotalElement) {
+    cartItemsContainer.innerHTML = '';
+    cartItems.forEach(item => {
+      const itemElement = document.createElement('div');
+      itemElement.className = 'cart-item';
+
+      itemElement.innerHTML = `
+        <div class="cart-item-image">
+          <img src="${item.image}" alt="${item.name}" />
+        </div>
+        <div class="cart-item-details">
+          <div class="cart-item-title">${item.name}</div>
+          <div class="cart-item-price">${formatPrice(item.price)}</div>
+          <div class="cart-item-quantity">
+            <input type="number" min="0" value="${item.quantity}" data-id="${item.id}" class="quantity-input" />
+          </div>
+          <button class="cart-item-remove" data-id="${item.id}" aria-label="Eliminar ${item.name} del carrito">&times;</button>
+        </div>
+      `;
+
+      cartItemsContainer.appendChild(itemElement);
+    });
+
+    cartTotalElement.textContent = formatPrice(cart.getTotal());
+
+    // Attach event listeners for quantity inputs and remove buttons
+    const quantityInputs = cartItemsContainer.querySelectorAll('.quantity-input');
+    quantityInputs.forEach(input => {
+      input.addEventListener('change', updateQuantity);
+    });
+
+    const removeButtons = cartItemsContainer.querySelectorAll('.cart-item-remove');
+    removeButtons.forEach(button => {
+      button.addEventListener('click', removeItem);
+    });
+  }
+}
+
+function toggleCartModal() {
+  const modal = document.getElementById('cart-modal');
+  if (modal) {
+    modal.classList.toggle('active');
+  }
+}
+
+document.addEventListener('astro:page-load', () => {
+  updateCartUI();
+  const cartToggle = document.getElementById('cart-toggle');
+  if (cartToggle) {
+    cartToggle.addEventListener('click', toggleCartModal);
+  }
+});
+
+</script>
 
 <style>
-  /* Cart modal styles will be imported from cart.css */
+  .cart-overlay {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: rgba(0,0,0,0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 1050;
+  }
+
+  .cart-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .cart-modal {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 400px;
+    height: 100%;
+    background: var(--bg-primary);
+    box-shadow: -4px 0 12px rgba(0,0,0,0.1);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    transition: right 0.3s ease;
+    z-index: 1100;
+  }
+
+  .cart-modal.active {
+    right: 0;
+  }
+
+  .cart-header {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .cart-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+
+  .cart-items {
+    flex-grow: 1;
+    overflow-y: auto;
+  }
+
+  .cart-item {
+    display: flex;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
+  }
+
+  .cart-item-image img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+  }
+
+  .cart-item-details {
+    flex-grow: 1;
+    margin-left: 1rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cart-item-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  .cart-item-price {
+    color: var(--biker-red);
+    margin-bottom: 0.5rem;
+  }
+
+  .cart-item-quantity input {
+    width: 60px;
+    padding: 0.25rem;
+    font-size: 1rem;
+  }
+
+  .cart-item-remove {
+    background: none;
+    border: none;
+    color: var(--biker-red);
+    font-size: 1.5rem;
+    cursor: pointer;
+    align-self: flex-start;
+  }
+
+  .cart-summary {
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+  }
+
+  .cart-total {
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .order-buttons {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .order-button {
+    flex: 1;
+    padding: 0.75rem;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+  }
+
+  .order-whatsapp {
+    background-color: #25D366;
+  }
+
+  .order-gmail {
+    background-color: #D44638;
+  }
 </style>
+
+<div id="cart-overlay" class="cart-overlay"></div>
+<div id="cart-modal" class="cart-modal" aria-modal="true" role="dialog" aria-labelledby="cart-title" aria-hidden="true">
+  <div class="cart-header">
+    <h2 id="cart-title">Carrito de Compras</h2>
+    <button class="cart-close" aria-label="Cerrar carrito" onclick="document.getElementById('cart-modal').classList.remove('active')">&times;</button>
+  </div>
+  <div id="cart-items" class="cart-items"></div>
+  <div class="cart-summary">
+    <div class="cart-total" id="cart-total">S/ 0.00</div>
+    <div class="order-buttons">
+      <a href="#" class="order-button order-whatsapp" id="order-whatsapp" target="_blank" rel="noopener noreferrer">Hacer pedido por WhatsApp</a>
+      <a href="#" class="order-button order-gmail" id="order-gmail" target="_blank" rel="noopener noreferrer">Hacer pedido por Gmail</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  function generateOrderMessage() {
+    const items = cart.getItems();
+    if (items.length === 0) return '';
+
+    let message = 'Hola, quiero hacer un pedido:%0A';
+    items.forEach(item => {
+      message += `- ${item.name} x${item.quantity} - S/ ${(item.price * item.quantity).toFixed(2)}%0A`;
+    });
+    message += `Total: S/ ${cart.getTotal().toFixed(2)}`;
+
+    return encodeURIComponent(message);
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    const whatsappButton = document.getElementById('order-whatsapp');
+    const gmailButton = document.getElementById('order-gmail');
+
+    if (whatsappButton) {
+      whatsappButton.href = `https://wa.me/?text=${generateOrderMessage()}`;
+    }
+
+    if (gmailButton) {
+      gmailButton.href = `mailto:?subject=Pedido Casa Biker&body=${generateOrderMessage()}`;
+    }
+  });
+</script>

@@ -1,222 +1,311 @@
 ---
-import type { Product } from '../../types/catalog';
-import { supabase } from '../../lib/supabase';
-import '../../styles/product-modal.css';
+interface Props {
+  product?: {
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+    image: string;
+    category: string;
+    discount?: number;
+  };
+  onClose?: () => void;
+}
+
+const { product } = Astro.props;
+
+// Only destructure product properties if product exists
+const { name, description, price, image, category, discount } = product || {};
+
+const formatPrice = (price: number): string => {
+  return new Intl.NumberFormat('es-PE', {
+    style: 'currency',
+    currency: 'PEN',
+    minimumFractionDigits: 2,
+  }).format(price);
+};
+
+// Only calculate finalPrice if price exists
+const finalPrice = price ? (discount ? price * (1 - discount / 100) : price) : 0;
 ---
 
-<div id="product-modal" class="product-modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3 id="modal-product-title" class="modal-title">Nombre del Producto</h3>
-      <button id="close-modal" class="close-button" aria-label="Cerrar modal">
-        <i class="fas fa-times"></i>
+{product && (
+  <div class="modal-overlay" onclick="document.querySelector('.modal-content').style.display='none'">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <button class="close-btn" onclick="this.closest('.modal-overlay').style.display='none'" aria-label="Cerrar modal">
+        &times;
       </button>
-    </div>
-    <div class="modal-body">
-      <div class="product-details">
-        <div class="product-image-container">
-          <img
-            id="modal-product-image"
-            src="/images/placeholder.jpg"
-            alt="Producto"
-            class="product-image"
+      
+      <div class="modal-body">
+        <div class="modal-image">
+          <img 
+            src={image} 
+            alt={name}
             loading="lazy"
-          >
+            onerror="this.src='/images/placeholder.jpg'"
+          />
         </div>
-        <div class="product-info">
-          <p id="modal-product-description" class="product-description">
-            Descripción detallada del producto.
-          </p>
-          <p class="product-price">
-            <span id="modal-product-price">S/ 0.00</span>
-          </p>
-          <button
-            class="add-to-cart-button"
-            id="add-to-cart"
-            aria-label="Añadir al carrito"
-          >
-            <i class="fas fa-shopping-cart"></i> Añadir al carrito
-          </button>
+        
+        <div class="modal-details">
+          <span class="category-badge">{category}</span>
+          <h2>{name}</h2>
+          <p class="description">{description}</p>
+          
+          {price && (
+            <div class="price-container">
+              <span class="current-price">{formatPrice(finalPrice)}</span>
+              {discount && price && (
+                <span class="original-price">{formatPrice(price)}</span>
+              )}
+              {discount && (
+                <span class="discount-badge">-{discount}%</span>
+              )}
+            </div>
+          )}
+          
+          <div class="modal-actions">
+            <button class="btn primary">
+              <i class="fas fa-shopping-cart"></i> Añadir al carrito
+            </button>
+            <a href={`/producto/${product.id}`} class="btn secondary">
+              Ver detalles completos
+            </a>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
+)}
+
+<style>
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 1rem;
+  }
+  
+  .modal-content {
+    background: white;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  }
+  
+  .close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+    z-index: 10;
+  }
+  
+  .modal-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    padding: 2rem;
+  }
+  
+  .modal-image {
+    position: relative;
+    padding-top: 100%;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #f5f5f5;
+  }
+  
+  .modal-image img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 1rem;
+  }
+  
+  .modal-details {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .category-badge {
+    display: inline-block;
+    background: #f0f0f0;
+    color: #666;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+    align-self: flex-start;
+  }
+  
+  h2 {
+    margin: 0 0 1rem 0;
+    color: #333;
+  }
+  
+  .description {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+  
+  .price-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .current-price {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2f3542;
+  }
+  
+  .original-price {
+    text-decoration: line-through;
+    color: #999;
+  }
+  
+  .discount-badge {
+    background: #ff4757;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  
+  .modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: auto;
+  }
+  
+  .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+  
+  .btn.primary {
+    background-color: #2f3542;
+    color: white;
+    border: none;
+  }
+  
+  .btn.primary:hover {
+    background-color: #1e90ff;
+  }
+  
+  .btn.secondary {
+    background: none;
+    color: #2f3542;
+    border: 1px solid #ddd;
+  }
+  
+  .btn.secondary:hover {
+    border-color: #2f3542;
+  }
+  
+  @media (max-width: 768px) {
+    .modal-body {
+      grid-template-columns: 1fr;
+      padding: 1rem;
+    }
+    
+    .modal-image {
+      margin-top: 2rem;
+    }
+  }
+</style>
 
 <script>
-  import { createClient } from '@supabase/supabase-js';
-
-  // Crear cliente de Supabase
-  const supabaseUrl = 'https://cnrhqbbquymnlquuwkbh.supabase.co';
-  const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNucmhxYmJxdXltbmxxdXV3a2JoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5NDYwNDksImV4cCI6MjA2MzUyMjA0OX0.uWq6EPQrMOq1vBif4flJVnjHhvKjIlbB-nrnxgRzCbY';
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-  document.addEventListener('DOMContentLoaded', () => {
-    // Elements
-    const modal = document.getElementById('product-modal');
-    const closeButton = document.getElementById('close-modal');
-    const addToCartButton = document.getElementById('add-to-cart');
-    let currentProduct = null;
-
-    // Show modal function
-    const showModal = () => {
-      if (modal) {
-        document.body.style.overflow = 'hidden';
-        modal.classList.add('active');
-        closeButton?.focus();
-      }
-    };
-
-    // Hide modal function
-    const hideModal = () => {
-      if (modal) {
-        document.body.style.overflow = '';
-        modal.classList.remove('active');
-      }
-    };
-
-    // Show notification function
-    const showNotification = (message) => {
-      const notification = document.createElement('div');
-      notification.className = 'notification';
-      notification.innerHTML = `
-        <div class="notification-content">
-          <i class="fas fa-check-circle"></i>
-          <span>${message} añadido al carrito</span>
-        </div>
-      `;
-      document.body.appendChild(notification);
-
-      // Remove notification after 3 seconds
-      setTimeout(() => {
-        notification.classList.add('fade-out');
-        setTimeout(() => notification.remove(), 300);
-      }, 3000);
-    };
-
-    // Event Listeners
-    closeButton?.addEventListener('click', hideModal);
-
-    modal?.addEventListener('click', (e) => {
-      if (e.target === modal) hideModal();
-    });
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && modal?.classList.contains('active')) {
-        hideModal();
-      }
-    });
-
-    // Add to cart functionality
-    if (addToCartButton) {
-      addToCartButton.addEventListener('click', () => {
-        if (!currentProduct) return;
-
-        // Get or initialize cart
-        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-
-        // Check if product already in cart
-        const existingItem = cart.find(item => item.id === currentProduct.id);
-
-        if (existingItem) {
-          existingItem.quantity += 1;
-        } else {
-          cart.push({
-            ...currentProduct,
-            quantity: 1
-          });
+  // Cerrar el modal al presionar la tecla Escape
+  if (typeof document !== 'undefined') {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        const modal = document.querySelector('.modal-overlay');
+        if (modal) {
+          modal.style.display = 'none';
         }
-
-        // Save to localStorage
-        localStorage.setItem('cart', JSON.stringify(cart));
-
-        // Show success message
-        showNotification(currentProduct.name);
-
-        // Update cart count
-        updateCartCount();
-
-        // Close modal
-        hideModal();
-      });
-    }
-
-    // Update cart count in UI
-    function updateCartCount() {
-      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-      const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-      const cartCount = document.getElementById('cart-count');
-
-      if (cartCount) {
-        cartCount.textContent = totalItems > 0 ? totalItems : '';
-        cartCount.style.display = totalItems > 0 ? 'flex' : 'none';
       }
-    }
+    };
 
-    // Expose function to update modal content
     window.updateProductModal = (product) => {
+      const modal = document.querySelector('.modal-overlay');
       if (!modal) return;
 
-      // Store current product
-      currentProduct = product;
+      // Actualizar contenido del modal con los datos del producto
+      const nameEl = modal.querySelector('h2');
+      const descriptionEl = modal.querySelector('.description');
+      const priceEl = modal.querySelector('.current-price');
+      const originalPriceEl = modal.querySelector('.original-price');
+      const discountBadge = modal.querySelector('.discount-badge');
+      const imageEl = modal.querySelector('.modal-image img');
+      const categoryEl = modal.querySelector('.category-badge');
 
-      // Update modal content
-      const titleEl = document.getElementById('modal-product-title');
-      const imageEl = document.getElementById('modal-product-image');
-      const descEl = document.getElementById('modal-product-description');
-      const priceEl = document.getElementById('modal-product-price');
-
-      if (titleEl) titleEl.textContent = product.name || 'Producto';
-
+      if (nameEl) nameEl.textContent = product.name || '';
+      if (descriptionEl) descriptionEl.textContent = product.description || '';
+      if (priceEl) priceEl.textContent = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(product.price * (1 - (product.discount || 0) / 100));
+      if (originalPriceEl) {
+        if (product.discount && product.discount > 0) {
+          originalPriceEl.textContent = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(product.price);
+          originalPriceEl.style.display = 'inline';
+        } else {
+          originalPriceEl.style.display = 'none';
+        }
+      }
+      if (discountBadge) {
+        if (product.discount && product.discount > 0) {
+          discountBadge.textContent = `-${product.discount}%`;
+          discountBadge.style.display = 'inline-block';
+        } else {
+          discountBadge.style.display = 'none';
+        }
+      }
       if (imageEl) {
-        let imageUrl = product.image ? `/images/${product.image}` : '/images/placeholder.jpg';
-
-        // Verificar si la imagen es una ruta de archivo (no una URL completa)
-        if (product.image && !product.image.startsWith('http')) {
-          try {
-            const { data } = supabase.storage
-              .from('productos')
-              .getPublicUrl(product.image);
-
-            if (data && data.publicUrl) {
-              imageUrl = data.publicUrl;
-              console.log('URL de imagen obtenida de Supabase para modal:', imageUrl);
-            }
-          } catch (error) {
-            console.error('Error al obtener URL de imagen para modal:', error);
-          }
-        }
-
-        imageEl.src = imageUrl;
-        imageEl.alt = product.name || 'Producto';
-        imageEl.onerror = () => {
-          imageEl.src = '/images/placeholder.jpg';
-        };
+        imageEl.src = product.image || '/images/placeholder.jpg';
+        imageEl.alt = product.name || '';
       }
+      if (categoryEl) categoryEl.textContent = product.category || '';
 
-      if (descEl) {
-        descEl.textContent = product.details || product.description || 'Descripción no disponible';
-      }
-
-      if (priceEl) {
-        const finalPrice = product.discount
-          ? product.price * (1 - product.discount / 100)
-          : product.price;
-
-        priceEl.innerHTML = `S/ ${finalPrice.toFixed(2)}`;
-
-        // Show original price if there's a discount
-        if (product.discount) {
-          const originalPrice = document.createElement('span');
-          originalPrice.className = 'original-price';
-          originalPrice.textContent = `S/ ${product.price.toFixed(2)}`;
-          priceEl.appendChild(document.createElement('br'));
-          priceEl.appendChild(originalPrice);
-        }
-      }
-
-      // Show the modal
-      showModal();
+      modal.style.display = 'flex';
     };
-  });
+
+    document.addEventListener('keydown', handleEscape);
+
+    // Limpiar el event listener cuando el componente se desmonte
+    document.addEventListener('astro:after-swap', () => {
+      document.removeEventListener('keydown', handleEscape);
+      window.updateProductModal = undefined;
+    });
+  }
 </script>

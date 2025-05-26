@@ -1,0 +1,146 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { supabase } from '../../lib/supabase';
+
+// Obtener el usuario de locals (establecido por el middleware)
+const user = Astro.locals.user;
+
+// Obtener estadísticas básicas de Supabase
+let stats = {
+  users: 0,
+  products: 0,
+  categories: 0
+};
+let error = null;
+
+try {
+  // Obtener conteo de usuarios
+  const { count: usersCount, error: usersError } = await supabase
+    .from('users')
+    .select('*', { count: 'exact' });
+
+  if (usersError) {
+    throw new Error('Error al obtener estadísticas de usuarios: ' + usersError.message);
+  } else {
+    stats.users = usersCount || 0;
+  }
+
+  // Obtener conteo de productos
+  const { count: productsCount, error: productsError } = await supabase
+    .from('products')
+    .select('*', { count: 'exact' });
+
+  if (productsError) {
+    throw new Error('Error al obtener estadísticas de productos: ' + productsError.message);
+  } else {
+    stats.products = productsCount || 0;
+  }
+
+  // Obtener conteo de categorías
+  const { count: categoriesCount, error: categoriesError } = await supabase
+    .from('categories')
+    .select('*', { count: 'exact' });
+
+  if (categoriesError) {
+    throw new Error('Error al obtener estadísticas de categorías: ' + categoriesError.message);
+  } else {
+    stats.categories = categoriesCount || 0;
+  }
+} catch (err) {
+  console.error('Error al obtener estadísticas:', err);
+  error = err instanceof Error ? err.message : 'Error desconocido al obtener estadísticas';
+}
+---
+
+<AdminLayout title="Dashboard" user={user}>
+  <div class="admin-content-header">
+    <h1>Bienvenido, {user?.name || 'Admin'}</h1>
+  </div>
+
+  {error && (
+    <div class="admin-alert admin-alert-danger">
+      <i class="fas fa-exclamation-circle"></i>
+      <span>Error: {error}</span>
+    </div>
+  )}
+
+  <div class="admin-dashboard">
+    <div class="admin-stat-card">
+      <div class="admin-stat-icon">
+        <i class="fas fa-users"></i>
+      </div>
+      <div class="admin-stat-info">
+        <h3>Usuarios</h3>
+        <p class="admin-stat-value">{stats.users}</p>
+      </div>
+    </div>
+    
+    <div class="admin-stat-card">
+      <div class="admin-stat-icon">
+        <i class="fas fa-box"></i>
+      </div>
+      <div class="admin-stat-info">
+        <h3>Productos</h3>
+        <p class="admin-stat-value">{stats.products}</p>
+      </div>
+    </div>
+    
+    <div class="admin-stat-card">
+      <div class="admin-stat-icon">
+        <i class="fas fa-tags"></i>
+      </div>
+      <div class="admin-stat-info">
+        <h3>Categorías</h3>
+        <p class="admin-stat-value">{stats.categories}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-content-header">
+    <h2>Acciones Rápidas</h2>
+  </div>
+
+  <div class="admin-dashboard">
+    <div class="admin-stat-card" style="background-color: #f8fafc; cursor: pointer;" onclick="window.location.href='/admin/products/new_products'">
+      <div class="admin-stat-icon" style="background-color: rgba(227, 6, 19, 0.1);">
+        <i class="fas fa-box"></i>
+      </div>
+      <div class="admin-stat-info">
+        <h3>Agregar Producto</h3>
+        <p style="color: var(--primary-color);">Crear un nuevo producto</p>
+      </div>
+    </div>
+    
+    <div class="admin-stat-card" style="background-color: #f8fafc; cursor: pointer;" onclick="window.location.href='/admin/categories/new_categories'">
+      <div class="admin-stat-icon" style="background-color: rgba(227, 6, 19, 0.1);">
+        <i class="fas fa-tag"></i>
+      </div>
+      <div class="admin-stat-info">
+        <h3>Nueva Categoría</h3>
+        <p style="color: var(--primary-color);">Agregar una categoría</p>
+      </div>
+    </div>
+    
+    <div class="admin-stat-card" style="background-color: #f8fafc; cursor: pointer;" onclick="window.location.href='/admin/users/new_users'">
+      <div class="admin-stat-icon" style="background-color: rgba(227, 6, 19, 0.1);">
+        <i class="fas fa-user-plus"></i>
+      </div>
+      <div class="admin-stat-info">
+        <h3>Nuevo Usuario</h3>
+        <p style="color: var(--primary-color);">Crear un usuario nuevo</p>
+      </div>
+    </div>
+  </div>
+</AdminLayout>
+
+<script>
+  // Script para resaltar el elemento del menú activo
+  document.addEventListener('DOMContentLoaded', () => {
+    const navItems = document.querySelectorAll('.admin-nav-item');
+    navItems.forEach(item => {
+      if (item.getAttribute('data-page') === 'dashboard') {
+        item.classList.add('active');
+      }
+    });
+  });
+</script>

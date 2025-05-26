@@ -8,503 +8,304 @@ interface Props {
 }
 
 const { product, categoryName } = Astro.props;
-const { name, description, price, image, discount } = product;
+const { id, name, description, price, image, discount, categories } = product;
 
-// Función para formatear el precio con descuento
-const formatPrice = (price: number) => {
+/**
+ * Formatea un número como moneda en soles peruanos (PEN)
+ */
+const formatPrice = (price: number): string => {
   return new Intl.NumberFormat('es-PE', {
     style: 'currency',
     currency: 'PEN',
-    minimumFractionDigits: 2
+    minimumFractionDigits: 2,
   }).format(price);
 };
 
-// Calcular precio con descuento si existe
-const finalPrice = discount ? price * (1 - discount / 100) : price;
+// Asegurarse de que el precio sea un número
+const productPrice = typeof price === 'number' ? price : 0;
+const productDiscount = typeof discount === 'number' ? discount : 0;
+const finalPrice = productDiscount > 0 
+  ? productPrice * (1 - productDiscount / 100) 
+  : productPrice;
 
-// Obtener la URL de la imagen desde Supabase
-let imageUrl = `/images/${image}`;
-
-// Verificar si la imagen es una ruta de archivo (no una URL completa)
-if (image && !image.startsWith('http')) {
-  try {
-    const { data } = supabase.storage
-      .from('productos')
-      .getPublicUrl(image);
-
-    if (data && data.publicUrl) {
-      imageUrl = data.publicUrl;
-      console.log('URL de imagen obtenida de Supabase:', imageUrl);
-    }
-  } catch (error) {
-    console.error('Error al obtener URL de imagen:', error);
-  }
-}
+// Usar la imagen directamente ya que ya viene formateada desde el componente padre
+const imageUrl = image || '/images/placeholder-product.jpg';
 ---
 
-<article class="card">
-  <!-- Badge de descuento -->
-  {discount && (
-    <div class="discount-badge">
-      -{discount}%
-    </div>
+<article class="product-card">
+  {/* Badge de descuento */}
+  {discount && discount > 0 && (
+    <div class="discount-badge">-{discount}%</div>
   )}
 
-  <!-- Contenedor de imagen -->
-  <div class="card-img">
+  {/* Contenedor de imagen */}
+  <div class="product-image-container">
     <img
       src={imageUrl}
       alt={name}
       class="product-image"
       loading="lazy"
-      onerror="this.src='/images/placeholder.jpg'"
+      onerror="this.src='/images/placeholder-product.jpg'"
     />
-    <!-- Botón de favoritos -->
+    
+    {/* Botón de favoritos */}
     <button
       class="favorite-btn"
-      aria-label="Añadir a favoritos"
-      data-product-id={product.id}
+      aria-label={`Añadir ${name} a favoritos`}
+      data-product-id={id}
     >
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+      <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-width="2"
+        class="w-5 h-5"
+      >
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
       </svg>
     </button>
   </div>
 
-  <!-- Categoría -->
-  <span class="card-category">{categoryName}</span>
+  {/* Contenido de la tarjeta */}
+  <div class="product-info">
+    <span class="category">{categories?.name || categoryName || 'Sin categoría'}</span>
+    <h3 class="product-name">{name}</h3>
+    
+    {/* Precios */}
+    <div class="price-container">
+      <span class="current-price">{formatPrice(finalPrice)}</span>
+      {discount && discount > 0 && (
+        <span class="original-price">{formatPrice(price)}</span>
+      )}
+    </div>
 
-  <!-- Título y descripción -->
-  <h3 class="card-title">{name}</h3>
-  <p class="card-subtitle">{description}</p>
-
-  <!-- Precios -->
-  <div class="price-container">
-    <span class="card-price">{formatPrice(finalPrice)}</span>
-    {discount && (
-      <span class="original-price">{formatPrice(price)}</span>
-    )}
-  </div>
-
-  <hr class="card-divider">
-
-  <!-- Acciones -->
-  <div class="card-footer">
-    <button
-      class="details-btn"
-      data-product={JSON.stringify(product)}
-      aria-label={`Ver detalles de ${name}`}
-    >
-      Ver detalles
-    </button>
-    <button
-      class="cart-btn"
-      data-product={JSON.stringify(product)}
-      aria-label="Añadir al carrito"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="9" cy="21" r="1"></circle>
-        <circle cx="20" cy="21" r="1"></circle>
-        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-      </svg>
-    </button>
+    {/* Acciones */}
+    <div class="actions">
+      <button
+        class="view-details details-btn"
+        aria-label={`Ver detalles de ${name}`}
+        data-product={JSON.stringify(product)}
+      >
+        <i class="fas fa-eye" aria-hidden="true"></i> Ver detalles
+      </button>
+      <button
+        class="add-to-cart-button"
+        aria-label={`Añadir ${name} al carrito`}
+        onclick={() => {
+          const event = new CustomEvent('addToCart', {
+            detail: {
+              id,
+              name,
+              price: typeof price === 'number' ? price : 0,
+              quantity: 1,
+              image: imageUrl,
+            },
+          });
+          window.dispatchEvent(event);
+        }}
+      >
+        <i class="fas fa-shopping-cart"></i> Añadir al carrito
+      </button>
+    </div>
   </div>
 </article>
 
 <style>
-  .card {
-    --font-color: #2d3436;
-    --font-color-sub: #636e72;
-    --bg-color: #fff;
-    --main-color: #2d3436;
-    --main-focus: #e63946;
-    --secondary-color: #f8f9fa;
-    --success-color: #2ecc71;
-    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-
+  /* Estilos profesionales para la tarjeta de producto */
+  .product-card {
     position: relative;
-    width: 100%;
-    max-width: 250px;
-    height: auto;
-    background: var(--bg-color);
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    transition: var(--transition-colors), var(--transition-transform);
+    background: var(--color-white);
+    height: 100%;
     display: flex;
     flex-direction: column;
-    padding: 12px;
-    gap: 8px;
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    transition: all 0.3s ease;
-    box-shadow: var(--shadow);
-    overflow: hidden;
+    border: 1px solid var(--color-gray-100);
+    will-change: transform, box-shadow;
   }
 
-  .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+  .product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.03);
+    border-color: var(--color-gray-200);
   }
 
-  /* Badge de descuento */
-  .discount-badge {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    background-color: var(--main-focus);
-    color: white;
-    padding: 3px 8px;
-    border-radius: 12px;
-    font-size: 10px;
-    font-weight: 600;
-    z-index: 2;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-
-  /* Contenedor de imagen */
-  .card-img {
+  .product-image-container {
     position: relative;
-    width: 100%;
-    height: 150px;
-    border-radius: 6px;
+    padding-top: 100%; /* Relación de aspecto 1:1 */
     overflow: hidden;
-    background-color: #f8f9fa;
-    margin-bottom: 3px;
+    background-color: var(--color-gray-50);
   }
 
   .product-image {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     object-fit: contain;
-    transition: transform 0.5s ease;
-    padding: 8px;
-    background: white;
+    object-position: center;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    background-color: var(--color-white);
+    padding: 1.5rem;
   }
 
-  .card:hover .product-image {
-    transform: scale(1.05);
+  .product-card:hover .product-image {
+    transform: scale(1.03);
   }
 
-  /* Botón de favoritos */
+  .discount-badge {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    background: var(--color-error);
+    color: var(--color-white);
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    z-index: 2;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    line-height: 1;
+  }
+
   .favorite-btn {
     position: absolute;
-    top: 8px;
-    left: 8px;
-    background: rgba(255, 255, 255, 0.9);
-    border: none;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(4px);
+    border: 1px solid var(--color-gray-200);
     border-radius: 50%;
-    width: 28px;
-    height: 28px;
+    width: 2rem;
+    height: 2rem;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: var(--transition-colors), var(--transition-transform);
     z-index: 2;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    color: var(--color-gray-600);
   }
 
   .favorite-btn:hover {
-    background: #fff;
+    background: var(--color-error);
+    color: var(--color-white);
+    border-color: var(--color-error);
     transform: scale(1.1);
   }
 
   .favorite-btn svg {
-    width: 14px;
-    height: 14px;
-    stroke: #e74c3c;
-    fill: none;
-    transition: all 0.3s ease;
+    width: 1rem;
+    height: 1rem;
+    transition: fill 0.2s ease;
   }
 
-  .favorite-btn:hover svg,
-  .favorite-btn.active svg {
-    fill: #e74c3c;
+  .product-info {
+    padding: 1.25rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--color-gray-100);
   }
 
-  /* Categoría */
-  .card-category {
-    font-size: 10px;
-    font-weight: 500;
-    color: var(--main-focus);
+  .category {
+    font-size: 0.6875rem;
+    color: var(--color-gray-500);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: -3px;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    line-height: 1.2;
   }
 
-  /* Título */
-  .card-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--font-color);
-    margin: 0;
-    line-height: 1.3;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    min-height: 2.6em;
-  }
-
-  /* Descripción */
-  .card-subtitle {
-    font-size: 12px;
-    color: var(--font-color-sub);
-    margin: 3px 0 6px;
+  .product-name {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    margin: 0 0 0.5rem;
+    color: var(--color-gray-900);
     line-height: 1.4;
+    letter-spacing: -0.01em;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    min-height: 2.8em;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 44px;
   }
 
-  /* Contenedor de precios */
   .price-container {
+    margin: 0.5rem 0 1rem;
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin: 3px 0;
+    gap: 0.5rem;
+    flex-wrap: wrap;
   }
 
-  /* Precio actual */
-  .card-price {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--main-focus);
+  .current-price {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    color: var(--color-gray-900);
+    letter-spacing: -0.01em;
   }
 
-  /* Precio original tachado */
   .original-price {
-    font-size: 12px;
-    color: var(--font-color-sub);
+    font-size: 0.8125rem;
+    color: var(--color-gray-400);
     text-decoration: line-through;
+    font-weight: 500;
   }
 
-  /* Divisor */
-  .card-divider {
-    width: 100%;
-    border: none;
-    border-top: 1px solid #f0f0f0;
-    margin: 3px 0 6px;
-  }
-
-  /* Pie de tarjeta */
-  .card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
+  .actions {
     margin-top: auto;
+    display: flex;
+    gap: 0.5rem;
   }
 
-  /* Botón de detalles */
-  .details-btn {
+  .view-details {
     flex: 1;
-    background: transparent;
-    color: var(--main-color);
-    border: 1px solid var(--main-color);
-    border-radius: 4px;
-    padding: 6px 10px;
-    font-size: 12px;
+    background-color: var(--color-white);
+    color: var(--color-primary-700);
+    border: 1px solid var(--color-primary-200);
+    border-radius: var(--border-radius-md);
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
+    transition: var(--transition-colors);
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 0.375rem;
+    line-height: 1.25;
+    text-align: center;
+    white-space: nowrap;
   }
 
-  .details-btn:hover {
-    background: var(--main-color);
-    color: white;
+  .view-details:hover {
+    background-color: var(--color-primary-50);
+    border-color: var(--color-primary-300);
+    color: var(--color-primary-800);
   }
 
-  /* Botón de carrito */
-  .cart-btn {
-    width: 32px;
-    height: 28px;
-    background: transparent;
-    border: 1px solid var(--main-color);
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
+  .view-details i {
+    font-size: 0.75rem;
+    transition: transform 0.2s ease;
   }
 
-  .cart-btn svg {
-    width: 16px;
-    height: 16px;
-    stroke: var(--main-color);
-    transition: all 0.2s ease;
-  }
-
-  .cart-btn:hover {
-    background: var(--main-focus);
-    border-color: var(--main-focus);
-  }
-
-  .cart-btn:hover svg {
-    stroke: white;
-  }
-
-  /* Efecto de carga */
-  @keyframes shimmer {
-    0% { background-position: -468px 0; }
-    100% { background-position: 468px 0; }
-  }
-
-  /* Responsive */
-  @media (max-width: 768px) {
-    .card {
-      max-width: 100%;
-    }
-
-    .card-img {
-      height: 160px;
-    }
-
-    .card-title {
-      font-size: 14px;
-      min-height: 2.4em;
-    }
-
-    .card-subtitle {
-      font-size: 12px;
-      min-height: 2.6em;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .card {
-      padding: 10px;
-      gap: 6px;
-    }
-
-    .card-img {
-      height: 140px;
-    }
-
-    .card-category {
-      font-size: 9px;
-    }
-
-    .card-title {
-      font-size: 13px;
-      min-height: 2.2em;
-    }
-
-    .card-subtitle {
-      font-size: 11px;
-      margin: 2px 0 4px;
-      min-height: 2.4em;
-    }
-
-    .card-price {
-      font-size: 14px;
-    }
-
-    .original-price {
-      font-size: 11px;
-    }
-
-    .details-btn {
-      padding: 5px 8px;
-      font-size: 11px;
-    }
-
-    .cart-btn {
-      width: 28px;
-      height: 26px;
-    }
-
-    .cart-btn svg {
-      width: 14px;
-      height: 14px;
-    }
-
-    .discount-badge {
-      font-size: 9px;
-      padding: 2px 6px;
-    }
-
-    .favorite-btn {
-      width: 24px;
-      height: 24px;
-    }
-
-    .favorite-btn svg {
-      width: 12px;
-      height: 12px;
-    }
-  }
-
-  @media (max-width: 360px) {
-    .card {
-      padding: 8px;
-      gap: 4px;
-    }
-
-    .card-img {
-      height: 120px;
-    }
-
-    .card-category {
-      font-size: 8px;
-    }
-
-    .card-title {
-      font-size: 12px;
-      min-height: 2em;
-    }
-
-    .card-subtitle {
-      font-size: 10px;
-      margin: 1px 0 3px;
-      min-height: 2.2em;
-    }
-
-    .card-price {
-      font-size: 13px;
-    }
-
-    .original-price {
-      font-size: 10px;
-    }
-
-    .details-btn {
-      padding: 4px 6px;
-      font-size: 10px;
-    }
-
-    .cart-btn {
-      width: 24px;
-      height: 24px;
-    }
-
-    .cart-btn svg {
-      width: 12px;
-      height: 12px;
-    }
-
-    .discount-badge {
-      font-size: 8px;
-      padding: 2px 5px;
-    }
-
-    .favorite-btn {
-      width: 22px;
-      height: 22px;
-    }
-
-    .favorite-btn svg {
-      width: 11px;
-      height: 11px;
-    }
+  .view-details:hover i {
+    transform: translateX(2px);
   }
 </style>
 
-<!-- Script para manejar interacciones -->
 <script>
   // Extender la interfaz Window para incluir updateProductModal
   declare global {
@@ -513,15 +314,17 @@ if (image && !image.startsWith('http')) {
     }
   }
 
-  // Función de utilidad para manejar el evento de clic
-  function handleCardClick(e: MouseEvent) {
-    const target = e.target as HTMLElement | null;
+  /**
+   * Maneja los eventos de clic en la tarjeta de producto
+   */
+  function handleCardClick(event: Event) {
+    const target = event.target as HTMLElement | null;
     if (!target) return;
 
     // Manejar clic en botón de favoritos
-    const favBtn = target.closest<HTMLButtonElement>('.favorite-btn');
+    const favBtn = target.closest('.favorite-btn') as HTMLButtonElement | null;
     if (favBtn) {
-      e.preventDefault();
+      event.preventDefault();
       favBtn.classList.toggle('active');
       const productId = favBtn.getAttribute('data-product-id');
       // Aquí puedes agregar la lógica para guardar en favoritos
@@ -529,53 +332,44 @@ if (image && !image.startsWith('http')) {
       return;
     }
 
-    // Manejar clic en botón de carrito
-    const cartBtn = target.closest<HTMLButtonElement>('.cart-btn');
-    if (cartBtn) {
-      e.preventDefault();
-      const productData = cartBtn.getAttribute('data-product');
-      if (productData) {
-        try {
-          const product = JSON.parse(productData);
-          // Aquí puedes agregar la lógica para añadir al carrito
-          console.log('Añadir al carrito:', product);
-
-          // Efecto visual al añadir al carrito
-          const icon = cartBtn.querySelector('svg');
-          if (icon) {
-            icon.setAttribute('style', 'transform: scale(1.3);');
-            setTimeout(() => {
-              icon.setAttribute('style', 'transform: scale(1);');
-            }, 200);
-          }
-        } catch (error) {
-          console.error('Error al procesar el producto:', error);
-        }
-      }
-      return;
-    }
 
     // Manejar clic en botón de detalles
-    const detailsBtn = target.closest<HTMLButtonElement>('.details-btn');
+    const detailsBtn = target.closest('.details-btn') as HTMLButtonElement | null;
     if (detailsBtn) {
-      e.preventDefault();
+      event.preventDefault();
       const productData = detailsBtn.getAttribute('data-product');
+      console.log('Clic en Ver detalles, productData:', productData);
       if (productData) {
         try {
           const product = JSON.parse(productData);
+          console.log('Producto parseado:', product);
           // Usar la función global para abrir el modal de detalles
           if (typeof window.updateProductModal === 'function') {
             window.updateProductModal(product);
+          } else {
+            console.warn('window.updateProductModal no está definido');
           }
         } catch (error) {
           console.error('Error al procesar los detalles del producto:', error);
         }
+      } else {
+        console.log('No hay datos de producto, intentando abrir modal sin datos');
+        if (typeof window.updateProductModal === 'function') {
+          window.updateProductModal({});
+        } else {
+          console.warn('window.updateProductModal no está definido');
+        }
       }
     }
   }
 
-  // Agregar el event listener cuando el DOM esté listo
-  if (typeof document !== 'undefined') {
+  // Agregar el event listener cuando el componente se monte
+  document.addEventListener('astro:page-load', () => {
     document.addEventListener('click', handleCardClick);
-  }
+  });
+
+  // Limpiar el event listener cuando el componente se desmonte
+  document.addEventListener('astro:after-swap', () => {
+    document.removeEventListener('click', handleCardClick);
+  });
 </script>
