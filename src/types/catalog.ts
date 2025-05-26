@@ -8,6 +8,9 @@ export interface Product {
   details: string;
   category_id: string;
   discount?: number; // Porcentaje de descuento (opcional)
+  stock?: number; // Stock disponible
+  created_at?: string; // Fecha de creación
+  updated_at?: string; // Fecha de actualización
   categories?: {
     name: string;
   };

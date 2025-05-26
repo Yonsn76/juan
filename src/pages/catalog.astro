@@ -61,11 +61,11 @@ try {
     return {
       id: product.id,
       name: product.name,
-      description: product.name, // Usar name como descripción temporal
+      description: product.description || product.name, // Usar la descripción real
       price: product.price,
       image: imageUrl,
       featured: product.featured,
-      details: product.name, // Usar name como detalles temporales
+      details: product.details || product.name, // Usar los detalles reales
       discount: product.discount || 0,
       category_id: product.category_id,
       categories: product.categories || { name: 'Sin categoría' },
