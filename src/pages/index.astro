@@ -11,7 +11,7 @@ import type { Product } from "../types/catalog";
 
 const carouselImages = [
   { src: "/images/promo.png", alt: "Promociones especiales" },
-  { src: "/images/lavada.png", alt: "Servicio de lavado profesional" },
+  { src: "/images/envio_provincias.png", alt: "Servicio de lavado profesional" },
   { src: "/images/tunning.png", alt: "Servicios de tunning" },
   { src: "/images/accesorios.png", alt: "Accesorios para motos" },
 ];
@@ -108,69 +108,109 @@ const brands = [
 <Layout title="Inicio">
   <Header slot="header" />
 
-  <!-- Hero Banner with Carousel - Lamborghini Style -->
-  <section class="hero-banner">
-    <div class="hero-overlay"></div>
-    <div class="hero-content">
-      <div class="hero-text">
-        <span class="hero-subtitle">PREMIUM MOTORCYCLE EXPERIENCE</span>
-        <h1 class="hero-title">ZONA BIKER 15</h1>
-        <p class="hero-description">
-          Donde la pasión por las motocicletas se encuentra con la excelencia.
-          Descubre un mundo de velocidad, estilo y adrenalina.
-        </p>
-        <div class="hero-buttons">
-          <a href="/services" class="btn btn-primary">EXPLORAR SERVICIOS</a>
-          <a href="/catalog" class="btn btn-secondary">VER CATÁLOGO</a>
+  <!-- Hero Banner con Carrusel de Servicios -->
+  <section class="hero-banner" id="hero-banner">
+    <!-- Promo Box (fuera del carrusel) -->
+    <div class="promo-box">
+      <h3 class="promo-title">¡Oferta Especial!</h3>
+      <div class="promo-deal">Descuento <span class="promo-percentage">30%<span class="promo-upto">HASTA</span></span></div>
+      <p class="promo-details">*Accesorios, Repuestos, Tunning, Mantenimiento</p>
+      <a href="/catalog" class="promo-button">Comprar Ahora</a>
+    </div>
+    
+    <div class="hero-slides-container">
+      <!-- Slide 1: Repuestos -->
+      <div class="hero-slide active" data-index="0">
+        <div class="hero-overlay" style="background: linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.5))"></div>
+        <div class="hero-background" style="background-image: url('/images/promo.png')"></div>
+        <div class="hero-content">
+          <div class="hero-text">
+            <span class="hero-subtitle">PREMIUM MOTORCYCLE EXPERIENCE</span>
+            <h1 class="hero-title">ZONA BIKER 15</h1>
+            <h2 class="hero-service-title">{services[0].title}</h2>
+            <p class="hero-description">{services[0].description}</p>
+            <div class="hero-buttons">
+              <a href="/services" class="btn btn-primary">VER DETALLES</a>
+              <a href="/catalog" class="btn btn-secondary">VER CATÁLOGO</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Slide 2: Personalización -->
+      <div class="hero-slide" data-index="1">
+        <div class="hero-overlay" style="background: linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.5))"></div>
+        <div class="hero-background" style="background-image: url('/images/tunning.png')"></div>
+        <div class="hero-content">
+          <div class="hero-text">
+            <span class="hero-subtitle">PREMIUM MOTORCYCLE EXPERIENCE</span>
+            <h1 class="hero-title">ZONA BIKER 15</h1>
+            <h2 class="hero-service-title">{services[1].title}</h2>
+            <p class="hero-description">{services[1].description}</p>
+            <div class="hero-buttons">
+              <a href="/services" class="btn btn-primary">VER DETALLES</a>
+              <a href="/catalog" class="btn btn-secondary">VER CATÁLOGO</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Slide 3: Tunning -->
+      <div class="hero-slide" data-index="2">
+        <div class="hero-overlay" style="background: linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.5))"></div>
+        <div class="hero-background" style="background-image: url('/images/tunning_hero.png')"></div>
+        <div class="hero-content">
+          <div class="hero-text">
+            <span class="hero-subtitle">PREMIUM MOTORCYCLE EXPERIENCE</span>
+            <h1 class="hero-title">ZONA BIKER 15</h1>
+            <h2 class="hero-service-title">{services[2].title}</h2>
+            <p class="hero-description">{services[2].description}</p>
+            <div class="hero-buttons">
+              <a href="/services" class="btn btn-primary">VER DETALLES</a>
+              <a href="/catalog" class="btn btn-secondary">VER CATÁLOGO</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Slide 4: Envíos -->
+      <div class="hero-slide" data-index="3">
+        <div class="hero-overlay" style="background: linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.5))"></div>
+        <div class="hero-background" style="background-image: url('/images/envio_provincias.png')"></div>
+        <div class="hero-content">
+          <div class="hero-text">
+            <span class="hero-subtitle">PREMIUM MOTORCYCLE EXPERIENCE</span>
+            <h1 class="hero-title">ZONA BIKER 15</h1>
+            <h2 class="hero-service-title">{services[3].title}</h2>
+            <p class="hero-description">{services[3].description}</p>
+            <div class="hero-buttons">
+              <a href="/services" class="btn btn-primary">VER DETALLES</a>
+              <a href="/catalog" class="btn btn-secondary">VER CATÁLOGO</a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <div class="hero-carousel-wrapper">
-      <Carousel images={carouselImages} />
+    
+    <!-- Indicadores y controles -->
+    <div class="hero-controls">
+      <div class="hero-indicators">
+        <span class="hero-indicator active" data-index="0"></span>
+        <span class="hero-indicator" data-index="1"></span>
+        <span class="hero-indicator" data-index="2"></span>
+        <span class="hero-indicator" data-index="3"></span>
+      </div>
+      <div class="hero-arrows">
+        <button class="hero-arrow prev">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="hero-arrow next">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
     </div>
   </section>
 
-  <!-- Services Section -->
-  <section class="section services-section">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-subtitle">Lo que ofrecemos</span>
-        <h2 class="section-title">Nuestros Servicios</h2>
-        <p class="section-description">
-          Brindamos servicios especializados para mantener tu moto en óptimas
-          condiciones
-        </p>
-      </div>
-      <div class="grid grid-cols-4 services-grid">
-        {
-          services.map((service) => (
-            <div
-              class="service-card"
-              style={`--service-color: ${service.color}`}
-            >
-              <div class="service-icon">
-                <i class={`fas fa-${service.icon}`} />
-              </div>
-              <h3>{service.title}</h3>
-              <p>{service.description}</p>
-              <a href="/services" class="service-link">
-                Más información <i class="fas fa-arrow-right" />
-              </a>
-              <video
-                class="service-video"
-                muted
-                loop
-                playsinline
-                poster={`/images/${service.icon}.png`}
-              >
-                <source src={`/videos/${service.video}`} type="video/mp4" />
-              </video>
-            </div>
-          ))
-        }
-      </div>
-    </div>
-  </section>
 
   <!-- Featured Products Section -->
   <section class="section products-section">
@@ -225,14 +265,47 @@ const brands = [
   /* Hero Banner - Lamborghini Style */
   .hero-banner {
     position: relative;
-    height: 100vh;
-    min-height: 700px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    margin-top: var(--header-height);
-    background: var(--lambo-black);
+    height: 60vh;
+    min-height: 500px;
+    overflow: visible;
+    z-index: 1;
+    background-color: #000;
+  }
+  
+  .hero-slides-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .hero-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 1s ease, visibility 1s ease;
+  }
+  
+  .hero-slide.active {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  .hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: contain;
+    background-position: right center;
+    background-repeat: no-repeat;
+    background-color: #000;
+    z-index: -1;
+    transition: opacity 1s ease-in-out;
   }
 
   .hero-overlay {
@@ -241,8 +314,8 @@ const brands = [
     left: 0;
     width: 100%;
     height: 100%;
-    background: var(--gradient-hero);
-    z-index: 2;
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.5));
+    z-index: 5;
   }
 
   .hero-carousel-wrapper {
@@ -260,53 +333,224 @@ const brands = [
     padding: 0 5%;
     color: var(--text-light);
     width: 100%;
-    max-width: 1400px;
+    max-width: 1200px;
+    padding: 0 2rem;
     margin: 0 auto;
+    height: 100%;
+    display: flex;
+    align-items: center;
   }
-
+  
   .hero-text {
-    max-width: 600px;
+    flex: 1;
+    color: white;
+    max-width: 650px;
+    z-index: 10;
   }
 
   .hero-subtitle {
-    font-family: var(--font-accent);
-    font-size: 0.9rem;
-    font-weight: 400;
-    letter-spacing: 3px;
-    color: var(--lambo-gold);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--red-500);
     margin-bottom: 1rem;
     text-transform: uppercase;
-    animation: fadeInUp 1s ease-out 0.3s forwards;
-    opacity: 0;
+    animation: fadeInUp 1s ease-out;
+    color: #ffffff;
   }
 
   .hero-title {
-    font-family: var(--font-heading);
-    font-size: clamp(3rem, 8vw, 6rem);
-    font-weight: 900;
-    line-height: 0.9;
-    margin-bottom: 2rem;
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    line-height: 1.1;
     text-transform: uppercase;
-    letter-spacing: 4px;
-    color: var(--text-light);
     animation: fadeInDown 1s ease-out;
+    letter-spacing: 1px;
+    color: #ffffff;
   }
-
+  
+  .hero-service-title {
+    font-size: 4.5rem;
+    font-weight: 900;
+    margin-bottom: 1.5rem;
+    color: #ffffff;
+    text-transform: uppercase;
+    text-shadow: 2px 2px 0px rgba(255, 0, 0, 0.7), 0 0 5px rgba(255, 0, 0, 0.3);
+    position: relative;
+    display: inline-block;
+    animation: fadeInUp 1s ease-out 0.3s forwards;
+    opacity: 0;
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+  
+  .hero-service-title::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -5px;
+    height: 3px;
+    width: 0;
+    background: linear-gradient(90deg, transparent, #ff0000, #ff3333, #ff0000, transparent);
+    animation: line-animation 2s ease-in-out 1s forwards;
+  }
+  
   .hero-description {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     line-height: 1.6;
-    margin-bottom: 3rem;
-    color: rgba(255, 255, 255, 0.8);
-    max-width: 500px;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 2rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
     animation: fadeInUp 1s ease-out 0.5s forwards;
     opacity: 0;
+    max-width: 90%;
+    font-weight: 400;
+  }
+
+  .hero-controls {
+    position: absolute;
+    bottom: 30px;
+    left: 0;
+    width: 100%;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .hero-indicators {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  
+  .hero-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .hero-indicator.active {
+    background-color: var(--red-500);
+    transform: scale(1.2);
+  }
+  
+  .hero-indicator:hover {
+    background-color: rgba(255, 255, 255, 0.5);
+    transform: scale(1.2);
+  }
+  
+  .hero-arrows {
+    display: flex;
+    gap: 20px;
+  }
+  
+  .hero-arrow {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .hero-arrow:hover {
+    background-color: var(--red-500);
+    transform: scale(1.1);
+  }
+  
+  @keyframes line-animation {
+    0% { width: 0; }
+    100% { width: 100%; }
   }
 
   .hero-buttons {
     display: flex;
-    gap: 1.5rem;
+    gap: 1rem;
+    margin-top: 2rem;
     animation: fadeInUp 1s ease-out 0.7s forwards;
     opacity: 0;
+  }
+  
+  /* Promo Box Styles */
+  .promo-box {
+    position: absolute;
+    right: 8%;
+    bottom: -35%;
+    background-color: #d00;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 5px;
+    max-width: 250px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    animation: fadeIn 1s ease-out;
+    z-index: 10;
+  }
+  
+  .promo-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: 0.3px;
+  }
+  
+  .promo-deal {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  
+  .promo-percentage {
+    font-size: 2rem;
+    font-weight: 900;
+    color: white;
+    position: relative;
+  }
+  
+  .promo-upto {
+    position: absolute;
+    top: -15px;
+    right: -25px;
+    font-size: 0.8rem;
+    font-weight: normal;
+    background-color: #000;
+    padding: 2px 5px;
+    border-radius: 3px;
+  }
+  
+  .promo-details {
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+    opacity: 0.9;
+  }
+  
+  .promo-button {
+    display: inline-block;
+    background-color: #000;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+  }
+  
+  .promo-button:hover {
+    background-color: #333;
+    transform: translateY(-2px);
   }
 
   /* Section Headers */
@@ -975,11 +1219,90 @@ const brands = [
 <script>
   document.addEventListener("astro:page-load", () => {
     initPage();
+    initHeroCarousel();
   });
+
+  function initHeroCarousel() {
+    const slides = document.querySelectorAll('.hero-slide');
+    const indicators = document.querySelectorAll('.hero-indicator');
+    const prevBtn = document.querySelector('.hero-arrow.prev');
+    const nextBtn = document.querySelector('.hero-arrow.next');
+    let currentIndex = 0;
+    let intervalId;
+
+    // Inicializar el primer slide como activo
+    slides[0].classList.add('active');
+
+    // Función para mostrar un slide específico
+    function showSlide(index) {
+      // Ocultar el slide actual
+      slides[currentIndex].classList.remove('active');
+      indicators[currentIndex].classList.remove('active');
+
+      // Actualizar el índice y mostrar el nuevo slide
+      currentIndex = index;
+      slides[currentIndex].classList.add('active');
+      indicators[currentIndex].classList.add('active');
+    }
+
+    // Función para ir al siguiente slide
+    function nextSlide() {
+      const newIndex = (currentIndex + 1) % slides.length;
+      showSlide(newIndex);
+    }
+
+    // Función para ir al slide anterior
+    function prevSlide() {
+      const newIndex = (currentIndex - 1 + slides.length) % slides.length;
+      showSlide(newIndex);
+    }
+
+    // Iniciar carrusel automático
+    intervalId = setInterval(nextSlide, 5000);
+
+    // Agregar eventos a los indicadores
+    indicators.forEach((indicator, index) => {
+      indicator.addEventListener('click', () => {
+        clearInterval(intervalId);
+        showSlide(index);
+        intervalId = setInterval(nextSlide, 5000);
+      });
+    });
+
+    // Agregar eventos a los botones de navegación
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => {
+        clearInterval(intervalId);
+        prevSlide();
+        intervalId = setInterval(nextSlide, 5000);
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        clearInterval(intervalId);
+        nextSlide();
+        intervalId = setInterval(nextSlide, 5000);
+      });
+    }
+
+    // Pausar carrusel al hover
+    const heroContainer = document.querySelector('.hero-banner');
+    if (heroContainer) {
+      heroContainer.addEventListener('mouseenter', () => {
+        clearInterval(intervalId);
+      });
+
+      heroContainer.addEventListener('mouseleave', () => {
+        intervalId = setInterval(nextSlide, 5000);
+      });
+    }
+  }
 
   // Also initialize on DOMContentLoaded to ensure it works on first load
   document.addEventListener("DOMContentLoaded", () => {
     initPage();
+    initHeroCarousel();
   });
 
   function initPage() {
