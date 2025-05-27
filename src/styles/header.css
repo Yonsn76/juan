@@ -50,7 +50,7 @@
   max-width: 1200px;
   margin: 0 auto;
   height: 100%;
-  padding: 0 2rem;
+  padding: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -75,7 +75,34 @@
   display: block;
   height: 100%;
   position: relative;
+}
 
+/* Logo en versión tablet */
+@media (min-width: 481px) and (max-width: 768px) {
+  .logo {
+    margin-left: -1rem;
+  }
+}
+
+/* Logo en iPad Pro y tablets grandes */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .logo {
+    margin-left: 1rem;
+  }
+}
+
+/* Logo en pantallas 1280x800 */
+@media (min-width: 1025px) and (max-width: 1280px) {
+  .logo {
+    margin-left: -2rem;
+  }
+}
+
+/* Logo en versión desktop grande */
+@media (min-width: 1281px) {
+  .logo {
+    margin-left: -10rem;
+  }
 }
 
 /* Imagen del logo */
@@ -377,12 +404,12 @@
   }
 
   .logo {
-    height: 45px;
+    height: 480px;
     padding: 0.4rem 0.8rem;
   }
 
   .logo img {
-    max-height: 45px;
+    max-height: 480px;
   }
 
   .mobile-nav {

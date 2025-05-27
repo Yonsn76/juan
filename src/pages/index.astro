@@ -78,11 +78,11 @@ const imageUrl = product.image?.startsWith('http')
 return {
   id: product.id,
   name: product.name,
-  description: product.name,
+  description: product.description || product.name,
   price: product.price,
   image: imageUrl,
   featured: product.featured,
-  details: product.name,
+  details: product.details || product.name,
   discount: product.discount,
   category_id: product.category_id,
   categories: product.categories
@@ -378,18 +378,21 @@ const brands = [
   }
   
   .hero-service-title {
-    font-size: 4.5rem;
+    font-size: 4rem;
     font-weight: 900;
     margin-bottom: 1.5rem;
     color: #ffffff;
     text-transform: uppercase;
-    text-shadow: 2px 2px 0px rgba(255, 0, 0, 0.7), 0 0 5px rgba(255, 0, 0, 0.3);
+    text-shadow: 2px 2px 0px rgba(255, 0, 0, 0.7), 0 0 2px rgba(255, 0, 0, 0.2);
     position: relative;
     display: inline-block;
     animation: fadeInUp 1s ease-out 0.3s forwards;
     opacity: 0;
-    letter-spacing: 1px;
+    letter-spacing: 0px;
     line-height: 1;
+    width: 100%;
+    word-break: keep-all;
+    overflow: visible;
   }
   
   .hero-service-title::after {
@@ -408,7 +411,7 @@ const brands = [
     line-height: 1.6;
     color: rgba(255, 255, 255, 0.9);
     margin-bottom: 2rem;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
     animation: fadeInUp 1s ease-out 0.5s forwards;
     opacity: 0;
     max-width: 90%;
@@ -1180,6 +1183,31 @@ const brands = [
     }
   }
 
+  /* Media queries para texto responsive en el hero */
+  @media (max-width: 1200px) {
+    .hero-service-title {
+      font-size: 3.8rem;
+    }
+    
+    .hero-title {
+      font-size: 3rem;
+    }
+  }
+  
+  @media (max-width: 992px) {
+    .hero-service-title {
+      font-size: 3.2rem;
+    }
+    
+    .hero-title {
+      font-size: 2.8rem;
+    }
+    
+    .hero-description {
+      font-size: 1.1rem;
+    }
+  }
+  
   @media (max-width: 768px) {
     .products-section {
       margin-top: 80px; /* Añadido margen superior para móviles */
@@ -1191,6 +1219,22 @@ const brands = [
 
     .hero-title {
       font-size: 2.5rem;
+    }
+    
+    .hero-service-title {
+      font-size: 2.8rem;
+      margin-bottom: 1rem;
+    }
+    
+    .hero-subtitle {
+      font-size: 0.9rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    .hero-description {
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+      max-width: 100%;
     }
 
     .hero-banner {
@@ -1252,8 +1296,31 @@ const brands = [
   }
 
 @media (max-width: 576px) {
+    .hero-title {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    
+    .hero-service-title {
+      font-size: 2.2rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    .hero-subtitle {
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+    }
+    
+    .hero-description {
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+    
+    .hero-text {
+      max-width: 100%;
+    }
     .products-grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(2, 1fr);
       gap: 0.75rem;
     }
 
@@ -1427,14 +1494,14 @@ const brands = [
     }
 
     // Iniciar carrusel automático
-    intervalId = setInterval(nextSlide, 5000);
+    intervalId = setInterval(nextSlide, 3000);
 
     // Agregar eventos a los indicadores
     indicators.forEach((indicator, index) => {
       indicator.addEventListener('click', () => {
         clearInterval(intervalId);
         showSlide(index);
-        intervalId = setInterval(nextSlide, 5000);
+        intervalId = setInterval(nextSlide, 3000);
       });
     });
 
@@ -1443,7 +1510,7 @@ const brands = [
       prevBtn.addEventListener('click', () => {
         clearInterval(intervalId);
         prevSlide();
-        intervalId = setInterval(nextSlide, 5000);
+        intervalId = setInterval(nextSlide, 3000);
       });
     }
 
@@ -1451,7 +1518,7 @@ const brands = [
       nextBtn.addEventListener('click', () => {
         clearInterval(intervalId);
         nextSlide();
-        intervalId = setInterval(nextSlide, 5000);
+        intervalId = setInterval(nextSlide, 3000);
       });
     }
 
@@ -1463,7 +1530,7 @@ const brands = [
       });
 
       heroContainer.addEventListener('mouseleave', () => {
-        intervalId = setInterval(nextSlide, 5000);
+        intervalId = setInterval(nextSlide, 3000);
       });
     }
   }

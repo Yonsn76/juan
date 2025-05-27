@@ -34,9 +34,9 @@ const finalPrice = productDiscount > 0
 const imageUrl = image || '/images/placeholder-product.jpg';
 ---
 
-<div class="card">
-  {discount && discount > 0 && (
-    <div class="discount-badge">-{discount}%</div>
+<div class="card" style="position: relative;">
+  {productDiscount > 0 && (
+    <div class="discount-badge"><span style="display: block; margin-top: 8px; font-size: 16px;">-{productDiscount}%</span></div>
   )}
 
   <div class="card-img">
@@ -250,18 +250,18 @@ const imageUrl = image || '/images/placeholder-product.jpg';
           right: '30px',
           backgroundColor: '#ff0000',
           color: 'white',
-          padding: '10px 20px',
-          borderRadius: '30px',
-          boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
+          padding: '8px 16px',
+          borderRadius: '24px',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
           cursor: 'pointer',
           zIndex: '1000',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '10px',
-          transition: 'all 0.3s',
+          gap: '8px',
+          transition: 'all 0.2s',
           transform: 'scale(0)',
-          fontWeight: 'bold'
+          fontWeight: '500'
         });
         
         // Estilos para el contador
@@ -276,23 +276,24 @@ const imageUrl = image || '/images/placeholder-product.jpg';
           
           #floating-cart-btn .floating-cart-counter {
             position: absolute;
-            top: -8px;
-            right: -8px;
+            top: -6px;
+            right: -6px;
             background-color: white;
             color: #ff0000;
-            font-size: 12px;
-            width: 20px;
-            height: 20px;
+            font-size: 11px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
+            font-weight: 500;
+            border: 1px solid #ff0000;
           }
           
           #floating-cart-btn:hover {
-            transform: scale(1.05) !important;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+            transform: scale(1.02) !important;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
           }
           
           #floating-cart-btn:active {
@@ -366,6 +367,10 @@ const imageUrl = image || '/images/placeholder-product.jpg';
           </div>
           <div class="cart-panel-body"></div>
           <div class="cart-panel-footer">
+            <div class="cart-summary-container">
+              <h3 class="cart-summary-title">Resumen del pedido:</h3>
+              <div class="cart-summary-list"></div>
+            </div>
             <div class="cart-total-container">
               <span>Total:</span>
               <span class="cart-panel-total">S/ 0.00</span>
@@ -428,10 +433,11 @@ const imageUrl = image || '/images/placeholder-product.jpg';
           max-width: 90%;
           height: 100%;
           background-color: white;
-          box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+          box-shadow: -1px 0 8px rgba(0, 0, 0, 0.15);
           display: flex;
           flex-direction: column;
-          transition: right 0.3s ease;
+          transition: right 0.25s ease;
+          border-left: 1px solid #eaeaea;
         }
         
         #cart-slide-panel.active .cart-panel-content {
@@ -442,15 +448,16 @@ const imageUrl = image || '/images/placeholder-product.jpg';
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 15px 20px;
-          border-bottom: 1px solid #eee;
-          background-color: #f8f8f8;
+          padding: 12px 16px;
+          border-bottom: 1px solid #eaeaea;
+          background-color: #fafafa;
         }
         
         .cart-panel-header h2 {
           margin: 0;
-          font-size: 18px;
-          color: #333;
+          font-size: 16px;
+          color: #222;
+          font-weight: 500;
         }
         
         .cart-panel-close {
@@ -479,9 +486,9 @@ const imageUrl = image || '/images/placeholder-product.jpg';
         }
         
         .cart-panel-footer {
-          padding: 15px 20px;
-          border-top: 1px solid #eee;
-          background-color: #f8f8f8;
+          padding: 12px 16px;
+          border-top: 1px solid #eaeaea;
+          background-color: #fafafa;
         }
         
         .cart-total-container {
@@ -500,20 +507,20 @@ const imageUrl = image || '/images/placeholder-product.jpg';
         }
         
         .cart-whatsapp-btn,
-        .cart-gmail-btn {
+        .cart-action-btn {
           flex: 1;
-          padding: 12px;
-          color: white;
+          padding: 8px 12px;
           border: none;
-          border-radius: 4px;
-          font-size: 14px;
-          font-weight: bold;
+          border-radius: 3px;
+          font-weight: 500;
           cursor: pointer;
-          transition: background-color 0.2s;
+          transition: all 0.2s ease;
+          text-align: center;
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 8px;
+          gap: 6px;
+          font-size: 14px;
         }
         
         .cart-whatsapp-btn {
@@ -587,17 +594,21 @@ const imageUrl = image || '/images/placeholder-product.jpg';
         .quantity-btn {
           width: 30px;
           height: 30px;
-          background-color: #f5f5f5;
-          border: none;
-          font-size: 16px;
+          background-color: transparent;
+          border: 2px solid #00b300;
+          font-size: 14px;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
+          color: #00b300;
+          transition: all 0.2s ease;
+          border-radius: 3px;
         }
         
         .quantity-btn:hover {
-          background-color: #e5e5e5;
+          border-color: #009900;
+          color: #009900;
         }
         
         .quantity-display {
@@ -638,6 +649,61 @@ const imageUrl = image || '/images/placeholder-product.jpg';
             width: 60px;
             height: 60px;
           }
+        }
+      `;
+      
+      // Estilos para el resumen del pedido
+      styleElement.innerHTML += `
+        .cart-summary-container {
+          padding: 10px 0;
+          border-bottom: 1px solid #eaeaea;
+          margin-bottom: 10px;
+        }
+        
+        .cart-summary-title {
+          font-size: 14px;
+          font-weight: 500;
+          color: #222;
+          margin: 0 0 8px 0;
+        }
+        
+        .cart-summary-list {
+          font-size: 13px;
+          color: #444;
+        }
+        
+        .cart-summary-item {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 4px;
+          padding-bottom: 4px;
+          border-bottom: 1px dashed #eaeaea;
+        }
+        
+        .cart-summary-item:last-child {
+          border-bottom: none;
+          margin-bottom: 0;
+        }
+        
+        .cart-summary-product {
+          display: flex;
+        }
+        
+        .cart-summary-quantity {
+          color: #666;
+          margin-right: 4px;
+        }
+        
+        .cart-summary-name {
+          flex: 1;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        
+        .cart-summary-price {
+          font-weight: 500;
+          white-space: nowrap;
         }
       `;
       
@@ -726,9 +792,9 @@ const imageUrl = image || '/images/placeholder-product.jpg';
                 <div class="cart-item-price">S/ ${item.price.toFixed(2)}</div>
                 <div class="cart-item-actions">
                   <div class="quantity-control">
-                    <button class="quantity-btn quantity-decrease" data-index="${index}">-</button>
+                    <button class="quantity-btn quantity-decrease" data-index="${index}">◀</button>
                     <input type="text" class="quantity-display" value="${item.quantity}" readonly>
-                    <button class="quantity-btn quantity-increase" data-index="${index}">+</button>
+                    <button class="quantity-btn quantity-increase" data-index="${index}">▶</button>
                   </div>
                   <button class="remove-item-btn" data-index="${index}">×</button>
                 </div>
@@ -775,6 +841,33 @@ const imageUrl = image || '/images/placeholder-product.jpg';
       
       if (cartTotal) {
         cartTotal.textContent = `S/ ${calculateCartTotal().toFixed(2)}`;
+      }
+      
+      // Actualizar el resumen de productos
+      const cartSummaryList = cartPanel.querySelector('.cart-summary-list');
+      if (cartSummaryList) {
+        cartSummaryList.innerHTML = '';
+        
+        if (window.cart.length === 0) {
+          cartSummaryList.innerHTML = '<div class="cart-summary-empty">No hay productos en el carrito</div>';
+        } else {
+          window.cart.forEach((item) => {
+            const summaryItem = document.createElement('div');
+            summaryItem.className = 'cart-summary-item';
+            
+            const productTotal = (item.price * item.quantity).toFixed(2);
+            
+            summaryItem.innerHTML = `
+              <div class="cart-summary-product">
+                <span class="cart-summary-quantity">${item.quantity}x</span>
+                <span class="cart-summary-name">${item.name}</span>
+              </div>
+              <div class="cart-summary-price">S/ ${productTotal}</div>
+            `;
+            
+            cartSummaryList.appendChild(summaryItem);
+          });
+        }
       }
     };
     
@@ -871,8 +964,8 @@ const imageUrl = image || '/images/placeholder-product.jpg';
     --bg-color: #fff;
     --main-color: #ff0000;
     --main-focus: #000000;
-    width: 230px;
-    min-height: 350px;
+    width: 100%;
+    min-height: 280px;
     background: var(--bg-color);
     border: 2px solid var(--main-color);
     box-shadow: 4px 4px var(--main-color);
@@ -880,7 +973,7 @@ const imageUrl = image || '/images/placeholder-product.jpg';
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    padding: 20px;
+    padding: 12px;
     gap: 10px;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   }
@@ -899,15 +992,15 @@ const imageUrl = image || '/images/placeholder-product.jpg';
     transform: scale(1);
     position: relative;
     box-sizing: border-box;
-    width: 150px;
-    height: 150px;
+    width: 120px;
+    height: 120px;
     display: flex;
     justify-content: center;
     align-items: center;
   }
 
   .card-title {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 500;
     text-align: center;
     color: var(--font-color);
@@ -926,13 +1019,13 @@ const imageUrl = image || '/images/placeholder-product.jpg';
   }
 
   .card-description {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 400;
     color: #0066cc; /* Color azul para la descripción */
-    margin-top: 10px;
-    margin-bottom: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px;
     flex-grow: 1;
-    min-height: 60px;
+    min-height: 40px;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
@@ -947,13 +1040,13 @@ const imageUrl = image || '/images/placeholder-product.jpg';
   }
 
   .card-price {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 500;
     color: var(--font-color);
   }
 
   .card-price span {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 500;
     color: var(--font-color-sub);
   }
@@ -965,22 +1058,22 @@ const imageUrl = image || '/images/placeholder-product.jpg';
   }
 
   .card-btn {
-    height: 35px;
+    height: 30px;
     background: var(--bg-color);
     border: 2px solid var(--main-color);
     border-radius: 5px;
-    padding: 0 15px;
+    padding: 0 10px;
     transition: all 0.3s;
     cursor: pointer;
   }
   
   .ver-detalles-btn {
-    height: 35px;
+    height: 30px;
     background-color: var(--main-focus);
     color: white;
     border: 2px solid var(--main-color);
     border-radius: 5px;
-    padding: 0 15px;
+    padding: 0 8px;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s;
@@ -1323,5 +1416,130 @@ const imageUrl = image || '/images/placeholder-product.jpg';
   .card-btn:active {
     transform: translateY(3px);
   }
-</style>
+  
+  /* Ajustes específicos para móviles */
+  /* Estilo para la insignia de descuento tipo flash/explosión de supermercado */
+  .discount-badge {
+    position: absolute;
+    top: -5px;
+    right: -10px;
+    background-color: #ff0000;
+    color: white;
+    padding: 15px 10px;
+    font-weight: bold;
+    font-size: 14px;
+    z-index: 5;
+    clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 50% 80%, 0% 100%);
+    animation: changeColor 2s infinite alternate;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  
+  .discount-badge::before {
+    content: 'OFERTA';
+    position: absolute;
+    top: 3px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 8px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .discount-badge::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.1) 10px,
+      rgba(255, 255, 255, 0) 10px,
+      rgba(255, 255, 255, 0) 20px
+    );
+  }
+  
+  .discount-badge:hover {
+    transform: rotate(0deg) scale(1.1);
+  }
+  
+  @keyframes changeColor {
+    0% {
+      background-color: #ff0000;
+    }
+    100% {
+      background-color: #4CAF50;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .card {
+      width: 100%;
+      min-height: 250px;
+      padding: 8px;
+      margin: 0 auto;
+    }
+    
+    .card-img .img {
+      width: 100px;
+      height: 100px;
+    }
+    
+    .card-title {
+      font-size: 14px;
+    }
+    
+    .card-description {
+      font-size: 11px;
+      min-height: 30px;
+      -webkit-line-clamp: 2;
+    }
+    
+    .card-price {
+      font-size: 14px;
+    }
+    
+    .card-price span {
+      font-size: 14px;
+    }
+    
+    .button-group {
+      flex-direction: column;
+      gap: 5px;
+    }
+    
+    .card-btn,
+    .ver-detalles-btn {
+      height: 28px;
+      width: 100%;
+      font-size: 12px;
+      padding: 0 5px;
+    }
+    
+    .card svg {
+      width: 16px;
+      height: 16px;
+    }
+    
+    .discount-badge {
+      top: 0px;
+      right: -5px;
+      padding: 12px 8px;
+      font-size: 12px;
+    }
+    
+    .discount-badge::before {
+      font-size: 6px;
+      top: 2px;
+    }
+    
+    .discount-badge span {
+      margin-top: 5px;
+      font-size: 14px;
+    }
+  }
 </style>

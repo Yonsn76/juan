@@ -64,15 +64,11 @@ const { brands } = Astro.props;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    opacity: 0.7;
+    opacity: 1;
     flex-shrink: 0;
   }
 
-  .brand-item:hover {
-    transform: translateY(-3px);
-    opacity: 1;
-  }
+  /* Eliminado efecto hover */
 
   .brand-image-wrapper {
     width: 180px;
@@ -83,13 +79,9 @@ const { brands } = Astro.props;
     padding: 1rem;
     background: transparent;
     border: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .brand-item:hover .brand-image-wrapper {
-    border-color: var(--lambo-gold);
-    box-shadow: 0 5px 20px rgba(212, 175, 55, 0.2);
-  }
+  /* Eliminado efecto hover */
 
   .brand-item img {
     max-width: 100%;
@@ -97,15 +89,10 @@ const { brands } = Astro.props;
     width: auto;
     height: auto;
     object-fit: contain;
-    transition: all 0.3s ease;
-    filter: grayscale(100%);
-    scale: 1.2;
+    /* Sin filtro grayscale para mostrar a color */
   }
 
-  .brand-item:hover img {
-    filter: grayscale(0%);
-    transform: scale(1.1);
-  }
+  /* Eliminado efecto hover */
 
   /* Responsive Design */
 @media (max-width: 768px) {
@@ -133,8 +120,5 @@ const { brands } = Astro.props;
     }
   }
 
-  /* Pause animation on hover */
-  .brands-slider:hover .brands-track {
-    animation-play-state: paused;
-  }
+  /* Desplazamiento continuo sin pausa */
 </style>
