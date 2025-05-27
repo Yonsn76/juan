@@ -16,9 +16,10 @@ interface DisplayProduct extends Product {
   categoryName: string;
 }
 
-const category = Astro.url.searchParams.get('category') || 'all';
-let displayProducts: DisplayProduct[] = [];
+const activeCategory = Astro.url.searchParams.get('category') || 'all';
 let allCategories: any[] = [];
+let productsByCategory: Record<string, DisplayProduct[]> = {};
+let displayProducts: DisplayProduct[] = [];
 
 try {
   // Obtener todas las categorías
@@ -29,19 +30,27 @@ try {
 
   if (categoriesError) throw categoriesError;
   allCategories = categoriesData || [];
+  
+  // Inicializar el mapa de productos por categoría con todas las categorías
+  allCategories.forEach(cat => {
+    productsByCategory[cat.id] = [];
+  });
+  
+  // Añadir categoría "Sin categoría" para productos sin clasificar
+  productsByCategory['uncategorized'] = [];
 
   // Construir la consulta de productos
   let productsQuery = supabase
     .from('products')
     .select(`
       *,
-      categories:category_id (name)
+      categories:category_id (id, name)
     `)
     .order('created_at', { ascending: false });
 
   // Aplicar filtro de categoría si no es 'all'
-  if (category !== 'all') {
-    productsQuery = productsQuery.eq('category_id', category);
+  if (activeCategory !== 'all') {
+    productsQuery = productsQuery.eq('category_id', activeCategory);
   }
 
   // Ejecutar la consulta
@@ -49,8 +58,8 @@ try {
 
   if (productsError) throw productsError;
 
-  // Transformar los datos al formato esperado por el componente ProductCard
-  displayProducts = (productsData || []).map(product => {
+  // Transformar y agrupar los productos por categoría
+  (productsData || []).forEach(product => {
     // Obtener la URL de la imagen
     const imageUrl = product.image?.startsWith('http') 
       ? product.image 
@@ -58,26 +67,39 @@ try {
         ? supabase.storage.from('productos').getPublicUrl(product.image).data.publicUrl
         : '/images/placeholder-product.jpg';
 
-    return {
+    const processedProduct = {
       id: product.id,
       name: product.name,
-      description: product.description || product.name, // Usar la descripción real
+      description: product.description || product.name,
       price: product.price,
       image: imageUrl,
       featured: product.featured,
-      details: product.details || product.name, // Usar los detalles reales
+      details: product.details || product.name,
       discount: product.discount || 0,
       category_id: product.category_id,
-      categories: product.categories || { name: 'Sin categoría' },
-      // Agregar categoryName para compatibilidad
+      categories: product.categories || { name: 'Sin categoría', id: 'uncategorized' },
       categoryName: product.categories?.name || 'Sin categoría',
-      // Agregar categoryKey para compatibilidad
-      categoryKey: product.category_id
+      categoryKey: product.category_id || 'uncategorized'
     };
+    
+    // Agregar al arreglo de todos los productos
+    displayProducts.push(processedProduct);
+    
+    // Agregar al grupo de su categoría
+    const categoryId = product.category_id || 'uncategorized';
+    if (productsByCategory[categoryId]) {
+      productsByCategory[categoryId].push(processedProduct);
+    } else {
+      productsByCategory[categoryId] = [processedProduct];
+    }
   });
 
-  console.log(`Encontrados ${displayProducts.length} productos en la categoría ${category}`);
-  console.log('Productos cargados:', displayProducts);
+  console.log(`Encontrados ${displayProducts.length} productos`);
+  if (activeCategory !== 'all') {
+    console.log(`Mostrando categoría: ${activeCategory}`);
+  } else {
+    console.log('Categorías cargadas:', Object.keys(productsByCategory).length);
+  }
 } catch (error) {
   console.error('Error al obtener datos de Supabase:', error);
   displayProducts = [];
@@ -90,16 +112,59 @@ try {
   <main class="catalog-page">
     <div class="catalog-container">
       <h1 class="catalog-title">Nuestro Catálogo</h1>
-      <NewCategoryFilter activeCategory={category} categories={allCategories} />
+      <NewCategoryFilter activeCategory={activeCategory} categories={allCategories} />
 
       {displayProducts.length > 0 ? (
-        <div class="products-grid">
-          {displayProducts.map((product) => (
-            <ProductCard
-              product={product}
-              categoryName={product.categoryName}
-            />
-          ))}
+        <div class="catalog-sections">
+          {activeCategory !== 'all' ? (
+            <div class="category-section" id={activeCategory}>
+              <div class="products-grid">
+                {displayProducts.map((product) => (
+                  <ProductCard
+                    product={product}
+                    categoryName={product.categoryName}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : (
+            // Cuando se muestra "Todas las categorías"
+            allCategories.map((category) => {
+              const categoryProducts = productsByCategory[category.id] || [];
+              if (categoryProducts.length === 0) return null;
+              
+              return (
+                <div class="category-section" id={category.id}>
+                  <h2 class="category-title">{category.name}</h2>
+                  <div class="category-divider"></div>
+                  <div class="products-grid">
+                    {categoryProducts.map((product) => (
+                      <ProductCard
+                        product={product}
+                        categoryName={product.categoryName}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })
+          )}
+          
+          {/* Mostrar productos sin categoría si hay alguno */}
+          {activeCategory === 'all' && productsByCategory['uncategorized']?.length > 0 && (
+            <div class="category-section" id="uncategorized">
+              <h2 class="category-title">Sin categoría</h2>
+              <div class="category-divider"></div>
+              <div class="products-grid">
+                {productsByCategory['uncategorized'].map((product) => (
+                  <ProductCard
+                    product={product}
+                    categoryName={product.categoryName}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div class="no-products">

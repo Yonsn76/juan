@@ -18,47 +18,113 @@ const allCategories = [
 ];
 ---
 
-<div class="category-filters">
-  {allCategories.map((category) => (
-    <a
-      href={`/catalog?category=${category.id}`}
-      class={`filter-link ${activeCategory === category.id ? 'active' : ''}`}
-      aria-current={activeCategory === category.id ? 'page' : undefined}
-    >
-      {category.name}
-    </a>
-  ))}
+<div class="category-filters-wrapper">
+  <div class="category-filters">
+    {allCategories.map((category) => (
+      <a
+        href={`/catalog?category=${category.id}`}
+        class={`filter-link ${activeCategory === category.id ? 'active' : ''}`}
+        aria-current={activeCategory === category.id ? 'page' : undefined}
+        data-category-id={category.id}
+      >
+        {category.name}
+      </a>
+    ))}
+  </div>
 </div>
 
+<script>
+  // Función para manejar el cambio de categoría y actualizar la URL
+  function setupCategoryFilters() {
+    const filterLinks = document.querySelectorAll('.filter-link');
+    
+    filterLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const categoryId = link.getAttribute('data-category-id') || 'all';
+        const url = new URL(window.location.href);
+        
+        if (categoryId === 'all') {
+          url.searchParams.delete('category');
+        } else {
+          url.searchParams.set('category', categoryId);
+        }
+        
+        // Actualizar la URL sin recargar la página
+        window.history.pushState({}, '', url);
+        
+        // Actualizar las clases activas
+        filterLinks.forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+        
+        // Mostrar/ocultar las secciones de categoría
+        const categorySections = document.querySelectorAll('.category-section');
+        
+        if (categoryId === 'all') {
+          // Mostrar todas las categorías
+          categorySections.forEach(section => {
+            if (section instanceof HTMLElement) {
+              section.style.display = 'block';
+            }
+          });
+        } else {
+          // Mostrar solo la categoría seleccionada
+          categorySections.forEach(section => {
+            if (section instanceof HTMLElement) {
+              if (section.id === categoryId) {
+                section.style.display = 'block';
+              } else {
+                section.style.display = 'none';
+              }
+            }
+          });
+        }
+      });
+    });
+  }
+  
+  // Inicializar cuando el DOM esté listo
+  document.addEventListener('DOMContentLoaded', setupCategoryFilters);
+</script>
+
 <style>
+  .category-filters-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+    width: 100%;
+  }
+  
   .category-filters {
     display: flex;
     flex-wrap: nowrap;
     gap: 0.5rem;
-    margin: 0 0 2.5rem;
-    padding: 0.25rem;
-    background-color: var(--color-gray-50);
-    border-radius: var(--border-radius-lg);
-    border: 1px solid var(--color-gray-200);
+    padding: 0.5rem;
+    background-color: #f5f5f5;
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
     width: fit-content;
     max-width: 100%;
     overflow-x: auto;
     scrollbar-width: thin;
     -webkit-overflow-scrolling: touch;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   }
 
   .filter-link {
     text-decoration: none;
-    color: var(--color-gray-600);
+    color: #555;
     padding: 0.5rem 1.25rem;
-    border-radius: var(--border-radius-md);
+    border-radius: 8px;
     background-color: transparent;
-    transition: var(--transition-colors);
-    font-size: 0.8125rem;
+    transition: all 0.3s ease;
+    font-size: 0.875rem;
     font-weight: 500;
     white-space: nowrap;
     line-height: 1.25;
     border: none;
+    letter-spacing: 0.2px;
+    position: relative;
   }
 
   .filter-link:hover {

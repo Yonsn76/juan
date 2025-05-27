@@ -104,6 +104,34 @@
   box-sizing: border-box;
 }
 
+/* Estilos para las secciones de categoría */
+.catalog-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  margin-top: 2rem;
+}
+
+.category-section {
+  scroll-margin-top: 100px;
+}
+
+.category-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  position: relative;
+  display: inline-block;
+}
+
+.category-divider {
+  height: 3px;
+  width: 100%;
+  background: linear-gradient(to right, var(--biker-red), transparent);
+  margin-bottom: 1.5rem;
+}
+
 /* Estilos de tarjetas de productos igual que en página de inicio */
 .product-card {
   background-color: white;
