@@ -1,0 +1,481 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import '../../../styles/admin.css';
+import { supabase } from '../../../lib/supabase';
+
+// Obtener el id de la promoción desde la URL
+const { id } = Astro.params;
+
+// Estado para almacenar los datos de la promoción
+let promotion = null;
+let error = null;
+
+// Intentar obtener los datos de la promoción
+if (id) {
+  try {
+    const { data, error: fetchError } = await supabase
+      .from('promotions')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (fetchError) {
+      error = `Error al cargar la promoción: ${fetchError.message}`;
+    } else if (!data) {
+      error = 'Promoción no encontrada';
+    } else {
+      promotion = data;
+    }
+  } catch (e) {
+    console.error('Error al obtener la promoción:', e);
+    error = 'Error al cargar los datos de la promoción';
+  }
+}
+---
+
+<Layout title="Editar Promoción - Casa Biker">
+  <div class="admin-container">
+    <header class="admin-header">
+      <div class="admin-header-content">
+        <h1>
+          <i class="fas fa-bullhorn"></i>
+          Editar Promoción
+        </h1>
+        <a href="/admin/promotions" class="admin-back-btn">
+          <i class="fas fa-arrow-left"></i> Volver
+        </a>
+      </div>
+    </header>
+
+    <div class="admin-content">
+      <aside class="admin-sidebar">
+        <nav class="admin-nav">
+          <ul>
+            <li class="admin-nav-item">
+              <a href="/admin" class="admin-nav-link">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+              </a>
+            </li>
+            <li class="admin-nav-item">
+              <a href="/admin/products/index_products" class="admin-nav-link">
+                <i class="fas fa-box"></i>
+                <span>Productos</span>
+              </a>
+            </li>
+            <li class="admin-nav-item">
+              <a href="/admin/categories/index_categories" class="admin-nav-link">
+                <i class="fas fa-tags"></i>
+                <span>Categorías</span>
+              </a>
+            </li>
+            <li class="admin-nav-item active">
+              <a href="/admin/promotions" class="admin-nav-link">
+                <i class="fas fa-bullhorn"></i>
+                <span>Promociones</span>
+              </a>
+            </li>
+            <li class="admin-nav-item">
+              <a href="/admin/settings/index_setting" class="admin-nav-link">
+                <i class="fas fa-cog"></i>
+                <span>Configuración</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      <main class="admin-main">
+        <div class="admin-content-header">
+          <h2>Editar Promoción</h2>
+          <a href="/admin/promotions" class="admin-btn admin-btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver a la lista
+          </a>
+        </div>
+
+        {error && (
+          <div class="admin-alert admin-alert-danger">
+            <i class="fas fa-exclamation-circle"></i> {error}
+          </div>
+        )}
+
+        {!error && promotion && (
+          <div class="admin-form-container">
+            <form id="promotion-form" class="admin-form">
+              <!-- Campo oculto para el ID -->
+              <input type="hidden" id="promotion-id" name="id" value={promotion.id} />
+              
+              <div class="admin-form-group">
+                <label for="promotion-title" class="admin-form-label">Título de la Promoción <span class="required">*</span></label>
+                <input 
+                  type="text" 
+                  id="promotion-title" 
+                  name="title" 
+                  class="admin-form-input" 
+                  placeholder="Ej: LAVADA GRATIS" 
+                  value={promotion.title}
+                  required
+                >
+                <small class="admin-form-help">Título corto y llamativo para la promoción.</small>
+              </div>
+
+              <div class="admin-form-group">
+                <label for="promotion-description" class="admin-form-label">Descripción</label>
+                <input 
+                  type="text" 
+                  id="promotion-description" 
+                  name="description" 
+                  class="admin-form-input" 
+                  placeholder="Ej: Por compras superiores a S/300"
+                  value={promotion.description || ''}
+                >
+                <small class="admin-form-help">Breve descripción de la promoción (opcional).</small>
+              </div>
+
+              <div class="admin-form-group">
+                <label for="promotion-image" class="admin-form-label">Imagen de la Promoción</label>
+                <div class="admin-image-input-container">
+                  <input 
+                    type="file" 
+                    id="promotion-image" 
+                    name="image" 
+                    class="admin-form-file-input" 
+                    accept="image/*"
+                  >
+                  <label for="promotion-image" class="admin-file-input-wrapper">
+                    <span>Cambiar imagen</span>
+                    <i class="fas fa-upload"></i>
+                  </label>
+                </div>
+                <div id="image-preview" class="admin-image-preview">
+                  {promotion.image_path && (
+                    <div class="current-image-container">
+                      <img 
+                        src={promotion.image_path.startsWith('http') 
+                          ? promotion.image_path 
+                          : supabase.storage.from('promos').getPublicUrl(promotion.image_path).data.publicUrl
+                        } 
+                        alt="Imagen actual" 
+                        class="admin-preview-img"
+                      />
+                      <div class="current-image-label">Imagen actual</div>
+                    </div>
+                  )}
+                </div>
+                <small class="admin-form-help">Selecciona una nueva imagen solo si deseas cambiarla. Formatos aceptados: JPG, PNG, GIF.</small>
+              </div>
+
+              <div class="admin-form-group">
+                <label for="promotion-whatsapp" class="admin-form-label">Mensaje de WhatsApp <span class="required">*</span></label>
+                <textarea 
+                  id="promotion-whatsapp" 
+                  name="whatsapp_message" 
+                  class="admin-form-input admin-form-textarea" 
+                  placeholder="Ej: Hola, me interesa la promoción de LAVADA GRATIS por compras superiores a S/300. ¿Podrían darme más información?" 
+                  required
+                >{promotion.whatsapp_message}</textarea>
+                <small class="admin-form-help">Mensaje que se enviará cuando el cliente solicite información sobre esta promoción.</small>
+              </div>
+
+              <div class="admin-form-actions">
+                <button type="button" class="admin-btn admin-btn-secondary" id="cancel-btn">
+                  <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="submit" class="admin-btn admin-btn-primary" id="save-btn">
+                  <i class="fas fa-save"></i> Guardar Cambios
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+      </main>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .admin-image-input-container {
+    margin-bottom: 10px;
+  }
+  
+  .admin-form-file-input {
+    position: absolute;
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    z-index: -1;
+  }
+  
+  .admin-file-input-wrapper {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    background-color: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .admin-file-input-wrapper:hover {
+    background-color: #e2e8f0;
+  }
+  
+  .admin-file-input-wrapper i {
+    margin-left: 8px;
+  }
+  
+  .admin-image-preview {
+    width: 100%;
+    max-width: 300px;
+    height: 200px;
+    margin-top: 10px;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  
+  .admin-preview-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+  
+  .admin-btn-remove-image {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: rgba(255, 255, 255, 0.8);
+    color: #ef4444;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .admin-btn-remove-image:hover {
+    background-color: rgba(255, 255, 255, 1);
+  }
+
+  .current-image-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .current-image-label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 4px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    text-align: center;
+    font-size: 12px;
+  }
+</style>
+
+<script>
+  // Importamos supabase desde el archivo lib/supabase.js que ya está configurado correctamente
+  import { supabase } from '../../../lib/supabase';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const promotionForm = document.getElementById('promotion-form');
+    const promotionId = document.getElementById('promotion-id')?.value;
+    const cancelBtn = document.getElementById('cancel-btn');
+    const imageInput = document.getElementById('promotion-image');
+    const imagePreview = document.getElementById('image-preview');
+    const saveBtn = document.getElementById('save-btn');
+
+    // Manejar la vista previa de la imagen nueva
+    if (imageInput && imagePreview) {
+      imageInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          // Limpiar preview de imagen actual si existe
+          const currentImageContainer = imagePreview.querySelector('.current-image-container');
+          if (currentImageContainer) {
+            currentImageContainer.style.display = 'none';
+          }
+
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            // Añadir la nueva vista previa
+            const newPreviewContainer = document.createElement('div');
+            newPreviewContainer.className = 'new-image-container';
+            newPreviewContainer.innerHTML = `
+              <img src="${e.target.result}" alt="Vista previa" class="admin-preview-img">
+              <div class="current-image-label">Nueva imagen</div>
+              <button type="button" class="admin-btn admin-btn-icon admin-btn-remove-image">
+                <i class="fas fa-times"></i>
+              </button>
+            `;
+            
+            // Insertar nuevo contenedor al inicio
+            imagePreview.insertBefore(newPreviewContainer, imagePreview.firstChild);
+
+            // Agregar evento para eliminar la imagen
+            const removeBtn = newPreviewContainer.querySelector('.admin-btn-remove-image');
+            if (removeBtn) {
+              removeBtn.addEventListener('click', () => {
+                imageInput.value = '';
+                newPreviewContainer.remove();
+                // Mostrar de nuevo la imagen actual si existe
+                if (currentImageContainer) {
+                  currentImageContainer.style.display = 'flex';
+                }
+              });
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    // Manejar el botón de cancelar
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => {
+        if (confirm('¿Estás seguro de que deseas cancelar? Los cambios no guardados se perderán.')) {
+          window.location.href = '/admin/promotions';
+        }
+      });
+    }
+
+    // Manejar el envío del formulario
+    if (promotionForm) {
+      promotionForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        try {
+          // Mostrar indicador de carga
+          if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+          }
+
+          // Recopilar datos del formulario
+          const formData = new FormData(promotionForm);
+          const promotionData = Object.fromEntries(formData.entries());
+
+          // Eliminar el campo de imagen del objeto de datos si no se seleccionó una nueva
+          if (!imageInput.files[0]) {
+            delete promotionData.image;
+          } else {
+            // Manejar la imagen si se seleccionó una nueva
+            const imageFile = imageInput.files[0];
+            console.log('Archivo de imagen seleccionado:', imageFile);
+
+            try {
+              console.log('Iniciando proceso de subida de imagen...');
+
+              // Generar un nombre único para la imagen
+              const timestamp = Date.now();
+              const randomString = Math.random().toString(36).substring(2, 15);
+              const fileExt = imageFile.name.split('.').pop();
+              const fileName = `${timestamp}_${randomString}.${fileExt}`;
+              const filePath = `${fileName}`; // Sin carpeta, directamente en la raíz del bucket
+
+              console.log('Ruta de archivo generada:', filePath);
+              console.log('Tipo de archivo:', imageFile.type);
+              console.log('Tamaño de archivo:', imageFile.size, 'bytes');
+
+              // Verificar que el bucket existe
+              const { data: buckets, error: bucketsError } = await supabase.storage
+                .listBuckets();
+
+              console.log('Buckets disponibles:', buckets);
+
+              if (bucketsError) {
+                console.error('Error al listar buckets:', bucketsError);
+                throw bucketsError;
+              }
+
+              // Subir la imagen al bucket de Supabase
+              console.log('Intentando subir imagen a Supabase...');
+              const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('promos')
+                .upload(filePath, imageFile, {
+                  cacheControl: '3600',
+                  upsert: true,
+                  contentType: imageFile.type
+                });
+
+              console.log('Respuesta de subida:', { uploadData, uploadError });
+
+              if (uploadError) {
+                console.error('Error detallado al subir la imagen:', uploadError);
+                throw uploadError;
+              }
+
+              // Obtener la URL pública de la imagen
+              const { data: publicUrlData } = supabase.storage
+                .from('promos')
+                .getPublicUrl(filePath);
+
+              console.log('URL pública de la imagen:', publicUrlData);
+
+              // Guardar la ruta de la imagen en la promoción
+              promotionData.image_path = filePath;
+
+              console.log('Imagen subida correctamente:', publicUrlData.publicUrl);
+            } catch (uploadError) {
+              console.error('Error al subir la imagen:', uploadError);
+              console.error('Detalles del error:', JSON.stringify(uploadError, null, 2));
+              // No cambiamos la imagen_path si hay un error al subir la nueva imagen
+              alert('Error al subir la imagen. Se mantendrá la imagen actual.');
+            }
+          }
+
+          // Eliminar el campo id de formData y usarlo para la actualización
+          const id = promotionData.id;
+          delete promotionData.id;
+          delete promotionData.image;
+
+          console.log('Datos de la promoción a actualizar:', promotionData);
+
+          // Actualizar la promoción en Supabase
+          const { data, error } = await supabase
+            .from('promotions')
+            .update(promotionData)
+            .eq('id', id)
+            .select();
+
+          if (error) throw error;
+
+          console.log('Promoción actualizada correctamente:', data);
+
+          // Mostrar mensaje de éxito
+          alert('Promoción actualizada correctamente');
+
+          // Redirigir a la lista de promociones
+          setTimeout(() => {
+            window.location.href = '/admin/promotions';
+          }, 2000);
+        } catch (error) {
+          console.error('Error al actualizar la promoción:', error);
+          alert('Error al actualizar la promoción: ' + error.message);
+
+          // Restaurar el botón de guardar
+          if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Cambios';
+          }
+        }
+      });
+    }
+  });
+</script>

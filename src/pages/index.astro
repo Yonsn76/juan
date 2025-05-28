@@ -9,12 +9,16 @@ import ProductCard from "../components/Catalog/ProductCard.astro";
 import { supabase } from "../lib/supabase";
 import type { Product } from "../types/catalog";
 
-const carouselImages = [
-  { src: "/images/promo.png", alt: "Promociones especiales" },
-  { src: "/images/envio_provincias.png", alt: "Servicio de lavado profesional" },
-  { src: "/images/tunning.png", alt: "Servicios de tunning" },
-  { src: "/images/accesorios.png", alt: "Accesorios para motos" },
-];
+// Definir un tipo para las promociones
+interface Promotion {
+  id: number;
+  title: string;
+  description: string;
+  image_path: string;
+  whatsapp_message: string;
+}
+
+// Las promociones ahora vienen exclusivamente desde Supabase
 
 const services = [
   {
@@ -50,6 +54,42 @@ const services = [
     color: "#10b981",
   },
 ];
+
+// Obtener promociones desde Supabase
+let promotions: Promotion[] = [];
+
+try {
+  // Obtener las promociones desde la tabla 'promotions'
+  const { data: promotionsData, error: promotionsError } = await supabase
+    .from('promotions')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (promotionsError) throw promotionsError;
+  
+  // Procesar las promociones para asegurar que las URLs de las imágenes sean correctas usando el método optimizado
+  promotions = (promotionsData || []).map(promo => {
+    // Obtener la URL de la imagen desde Supabase siguiendo el mismo patrón que en productos
+    const imagePath = promo.image_path?.startsWith('http')
+      ? promo.image_path
+      : promo.image_path
+        ? supabase.storage.from('promos').getPublicUrl(promo.image_path).data.publicUrl
+        : '/images/promo1.png';
+    
+    return {
+      ...promo,
+      image_path: imagePath
+    };
+  });
+  
+  console.log(`Obtenidas ${promotions.length} promociones de Supabase`);
+  // Imprimir las URLs de las imágenes para depuración
+  promotions.forEach((promo, index) => {
+    console.log(`Promoción ${index + 1} - Imagen: ${promo.image_path}`);
+  });
+} catch (error) {
+  console.error('Error al obtener promociones de Supabase:', error);
+}
 
 // Obtener productos destacados desde Supabase
 let featuredProducts: Product[] = [];
@@ -113,15 +153,34 @@ const brands = [
     <!-- Promo Box (fuera del carrusel) -->
     <div class="promo-box">
       <div class="promo-bg">
-        <div class="promo-bg-item" style="background-image: url('/images/promo1.png'); animation-delay: 0s;"></div>
-        <div class="promo-bg-item" style="background-image: url('/images/lavada.png'); animation-delay: 4s;"></div>
-        <div class="promo-bg-item" style="background-image: url('/images/promo.png'); animation-delay: 8s;"></div>
-        <div class="promo-bg-item" style="background-image: url('/images/promo2.jpg'); animation-delay: 12s;"></div>
-        <div class="promo-bg-item" style="background-image: url('/images/promo3.jpg'); animation-delay: 16s;"></div>
-        <div class="promo-bg-item" style="background-image: url('/images/promo4.jpg'); animation-delay: 20s;"></div>
+        {promotions.map((promo, index) => (
+          <div 
+            class="promo-bg-item" 
+            style={`background-image: url('${promo.image_path}'); ${index === 0 ? 'opacity: 1;' : 'opacity: 0;'}`}
+          ></div>
+        ))}
+        
+        {/* Solo se mostrarán las promociones de Supabase */}
       </div>
       <div class="promo-content">
-        <a href="/catalog" class="promo-button">Preguntar</a>
+        {/* Promociones dinámicas desde Supabase */}
+        {promotions.map((promo, index) => (
+          <div class={`promo-item ${index === 0 ? 'active' : ''}`} data-promo={index}>
+            <div class="promo-content-inner">
+              <h3 class="promo-title">{promo.title}</h3>
+              <p class="promo-details">{promo.description}</p>
+              <a 
+                href={`https://wa.me/51999999999?text=${encodeURIComponent(promo.whatsapp_message)}`} 
+                target="_blank" 
+                class="promo-button"
+              >
+                Solicitar
+              </a>
+            </div>
+          </div>
+        ))}
+        
+        {/* Solo se mostrarán las promociones almacenadas en Supabase */}
       </div>
     </div>
     
@@ -592,20 +651,66 @@ const brands = [
       position: absolute;
       top: 0;
       left: 0;
-      right: 0;
-      bottom: 0;
+      width: 100%;
+      height: 100%;
       background-size: cover;
       background-position: center;
-      background-repeat: no-repeat;
       opacity: 0;
-      animation: changeImage 24s infinite ease-in-out;
+      transition: opacity 0.5s ease-in-out;
     }
     
     .promo-content {
       position: relative;
       z-index: 1;
       width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
     }
+    
+    /* Estilos para los ítems de promociones */
+    .promo-item {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      text-align: center;
+      width: 100%;
+      height: 100%;
+    }
+    
+    .promo-item.active {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 1;
+      animation: fadeIn 0.8s ease-in-out;
+    }
+    
+    .promo-content-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      padding: 15px;
+    }
+    
+    /* Espaciado interno de los items de promoción */
+    .promo-title {
+      margin-bottom: 8px;
+      color: white;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    
+    .promo-details {
+      margin-bottom: 15px;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 1rem;
     }
   
   
@@ -648,21 +753,30 @@ const brands = [
   
   .promo-button {
     display: inline-block;
-    background-color: #000;
+    background-color: #10b981; /* Verde vibrante */
     color: white;
-    padding: 8px 16px;
-    border-radius: 4px;
+    padding: 12px 25px;
+    border-radius: 8px;
     text-decoration: none;
-    font-weight: 600;
-    font-size: 0.9rem;
+    font-weight: 700;
+    font-size: 1.1rem;
     text-transform: uppercase;
     transition: all 0.3s ease;
+    letter-spacing: 0.8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.2);
   }
   
   .promo-button:hover {
-    background-color: #cc0000;
-    transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    background-color: #059669; /* Verde más oscuro en hover */
+    transform: translateY(-4px) scale(1.08);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+  
+  .promo-button:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   }
 
   /* Section Headers */
@@ -1542,6 +1656,9 @@ const brands = [
   });
 
   function initPage() {
+    // Inicializar rotación de promociones
+    initPromoRotation();
+    
     // Initialize service videos
     document.querySelectorAll(".service-card").forEach((card) => {
       const video = card.querySelector("video");
@@ -1619,5 +1736,57 @@ const brands = [
 
     // Add scroll listener
     window.addEventListener("scroll", animateOnScroll);
+  }
+  
+  // Función para inicializar la rotación de promociones
+  function initPromoRotation() {
+    const promoItems = document.querySelectorAll('.promo-item');
+    const bgItems = document.querySelectorAll('.promo-bg-item');
+    let currentPromo = 0;
+    
+    if (promoItems.length === 0) return; // No hay promociones para mostrar
+    
+    // Asegurarnos de que la primera promoción e imagen están activas
+    promoItems[0].classList.add('active');
+    
+    // Si no hay suficientes promociones, no iniciamos la rotación
+    if (promoItems.length <= 1) return;
+    
+    // Resetear cualquier estilo de animation-delay en las imágenes de fondo para sincronizarlas con JS
+    bgItems.forEach(item => {
+      item.style.animationDelay = '0s';
+      // Hacemos que las imágenes no sean visibles inicialmente excepto la primera
+      if (item !== bgItems[0]) {
+        item.style.opacity = '0';
+      }
+    });
+    
+    // Cambiar promociones cada 4 segundos usando JS para mejor sincronización
+    const ROTATION_INTERVAL = 4000; // 4 segundos
+    
+    setInterval(() => {
+      // 1. Ocultar promoción actual (texto)
+      promoItems[currentPromo].classList.remove('active');
+      
+      // 2. Ocultar imagen de fondo actual con fade
+      if (bgItems[currentPromo]) {
+        bgItems[currentPromo].style.opacity = '0';
+        bgItems[currentPromo].style.transition = 'opacity 0.5s ease-out';
+      }
+      
+      // 3. Avanzar al siguiente índice
+      currentPromo = (currentPromo + 1) % promoItems.length;
+      
+      // 4. Mostrar la siguiente promoción (texto)
+      promoItems[currentPromo].classList.add('active');
+      
+      // 5. Mostrar la siguiente imagen de fondo con fade
+      if (bgItems[currentPromo]) {
+        bgItems[currentPromo].style.opacity = '1';
+        bgItems[currentPromo].style.transition = 'opacity 0.5s ease-in';
+      }
+      
+      console.log(`Rotando a promoción #${currentPromo + 1}`);
+    }, ROTATION_INTERVAL);
   }
 </script>

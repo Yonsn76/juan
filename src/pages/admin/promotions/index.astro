@@ -1,0 +1,1049 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { supabase } from '../../../lib/supabase';
+
+// Obtener el usuario de locals (establecido por el middleware)
+const user = Astro.locals.user;
+
+// Estado para mensajes
+let successMessage = '';
+let errorMessage = '';
+
+// Estado para las promociones
+let promotions = [];
+
+// Verificar si hay mensajes de actualización exitosa
+const updated = Astro.url.searchParams.get('updated');
+if (updated === 'true') {
+  successMessage = 'Promoción actualizada correctamente';
+}
+
+// Manejar eliminación si se recibe un ID por GET
+const deleteId = Astro.url.searchParams.get('delete');
+if (deleteId) {
+  try {
+    const { error } = await supabase
+      .from('promotions')
+      .delete()
+      .eq('id', deleteId);
+    
+    if (error) {
+      throw new Error(error.message);
+    } else {
+      successMessage = 'Promoción eliminada correctamente';
+    }
+  } catch (err) {
+    console.error('Error al eliminar promoción:', err);
+    errorMessage = err instanceof Error ? err.message : 'Error desconocido al eliminar la promoción';
+  }
+}
+
+// Obtener todas las promociones
+try {
+  const { data, error } = await supabase
+    .from('promotions')
+    .select('*')
+    .order('created_at', { ascending: false });
+  
+  if (error) {
+    throw new Error(error.message);
+  } else {
+    // Procesar las promociones para asegurar que las URLs de las imágenes sean correctas usando el mismo método que en productos
+    promotions = (data || []).map(promo => {
+      // Obtener la URL de la imagen desde Supabase siguiendo el mismo patrón que en productos
+      const imagePath = promo.image_path?.startsWith('http')
+        ? promo.image_path
+        : promo.image_path
+          ? supabase.storage.from('promos').getPublicUrl(promo.image_path).data.publicUrl
+          : '/images/promo-default.png';
+      
+      return {
+        ...promo,
+        image_path: imagePath
+      };
+    });
+    console.log('Promociones procesadas:', promotions.length);
+  }
+} catch (err) {
+  console.error('Error al obtener promociones:', err);
+  errorMessage = err instanceof Error ? err.message : 'Error desconocido al obtener las promociones';
+}
+---
+
+<AdminLayout title="Gestión de Promociones" user={user}>
+  <div class="admin-content-header">
+    <h1>Gestión de Promociones</h1>
+    <div class="admin-content-actions">
+      <a href="/admin/promotions/new_promotions" class="admin-button admin-button-primary">
+        <i class="fas fa-plus"></i> Nueva Promoción
+      </a>
+    </div>
+  </div>
+
+  {successMessage && (
+    <div class="admin-alert admin-alert-success">
+      <i class="fas fa-check-circle"></i>
+      <span>{successMessage}</span>
+    </div>
+  )}
+
+  {errorMessage && (
+    <div class="admin-alert admin-alert-danger">
+      <i class="fas fa-exclamation-circle"></i>
+      <span>Error: {errorMessage}</span>
+    </div>
+  )}
+
+  <div class="admin-card">
+    <div class="admin-card-header">
+      <h2>Promociones Actuales</h2>
+    </div>
+    <div class="admin-card-body">
+      {promotions.length === 0 ? (
+        <div class="admin-empty-state">
+          <i class="fas fa-bullhorn"></i>
+          <p>No hay promociones disponibles. ¡Crea la primera!</p>
+          <a href="/admin/promotions/new_promotions" class="admin-button admin-button-primary">
+            <i class="fas fa-plus"></i> Crear Promoción
+          </a>
+        </div>
+      ) : (
+        <div class="admin-table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Título</th>
+                <th>Descripción</th>
+                <th>Imagen</th>
+                <th>Fecha de Creación</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {promotions.map(promo => (
+                <tr><!-- ID: {promo.id} -->
+                  <td>{promo.id}</td>
+                  <td>{promo.title}</td>
+                  <td>{promo.description}</td>
+                  <td>
+                    <div class="admin-image-thumbnail">
+                      <img 
+                        src={promo.image_path} 
+                        alt={promo.title} 
+                        onerror="this.onerror=null; this.src='/images/promo-default.png'; console.log('Error al cargar imagen de promoción');"
+                      />
+                    </div>
+                  </td>
+                  <td>{new Date(promo.created_at).toLocaleString()}</td>
+                  <td>
+                    <div class="admin-actions">
+                      <button 
+                        class="admin-action-btn admin-action-edit" 
+                        title="Editar"
+                        data-id={promo.id}
+                        data-title={promo.title}
+                        data-description={promo.description || ''}
+                        data-image-path={promo.image_path}
+                        data-whatsapp-message={promo.whatsapp_message}
+                        onclick={`editPromotion(${promo.id})`}
+                      >
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button 
+                        class="admin-action-btn admin-action-delete" 
+                        title="Eliminar"
+                        data-id={promo.id}
+                        data-title={promo.title}
+                        onclick={`confirmDelete(${promo.id}, '${promo.title}')`}
+                      >
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  </div>
+  <!-- Modal de edición -->
+  <div id="edit-modal" class="admin-modal">
+    <div class="admin-modal-content">
+      <div class="admin-modal-header">
+        <h3>Editar Promoción</h3>
+        <button class="admin-modal-close" onclick="closeEditModal()">&times;</button>
+      </div>
+      <div class="admin-modal-body">
+        <form id="edit-promotion-form" class="admin-form">
+          <input type="hidden" id="edit-promotion-id" name="id">
+          
+          <div class="admin-form-group">
+            <label for="edit-promotion-title" class="admin-form-label">Título de la Promoción <span class="required">*</span></label>
+            <input 
+              type="text" 
+              id="edit-promotion-title" 
+              name="title" 
+              class="admin-form-input" 
+              placeholder="Ej: LAVADA GRATIS" 
+              required
+            >
+          </div>
+
+          <div class="admin-form-group">
+            <label for="edit-promotion-description" class="admin-form-label">Descripción</label>
+            <textarea 
+              id="edit-promotion-description" 
+              name="description" 
+              class="admin-form-input admin-form-textarea" 
+              placeholder="Ej: Por compras superiores a S/300"
+              rows="3"
+            ></textarea>
+          </div>
+
+          <div class="admin-form-group">
+            <label for="edit-promotion-image" class="admin-form-label">Imagen de la Promoción</label>
+            <div class="admin-image-input-container">
+              <input 
+                type="file" 
+                id="edit-promotion-image" 
+                name="image" 
+                class="admin-form-file-input" 
+                accept="image/*"
+              >
+              <label for="edit-promotion-image" class="admin-file-input-wrapper">
+                <span>Cambiar imagen</span>
+                <i class="fas fa-upload"></i>
+              </label>
+            </div>
+            <div id="edit-image-preview" class="admin-image-preview">
+              <!-- La imagen actual se mostrará aquí -->
+            </div>
+            <small class="admin-form-help">Selecciona una nueva imagen solo si deseas cambiarla.</small>
+          </div>
+
+          <div class="admin-form-group">
+            <label for="edit-promotion-whatsapp" class="admin-form-label">Mensaje de WhatsApp <span class="required">*</span></label>
+            <textarea 
+              id="edit-promotion-whatsapp" 
+              name="whatsapp_message" 
+              class="admin-form-input admin-form-textarea" 
+              placeholder="Ej: Hola, me interesa la promoción..." 
+              required
+            ></textarea>
+          </div>
+
+          <div class="admin-form-actions">
+            <button type="button" class="admin-btn admin-btn-secondary" onclick="closeEditModal()">
+              <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button type="submit" class="admin-btn admin-btn-primary" id="save-edit-btn">
+              <i class="fas fa-save"></i> Guardar Cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</AdminLayout>
+
+<script>
+  import { supabase } from '../../../lib/supabase';
+  
+  // Script para resaltar el elemento del menú activo
+  document.addEventListener('DOMContentLoaded', () => {
+    const navItems = document.querySelectorAll('.admin-nav-item');
+    navItems.forEach(item => {
+      if (item.getAttribute('data-page') === 'promotions') {
+        item.classList.add('active');
+      }
+    });
+
+    // Configuración del formulario de edición
+    setupEditForm();
+  });
+
+  // Declarar tipos en TypeScript para las funciones globales
+  declare global {
+    interface Window {
+      confirmDelete: (id: number, title: string) => void;
+      openEditModal: (id: number, title: string, description: string, imagePath: string, whatsappMessage: string) => void;
+      closeEditModal: () => void;
+      editPromotion: (id: number) => void;
+    }
+  }
+
+  // Función para editar una promoción obteniendo datos desde los atributos data-
+  window.editPromotion = (id) => {
+    // Buscar el botón que tiene el data-id igual al id proporcionado
+    const button = document.querySelector(`.admin-action-edit[data-id="${id}"]`) as HTMLButtonElement;
+    if (!button) {
+      console.error('No se encontró el botón para la promoción con ID:', id);
+      return;
+    }
+    
+    // Obtener los datos de los atributos data-
+    const promoId = button.getAttribute('data-id') || '';
+    const title = button.getAttribute('data-title') || '';
+    const description = button.getAttribute('data-description') || '';
+    const imagePath = button.getAttribute('data-image-path') || '';
+    const whatsappMessage = button.getAttribute('data-whatsapp-message') || '';
+    
+    // Registrar los datos para depuración
+    console.log('Datos obtenidos de los atributos data-', {
+      id: promoId,
+      title,
+      description,
+      imagePath,
+      whatsappMessage
+    });
+    
+    // Llamar a window.openEditModal con los datos obtenidos
+    window.openEditModal(Number(promoId), title, description, imagePath, whatsappMessage);
+  };
+
+  // Función para confirmar eliminación
+  window.confirmDelete = (id, title) => {
+    if (confirm(`¿Estás seguro de que deseas eliminar la promoción "${title}"? Esta acción no se puede deshacer.`)) {
+      window.location.href = `/admin/promotions?delete=${id}`;
+    }
+  };
+
+  // Función para abrir el modal de edición
+  window.openEditModal = (id, title, description, imagePath, whatsappMessage) => {
+    console.log('Abriendo modal con datos:', { id, title, description, imagePath, whatsappMessage });
+    
+    // Limpiar los campos primero para evitar datos anteriores
+    const idInput = document.getElementById('edit-promotion-id') as HTMLInputElement;
+    const titleInput = document.getElementById('edit-promotion-title') as HTMLInputElement;
+    const descriptionInput = document.getElementById('edit-promotion-description') as HTMLTextAreaElement;
+    const whatsappInput = document.getElementById('edit-promotion-whatsapp') as HTMLTextAreaElement;
+    
+    if (idInput) idInput.value = '';
+    if (titleInput) titleInput.value = '';
+    if (descriptionInput) descriptionInput.value = '';
+    if (whatsappInput) whatsappInput.value = '';
+    
+    // Establecer los valores con un pequeño retraso para asegurar que se apliquen correctamente
+    setTimeout(() => {
+      if (idInput) idInput.value = id.toString();
+      if (titleInput) titleInput.value = title || '';
+      if (descriptionInput) descriptionInput.value = description || '';
+      if (whatsappInput) whatsappInput.value = whatsappMessage || '';
+      
+      // Verificar que los valores se establecieron correctamente
+      console.log('Valores establecidos en el formulario:', {
+        id: idInput?.value || '',
+        title: titleInput?.value || '',
+        description: descriptionInput?.value || '',
+        whatsapp: whatsappInput?.value || ''
+      });
+    }, 100);
+    
+    // Mostrar la imagen actual
+    const imagePreview = document.getElementById('edit-image-preview');
+    if (imagePreview) {
+      // Verificar si tenemos una URL de imagen válida
+      const imgSrc = imagePath && imagePath.trim() !== '' ? imagePath : '/images/promo-default.png';
+      const altText = title || 'Imagen de promoción';
+      
+      // Registrar información para depuración
+      console.log('Mostrando imagen en el modal:', { imagePath, imgSrc });
+      
+      imagePreview.innerHTML = `
+        <div class="current-image-container">
+          <img src="${imgSrc}" alt="${altText}" class="admin-preview-img" onerror="this.onerror=null; this.src='/images/promo-default.png'; console.log('Error al cargar imagen en modal, usando imagen por defecto');">
+          <div class="current-image-label">Imagen actual</div>
+        </div>
+      `;
+    }
+    
+    // Mostrar el modal
+    const modal = document.getElementById('edit-modal');
+    if (modal) modal.style.display = 'flex';
+  };
+
+  // Función para cerrar el modal
+  window.closeEditModal = () => {
+    document.getElementById('edit-modal').style.display = 'none';
+  };
+
+  // Configurar el formulario de edición
+  function setupEditForm() {
+    const editForm = document.getElementById('edit-promotion-form') as HTMLFormElement;
+    const imageInput = document.getElementById('edit-promotion-image') as HTMLInputElement;
+    const imagePreview = document.getElementById('edit-image-preview');
+    const saveBtn = document.getElementById('save-edit-btn') as HTMLButtonElement;
+
+    // Manejar la vista previa de la imagen nueva
+    if (imageInput && imagePreview) {
+      imageInput.addEventListener('change', (event: Event) => {
+        const input = event.target as HTMLInputElement;
+        if (input && input.files && input.files.length > 0) {
+          const file = input.files[0];
+          // Limpiar preview de imagen actual si existe
+          const currentImageContainer = imagePreview?.querySelector('.current-image-container') as HTMLElement;
+          if (currentImageContainer) {
+            currentImageContainer.style.display = 'none';
+          }
+
+          const reader = new FileReader();
+          reader.onload = (e: ProgressEvent<FileReader>) => {
+            // Añadir la nueva vista previa
+            const newPreviewContainer = document.createElement('div');
+            newPreviewContainer.className = 'new-image-container';
+            const result = e.target?.result as string;
+            newPreviewContainer.innerHTML = `
+              <img src="${result}" alt="Vista previa" class="admin-preview-img">
+              <div class="current-image-label">Nueva imagen</div>
+            `;
+            
+            // Insertar nuevo contenedor al inicio
+            imagePreview.insertBefore(newPreviewContainer, imagePreview.firstChild);
+
+            // Agregar evento para eliminar la imagen
+            const removeBtn = newPreviewContainer.querySelector('.admin-btn-remove-image');
+            if (removeBtn) {
+              removeBtn.addEventListener('click', () => {
+                imageInput.value = '';
+                newPreviewContainer.remove();
+                // Mostrar de nuevo la imagen actual si existe
+                if (currentImageContainer) {
+                  currentImageContainer.style.display = 'flex';
+                }
+              });
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    // Manejar el envío del formulario
+    if (editForm) {
+      editForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        try {
+          // Mostrar indicador de carga
+          if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+          }
+
+          // Obtener la ID de la promoción
+          const idElement = document.getElementById('edit-promotion-id') as HTMLInputElement;
+          const promotionId = idElement ? idElement.value : '';
+          
+          // Obtener los datos directamente de los elementos del DOM con verificaciones de tipo
+          const titleElement = document.getElementById('edit-promotion-title') as HTMLInputElement;
+          const descriptionElement = document.getElementById('edit-promotion-description') as HTMLTextAreaElement;
+          const whatsappElement = document.getElementById('edit-promotion-whatsapp') as HTMLTextAreaElement;
+          
+          const title = titleElement ? titleElement.value : '';
+          const description = descriptionElement ? descriptionElement.value : '';
+          const whatsappMessage = whatsappElement ? whatsappElement.value : '';
+          
+          // Imprimir los valores para depuración
+          console.log('Valores del formulario a enviar:', {
+            id: promotionId,
+            title,
+            description,
+            whatsapp_message: whatsappMessage
+          });
+          
+          // Crear un objeto tipado con los datos exactos para actualizar
+          // Define el tipo explícitamente para evitar errores de TypeScript
+          interface PromotionData {
+            title: string;
+            description: string;
+            whatsapp_message: string;
+            image_path?: string;
+          }
+          
+          const promotionData: PromotionData = {
+            title,
+            description,
+            whatsapp_message: whatsappMessage
+          };
+
+          // Manejar la imagen si se seleccionó una nueva
+          if (imageInput && imageInput.files && imageInput.files[0]) {
+            try {
+              const imageFile = imageInput.files[0];
+              
+              // Generar nombre de archivo único
+              const fileExt = imageFile.name.split('.').pop();
+              const fileName = `promo_${promotionId}_${Date.now()}.${fileExt}`;
+              
+              console.log('Subiendo imagen con nombre:', fileName);
+              
+              // Subir imagen a Supabase
+              const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('promos')
+                .upload(fileName, imageFile, {
+                  cacheControl: '3600',
+                  upsert: true
+                });
+              
+              if (uploadError) {
+                throw new Error(`Error al subir la imagen: ${uploadError.message}`);
+              }
+              
+              // Obtener URL pública
+              const { data: publicUrlData } = supabase.storage
+                .from('promos')
+                .getPublicUrl(fileName);
+              
+              // Actualizar la ruta de imagen en los datos a enviar
+              promotionData.image_path = fileName;
+              
+              console.log('Imagen subida exitosamente. URL:', publicUrlData.publicUrl);
+            } catch (uploadError) {
+              console.error('Error al subir la imagen:', uploadError);
+              alert('Error al subir la imagen. Se mantendrá la imagen actual.');
+            }
+          }
+
+          // Ya no necesitamos eliminar el campo de imagen porque está tipado correctamente
+
+          // Mostrar los datos que se van a actualizar (para depuración)
+          console.log('Datos a actualizar:', promotionData);
+          console.log('ID de promoción:', promotionId);
+          
+          // Actualizar la promoción en Supabase con método RPC personalizado para asegurar actualización completa
+          const { data, error } = await supabase
+            .from('promotions')
+            .update(promotionData)
+            .eq('id', promotionId)
+            .select();
+
+          if (error) {
+            console.error('Error al actualizar en Supabase:', error);
+            throw error;
+          }
+          
+          // Mostrar datos actualizados (para depuración)
+          console.log('Datos actualizados:', data);
+          
+          // Cerrar el modal primero
+          window.closeEditModal();
+
+          // Redirigir a la misma página con un parámetro de éxito para mostrar el mensaje
+          // Añadir un timestamp para evitar caché
+          window.location.href = `/admin/promotions?updated=true&t=${Date.now()}`;
+          
+        } catch (error: unknown) {
+          console.error('Error al actualizar la promoción:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+          alert('Error al actualizar la promoción: ' + errorMessage);
+          
+          // Restaurar el botón de guardar
+          if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Cambios';
+          }
+        }
+      });
+    }
+  }
+</script>
+
+<style>
+  /* Colores personalizados */
+  :root {
+    --color-primary: #2ecc71; /* Verde brillante */
+    --color-text: #3498db;    /* Azul para textos */
+    --color-editable: #e74c3c; /* Rojo para elementos editables */
+    --color-bg-light: #f8fffa; /* Fondo verde muy claro */
+    --color-bg-medium: #e8f8e9; /* Fondo verde claro medio */
+  }
+
+  /* Estilo para la tarjeta principal */
+  .admin-card {
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+  }
+
+  .admin-card-header {
+    background-color: var(--color-bg-medium);
+    padding: 16px 20px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .admin-card-header h2 {
+    margin: 0;
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+
+  /* Estilo para los mensajes de alerta */
+  .admin-alert {
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+  }
+
+  .admin-alert i {
+    margin-right: 10px;
+    font-size: 1.2rem;
+  }
+
+  .admin-alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border-left: 4px solid var(--color-primary);
+  }
+
+  .admin-alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid var(--color-editable);
+  }
+
+  /* Estilo para botones */
+  .admin-button-primary, .admin-btn-primary {
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    transition: all 0.3s ease;
+  }
+
+  .admin-button-primary:hover, .admin-btn-primary:hover {
+    background-color: #27ae60;
+    box-shadow: 0 4px 8px rgba(46, 204, 113, 0.2);
+  }
+
+  .admin-button-secondary, .admin-btn-secondary {
+    background-color: #f8f9fa;
+    color: var(--color-text);
+    border: 1px solid #dee2e6;
+  }
+
+  /* Estilo para la tabla */
+  .admin-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .admin-table thead th {
+    background-color: var(--color-bg-medium);
+    color: var(--color-primary);
+    font-weight: 600;
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 2px solid var(--color-primary);
+  }
+
+  .admin-table tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e0e0e0;
+    color: var(--color-text);
+    vertical-align: middle;
+  }
+
+  .admin-table tbody tr:hover {
+    background-color: var(--color-bg-light);
+  }
+
+  /* Estilo para el estado vacío */
+  .admin-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    text-align: center;
+    background-color: var(--color-bg-light);
+    border-radius: 8px;
+  }
+
+  .admin-empty-state i {
+    font-size: 3rem;
+    color: var(--color-primary);
+    margin-bottom: 1rem;
+  }
+
+  .admin-empty-state p {
+    margin-bottom: 1.5rem;
+    color: var(--color-text);
+    font-size: 1.1rem;
+  }
+
+  /* Estilo para las miniaturas de imagen */
+  .admin-image-thumbnail {
+    width: 50px;
+    height: 50px;
+    overflow: hidden;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+    border: 2px solid var(--color-bg-medium);
+  }
+
+  .admin-image-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Estilo para las acciones */
+  .admin-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .admin-action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .admin-action-edit {
+    background-color: var(--color-text);
+    color: white;
+  }
+
+  .admin-action-edit:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+  }
+
+  .admin-action-delete {
+    background-color: var(--color-editable);
+    color: white;
+  }
+
+  .admin-action-delete:hover {
+    background-color: #c0392b;
+    transform: translateY(-2px);
+  }
+
+  /* Estilo para el header de contenido */
+  .admin-content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--color-bg-medium);
+  }
+
+  .admin-content-header h1 {
+    color: var(--color-primary);
+    margin: 0;
+    font-weight: 600;
+  }
+  
+  /* Estilos para el modal de edición */
+  .admin-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
+    padding: 20px;
+    animation: modalFadeIn 0.3s ease;
+  }
+  
+  @keyframes modalFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  .admin-modal-content {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 0 2px var(--color-primary);
+    width: 100%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    animation: modalSlideIn 0.3s ease;
+    transform-origin: center;
+  }
+  
+  @keyframes modalSlideIn {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  
+  .admin-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 24px;
+    border-bottom: 2px solid var(--color-bg-medium);
+    background-color: var(--color-bg-medium);
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+  }
+  
+  .admin-modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+  
+  .admin-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--color-text);
+    cursor: pointer;
+    padding: 8px;
+    line-height: 1;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+  
+  .admin-modal-close:hover {
+    color: var(--color-editable);
+    background-color: rgba(231, 76, 60, 0.1);
+    transform: rotate(90deg);
+  }
+  
+  .admin-modal-body {
+    padding: 24px;
+  }
+  
+  .admin-modal .form-label {
+    color: var(--color-text);
+    font-weight: 500;
+    margin-bottom: 8px;
+    display: block;
+  }
+  
+  .admin-modal .form-control {
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px;
+    width: 100%;
+    transition: all 0.2s ease;
+    color: var(--color-text);
+  }
+  
+  .admin-modal .form-control:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
+    outline: none;
+  }
+  
+  .admin-modal .btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+  
+  .admin-modal .btn-primary {
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+  }
+  
+  .admin-modal .btn-primary:hover {
+    background-color: #27ae60;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.2);
+  }
+  
+  .admin-modal .btn-secondary {
+    background-color: #f8f9fa;
+    color: var(--color-text);
+    border: 1px solid #dee2e6;
+  }
+  
+  .admin-modal .btn-secondary:hover {
+    background-color: #e2e6ea;
+    transform: translateY(-2px);
+  }
+  
+  .admin-modal .btn-danger {
+    background-color: var(--color-editable);
+    color: white;
+    border: none;
+  }
+  
+  .admin-modal .btn-danger:hover {
+    background-color: #c0392b;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.2);
+  }
+  
+  .admin-image-input-container {
+    margin-bottom: 20px;
+    position: relative;
+  }
+  
+  .admin-form-file-input {
+    position: absolute;
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    z-index: -1;
+  }
+  
+  .admin-file-input-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background-color: var(--color-text);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+  }
+  
+  .admin-file-input-wrapper:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+  }
+  
+  .admin-file-input-wrapper i {
+    font-size: 1.1rem;
+  }
+  
+  .admin-image-preview {
+    width: 100%;
+    max-width: 320px;
+    height: 220px;
+    margin-top: 15px;
+    background-color: var(--color-bg-light);
+    border: 2px solid var(--color-primary);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+  }
+  
+  .admin-image-preview:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(46, 204, 113, 0.15);
+  }
+  
+  .admin-preview-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+  
+  .admin-btn-remove-image {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: var(--color-editable);
+    color: white;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+    opacity: 0.9;
+  }
+  
+  .admin-btn-remove-image:hover {
+    opacity: 1;
+    transform: rotate(90deg);
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+  }
+
+  .current-image-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .current-image-label,
+  .new-image-container .current-image-label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 4px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    text-align: center;
+    font-size: 12px;
+  }
+  
+  .new-image-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .admin-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .admin-action-edit {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+  }
+
+  .admin-action-edit:hover {
+    background-color: #3b82f6;
+    color: white;
+  }
+
+  .admin-action-delete {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+
+  .admin-action-delete:hover {
+    background-color: #ef4444;
+    color: white;
+  }
+</style>

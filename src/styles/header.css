@@ -105,14 +105,35 @@
   }
 }
 
-/* Imagen del logo */
+/* Imagen del logo - configuración base */
 .logo-img {
-  height: 250%;
   width: auto;
   object-fit: contain;
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
+  /* No especificamos altura aquí para que la tomen los media queries */
+}
+
+/* Tamaño del logo para dispositivos móviles (mantiene el tamaño original) */
+@media (max-width: 768px) {
+  .logo-img {
+    height: auto;
+  }
+}
+
+/* Tamaño específico para tablets y escritorio */
+@media (min-width: 769px) {
+  .logo-img {
+    height: 150%;
+  }
+}
+
+/* Ajuste fino para pantallas grandes */
+@media (min-width: 1280px) {
+  .logo-img {
+    height: 100%;
+  }
 }
 
 /* ============================================
