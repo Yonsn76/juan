@@ -299,11 +299,7 @@ console.log('Estado final:', { category, error, method: Astro.request.method });
           console.log('Datos de categoría a actualizar:', categoryData);
 
 
-          // Importar supabase dinámicamente para evitar problemas de TypeScript
-          const { createClient } = await import('@supabase/supabase-js');
-          const supabaseUrl = 'https://cnrhqbbquymnlquuwkbh.supabase.co';
-          const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNucmhxYmJxdXltbmxxdXV3a2JoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5NDYwNDksImV4cCI6MjA2MzUyMjA0OX0.uWq6EPQrMOq1vBif4flJVnjHhvKjIlbB-nrnxgRzCbY';
-          const supabase = createClient(supabaseUrl, supabaseAnonKey);
+          // Usar el cliente de Supabase configurado globalmente
 
           // Actualizar la categoría en Supabase
           const { data, error } = await supabase

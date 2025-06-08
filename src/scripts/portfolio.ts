@@ -58,12 +58,12 @@ class PortfolioManager {
     const projectsToShow = allProjects.slice(0, endIndex);
 
     if (!append) {
-      this.projectsContainer.innerHTML = '';
+      this.projectsContainer!.innerHTML = '';
     }
 
     projectsToShow.forEach(project => {
       const projectElement = this.createProjectElement(project);
-      this.projectsContainer.appendChild(projectElement);
+      this.projectsContainer!.appendChild(projectElement);
     });
 
     // Update load more button visibility

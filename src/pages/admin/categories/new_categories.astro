@@ -1,6 +1,7 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
 import '../../../styles/admin.css';
+import { supabase } from '../../../lib/supabase';
 
 // Lista de iconos disponibles de Font Awesome
 const availableIcons = [
@@ -138,12 +139,6 @@ const availableIcons = [
 </Layout>
 
 <script>
-  import { createClient } from '@supabase/supabase-js';
-
-  // Crear cliente de Supabase
-  const supabaseUrl = 'https://cnrhqbbquymnlquuwkbh.supabase.co';
-  const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNucmhxYmJxdXltbmxxdXV3a2JoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5NDYwNDksImV4cCI6MjA2MzUyMjA0OX0.uWq6EPQrMOq1vBif4flJVnjHhvKjIlbB-nrnxgRzCbY';
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   document.addEventListener('DOMContentLoaded', () => {
     const categoryForm = document.getElementById('category-form') as HTMLFormElement;
