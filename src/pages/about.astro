@@ -2,72 +2,31 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import AnimatedTestimonials from '../components/AnimatedTestimonials.astro';
+
 
 const teamMembers = [
   {
     name: 'Juan Pérez',
     role: 'Fundador & Gerente',
-    image: 'team/juan.jpg',
     description: 'Con más de 15 años de experiencia en el mundo de las motos.'
   },
   {
     name: 'Ana García',
     role: 'Especialista en Ventas',
-    image: 'team/ana.jpg',
     description: 'Experta en asesoramiento y atención al cliente.'
   },
   {
     name: 'Carlos López',
     role: 'Técnico Principal',
-    image: 'team/carlos.jpg',
     description: 'Mecánico certificado con especialización en tunning.'
   },
   {
     name: 'María Torres',
     role: 'Diseñadora',
-    image: 'team/maria.jpg',
     description: 'Especialista en personalización y diseño de motos.'
   }
 ];
 
-const testimonials = [
-  {
-    quote:
-      "The attention to detail and innovative features have completely transformed our workflow. This is exactly what we've been looking for.",
-    name: "Sarah Chen",
-    designation: "Product Manager at TechFlow",
-    src: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=3560&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  },
-  {
-    quote:
-      "Implementation was seamless and the results exceeded our expectations. The platform's flexibility is remarkable.",
-    name: "Michael Rodriguez",
-    designation: "CTO at InnovateSphere",
-    src: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=3540&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  },
-  {
-    quote:
-      "This solution has significantly improved our team's productivity. The intuitive interface makes complex tasks simple.",
-    name: "Emily Watson",
-    designation: "Operations Director at CloudScale",
-    src: "https://images.unsplash.com/photo-1623582854588-d60de57fa33f?q=80&w=3540&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  },
-  {
-    quote:
-      "Outstanding support and robust features. It's rare to find a product that delivers on all its promises.",
-    name: "James Kim",
-    designation: "Engineering Lead at DataPro",
-    src: "https://images.unsplash.com/photo-1636041293178-808a6762ab39?q=80&w=3464&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  },
-  {
-    quote:
-      "The scalability and performance have been game-changing for our organization. Highly recommend to any growing business.",
-    name: "Lisa Thompson",
-    designation: "VP of Technology at FutureNet",
-    src: "https://images.unsplash.com/photo-1624561172888-ac93c696e10c?q=80&w=2592&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  },
-];
 ---
 
 <Layout title="Nosotros">
@@ -139,24 +98,18 @@ const testimonials = [
     <section class="section team-section">
       <div class="container">
         <h2 class="section-title">Nuestro Equipo</h2>
-        <div class="team-grid">
+        <ul class="team-list">
           {teamMembers.map(member => (
-            <div class="team-card">
-              <div class="team-image">
-                <img src={`/images/${member.image}`} alt={member.name} />
-              </div>
-              <div class="team-info">
-                <h3>{member.name}</h3>
-                <span class="team-role">{member.role}</span>
-                <p>{member.description}</p>
-              </div>
-            </div>
+            <li>
+              <h3>{member.name}</h3>
+              <p class="team-role">{member.role}</p>
+              <p>{member.description}</p>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
     </section>
 
-    <AnimatedTestimonials testimonials={testimonials} />
   </main>
   
   <Footer slot="footer" />
@@ -241,50 +194,33 @@ const testimonials = [
   }
 
   /* Team Section */
-  .team-grid {
+  .team-list {
+    list-style: none;
+    padding: 0;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 2rem;
   }
 
-  .team-card {
+  .team-list li {
     background-color: white;
     border-radius: 0.5rem;
-    overflow: hidden;
+    padding: 1.5rem;
+    text-align: center;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   }
 
-  .team-image {
-    height: 250px;
-    overflow: hidden;
-  }
-
-  .team-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .team-info {
-    padding: 1.5rem;
-    text-align: center;
-  }
-
-  .team-info h3 {
-    margin-bottom: 0.5rem;
-  }
-
   .team-role {
-    display: block;
     color: var(--biker-red);
     font-weight: 500;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
+    display: block;
   }
 
   /* Responsive Design */
   @media (max-width: 1024px) {
     .values-grid,
-    .team-grid {
+    .team-list {
       grid-template-columns: repeat(2, 1fr);
     }
   }
@@ -305,7 +241,7 @@ const testimonials = [
 
   @media (max-width: 640px) {
     .values-grid,
-    .team-grid {
+    .team-list {
       grid-template-columns: 1fr;
     }
 
@@ -317,8 +253,5 @@ const testimonials = [
       font-size: 1.1rem;
     }
 
-    .team-image {
-      height: 200px;
-    }
   }
 </style>
