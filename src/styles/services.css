@@ -100,12 +100,12 @@ a:hover {
 }
 
 .services-list > .container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-
+    display: flex;
+    flex-direction: column;
     gap: var(--space-xl);
-
-    max-width: 1200px;
+    align-items: center;
+    max-width: 800px;
+    margin: 0 auto;
 }
 
 /* Service Card */
@@ -151,11 +151,11 @@ a:hover {
 
 @media (min-width: 900px) {
     .card-content {
-        flex-direction: row;
+        flex-direction: column;
     }
 
     .service-card.reverse .card-content {
-        flex-direction: row-reverse;
+        flex-direction: column;
     }
 }
 
@@ -188,33 +188,33 @@ a:hover {
     }
     
     .card-content {
-        flex-direction: row;
-        min-height: 380px;
+        flex-direction: column;
+        min-height: auto;
     }
-    
+
     .service-card.reverse .card-content {
-        flex-direction: row-reverse;
+        flex-direction: column;
     }
-    
+
     .media-section {
-        width: 50%;
-        height: 100%;
+        width: 100%;
+        height: auto;
     }
-    
+
     .content-section {
-        width: 50%;
+        width: 100%;
         padding: var(--space-xl);
     }
-    
+
     .service-card.reverse .media-section,
     .service-card:not(.reverse) .media-section {
-        border-radius: 1rem;
+        border-radius: 0;
     }
 }
 
 @media (min-width: 1200px) {
     .card-content {
-        min-height: 420px;
+        min-height: auto;
     }
 }
 
@@ -285,13 +285,13 @@ a:hover {
 @media (min-width: 900px) {
     .content-section {
         padding: var(--space-xl);
-        width: 55%;
+        width: 100%;
     }
 }
 
 @media (min-width: 1200px) {
     .content-section {
-        width: 60%;
+        width: 100%;
     }
 }
 
