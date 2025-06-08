@@ -14,7 +14,7 @@
     /* Typography */
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     --font-heading: 'Montserrat', var(--font-sans);
-    --font-size-base: 1rem;
+    --font-size-base: 0.9rem;
     --line-height-base: 1.6;
     --text-primary: #2d3748;
     --text-secondary: #4a5568;
@@ -39,7 +39,7 @@
 
 /* Base Styles */
 html {
-    font-size: 16px;
+    font-size: 14px;
     scroll-behavior: smooth;
 }
 
@@ -100,16 +100,17 @@ a:hover {
 }
 
 .services-list > .container {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-xl);
-    max-width: 1000px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--space-lg);
+    max-width: 1200px;
 }
 
 /* Service Card */
 .service-card {
     background: rgba(255, 255, 255, 0.98);
-    border-radius: 1.25rem;
+    border-radius: 0;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), 50% 100%, 0 calc(100% - 20px));
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
     border: 1px solid rgba(0, 0, 0, 0.08);
     overflow: hidden;
@@ -346,9 +347,9 @@ a:hover {
 
 .service-description {
     color: #444;
-    margin-bottom: 1.75rem;
-    line-height: 1.7;
-    font-size: 1.05rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+    font-size: 0.95rem;
 }
 
 .service-description p {
@@ -366,7 +367,7 @@ a:hover {
 }
 
 .service-title {
-    font-size: 1.7rem;
+    font-size: 1.4rem;
     font-weight: 300;
     color: #181818;
     letter-spacing: 0.11em;
@@ -379,7 +380,7 @@ a:hover {
 }
 @media (min-width: 700px) {
   .service-title {
-    font-size: 2.15rem;
+    font-size: 1.8rem;
     letter-spacing: 0.18em;
   }
 }
@@ -388,9 +389,9 @@ a:hover {
 /* Service Description */
 .service-description p {
     color: #444;
-    margin-bottom: 1.3rem;
-    line-height: 1.65;
-    font-size: 1.17rem;
+    margin-bottom: 1.2rem;
+    line-height: 1.5;
+    font-size: 0.9rem;
     text-align: center;
     font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
     font-weight: 300;
@@ -427,7 +428,7 @@ a:hover {
     display: flex;
     align-items: flex-start;
     gap: 0.85rem;
-    font-size: 0.98rem;
+    font-size: 0.85rem;
     color: #444;
     padding: 0.4rem 0;
     transition: var(--transition-base);
@@ -590,8 +591,8 @@ a:hover {
     align-items: center;
     background: rgba(240,240,240,0.5);
     border-radius: 2rem;
-    padding: 0.45rem 1.3rem;
-    font-size: 1.04rem;
+    padding: 0.4rem 1.1rem;
+    font-size: 0.85rem;
     color: #222;
     font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
     font-weight: 300;
@@ -610,7 +611,7 @@ a:hover {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0.9rem 2.2rem;
+    padding: 0.7rem 1.8rem;
     border-radius: 2rem;
     font-weight: 400;
     color: #222;
@@ -620,7 +621,7 @@ a:hover {
     text-decoration: none;
     min-width: 170px;
     box-shadow: none;
-    font-size: 1.07rem;
+    font-size: 0.9rem;
     letter-spacing: 0.04em;
     text-transform: uppercase;
     font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
