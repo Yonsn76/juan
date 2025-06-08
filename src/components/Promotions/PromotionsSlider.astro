@@ -1,0 +1,117 @@
+---
+interface Promotion {
+  id: number;
+  title: string;
+  description: string;
+  image_path: string;
+  whatsapp_message: string;
+}
+
+const { promotions } = Astro.props;
+---
+
+<section class="promotions-section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-subtitle">Ofertas exclusivas</span>
+      <h2 class="section-title">Promociones</h2>
+    </div>
+    <div class="promo-slider">
+      {promotions.map((promo, index) => (
+        <div class={`promo-slide ${index === 0 ? 'active' : ''}`} data-index={index}>
+          <img src={promo.image_path} alt={promo.title} class="promo-image" />
+          <div class="promo-info">
+            <h3 class="promo-title">{promo.title}</h3>
+            <p class="promo-description">{promo.description}</p>
+            <a href={`https://wa.me/51999999999?text=${encodeURIComponent(promo.whatsapp_message)}`} target="_blank" class="promo-btn">Solicitar</a>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script>
+  function initPromotionsSlider() {
+    const slides = document.querySelectorAll('.promo-slide');
+    let current = 0;
+    if (slides.length <= 1) return;
+
+    setInterval(() => {
+      slides[current].classList.remove('active');
+      current = (current + 1) % slides.length;
+      slides[current].classList.add('active');
+    }, 4000);
+  }
+
+  document.addEventListener('DOMContentLoaded', initPromotionsSlider);
+  document.addEventListener('astro:page-load', initPromotionsSlider);
+</script>
+
+<style>
+  .promotions-section {
+    padding: 4rem 0;
+    background: var(--gray-50);
+  }
+
+  .promo-slider {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .promo-slide {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .promo-slide.active {
+    display: flex;
+    animation: fadeIn 0.6s ease-in-out;
+  }
+
+  .promo-image {
+    width: 100%;
+    max-height: 300px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+
+  .promo-btn {
+    display: inline-block;
+    background-color: #10b981;
+    color: #fff;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+  }
+
+  .promo-btn:hover {
+    background-color: #059669;
+  }
+
+  @media (min-width: 768px) {
+    .promo-slide {
+      flex-direction: row;
+      text-align: left;
+    }
+
+    .promo-image {
+      width: 50%;
+      max-height: 350px;
+    }
+
+    .promo-info {
+      width: 50%;
+      padding: 0 1rem;
+    }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+</style>
