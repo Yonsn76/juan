@@ -102,14 +102,19 @@ a:hover {
 .services-list > .container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+
     gap: var(--space-xl);
+
     max-width: 1200px;
 }
 
 /* Service Card */
 .service-card {
-    background: #ffffff;
-    border-radius: 1rem;
+
+
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 0;
+    clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 50%, calc(100% - 20px) 100%, 0 100%, 20px 50%);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
     border: 1px solid rgba(0, 0, 0, 0.08);
     overflow: hidden;
@@ -126,7 +131,8 @@ a:hover {
 }
 
 .service-card.reverse {
-    /* diseño simétrico en modo inverso */
+
+    clip-path: polygon(20px 0, 100% 0, 100% 100%, 20px 100%, 0 50%);
 }
 
 .service-card:hover {
@@ -635,34 +641,46 @@ a:hover {
     margin-left: 0.7rem;
 }
 
+
 /* Variantes de color para un estilo moderno */
 .service-card.biker-red-card {
     background: linear-gradient(135deg, var(--biker-red) 0%, #f9f9f9 72%);
+
     border-color: var(--biker-red);
 }
 
 .service-card.racing-blue-card {
+
     background: linear-gradient(135deg, var(--racing-blue) 0%, #f9f9f9 72%);
+
     border-color: var(--racing-blue);
 }
 
 .service-card.safety-yellow-card {
+
     background: linear-gradient(135deg, var(--safety-yellow) 0%, #f9f9f9 72%);
+
     border-color: var(--safety-yellow);
 }
 
 .service-card.mechanic-gray-card {
+
     background: linear-gradient(135deg, var(--mechanic-gray) 0%, #f9f9f9 72%);
+
     border-color: var(--mechanic-gray);
 }
 
 .service-card.custom-purple-card {
+
     background: linear-gradient(135deg, var(--custom-purple) 0%, #f9f9f9 72%);
+
     border-color: var(--custom-purple);
 }
 
 .service-card.collector-green-card {
+
     background: linear-gradient(135deg, var(--collector-green) 0%, #f9f9f9 72%);
+
     border-color: var(--collector-green);
 }
 
