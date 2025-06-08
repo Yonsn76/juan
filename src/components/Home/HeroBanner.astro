@@ -1,0 +1,122 @@
+---
+interface Service {
+  icon: string;
+  title: string;
+  description: string;
+  video: string;
+  color: string;
+}
+
+const { services } = Astro.props as { services: Service[] };
+---
+
+<section class="hero-banner" id="hero-banner">
+  <div class="hero-slides-container">
+    {services.map((service, index) => (
+      <div class:list={["hero-slide", { active: index === 0 }]} data-index={index}>
+        <div class="hero-overlay" style="background: linear-gradient(to right, rgba(0,0,0,0.8), rgba(0,0,0,0.5))"></div>
+        <div class="hero-background" style={`background-image: url('/images/${service.video.replace('.mp4','_hero.png')}')`}></div>
+        <div class="hero-content">
+          <div class="hero-text">
+            <span class="hero-subtitle">PREMIUM MOTORCYCLE EXPERIENCE</span>
+            <h1 class="hero-title">ZONA BIKER 15</h1>
+            <h2 class="hero-service-title">{service.title}</h2>
+            <p class="hero-description">{service.description}</p>
+            <div class="hero-buttons">
+              <a href="/services" class="btn btn-primary">VER DETALLES</a>
+              <a href="/catalog" class="btn btn-secondary">VER CATÁLOGO</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <div class="hero-controls">
+    <div class="hero-indicators">
+      {services.map((_, index) => (
+        <span class:list={["hero-indicator", { active: index === 0 }]} data-index={index}></span>
+      ))}
+    </div>
+    <div class="hero-arrows">
+      <button class="hero-arrow prev">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <button class="hero-arrow next">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.addEventListener('astro:page-load', initHeroCarousel);
+  document.addEventListener('DOMContentLoaded', initHeroCarousel);
+
+  function initHeroCarousel() {
+    const slides = document.querySelectorAll('.hero-slide');
+    const indicators = document.querySelectorAll('.hero-indicator');
+    const prevBtn = document.querySelector('.hero-arrow.prev');
+    const nextBtn = document.querySelector('.hero-arrow.next');
+    let currentIndex = 0;
+    let intervalId;
+
+    slides[0].classList.add('active');
+
+    function showSlide(index) {
+      slides[currentIndex].classList.remove('active');
+      indicators[currentIndex].classList.remove('active');
+
+      currentIndex = index;
+      slides[currentIndex].classList.add('active');
+      indicators[currentIndex].classList.add('active');
+    }
+
+    function nextSlide() {
+      const newIndex = (currentIndex + 1) % slides.length;
+      showSlide(newIndex);
+    }
+
+    function prevSlide() {
+      const newIndex = (currentIndex - 1 + slides.length) % slides.length;
+      showSlide(newIndex);
+    }
+
+    intervalId = setInterval(nextSlide, 3000);
+
+    indicators.forEach((indicator, index) => {
+      indicator.addEventListener('click', () => {
+        clearInterval(intervalId);
+        showSlide(index);
+        intervalId = setInterval(nextSlide, 3000);
+      });
+    });
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => {
+        clearInterval(intervalId);
+        prevSlide();
+        intervalId = setInterval(nextSlide, 3000);
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        clearInterval(intervalId);
+        nextSlide();
+        intervalId = setInterval(nextSlide, 3000);
+      });
+    }
+
+    const heroContainer = document.querySelector('.hero-banner');
+    if (heroContainer) {
+      heroContainer.addEventListener('mouseenter', () => {
+        clearInterval(intervalId);
+      });
+
+      heroContainer.addEventListener('mouseleave', () => {
+        intervalId = setInterval(nextSlide, 3000);
+      });
+    }
+  }
+</script>
