@@ -396,10 +396,9 @@ const brands = [
   .hero-content {
     position: relative;
     z-index: 10;
-    padding: 0 5%;
     color: var(--text-light);
     width: 100%;
-    max-width: 1200px;
+    max-width: var(--container-width-xl);
     padding: 0 2rem;
     margin: 0 auto;
     height: 100%;
@@ -415,7 +414,7 @@ const brands = [
   }
 
   .hero-subtitle {
-    font-size: 1rem;
+    font-size: clamp(0.8rem, 2.5vw, 1rem);
     font-weight: 600;
     letter-spacing: 2px;
     color: var(--red-500);
@@ -426,7 +425,7 @@ const brands = [
   }
 
   .hero-title {
-    font-size: 3.5rem;
+    font-size: clamp(2rem, 5vw, 3.5rem);
     font-weight: 700;
     margin-bottom: 1.5rem;
     line-height: 1.1;
@@ -437,7 +436,7 @@ const brands = [
   }
   
   .hero-service-title {
-    font-size: 4rem;
+    font-size: clamp(2.5rem, 6vw, 4rem);
     font-weight: 900;
     margin-bottom: 1.5rem;
     color: #ffffff;
@@ -561,13 +560,10 @@ const brands = [
     .promo-box {
       display: flex !important;
       position: absolute;
-      right: 5%;
-      top: 85%;
-      transform: translateY(20%);
-      max-width: 90%;
-      width: 280px;
-      min-height: 100px;
-      height: 35%;
+      left: 50%;
+      bottom: -90px;
+      transform: translateX(-50%);
+      width: clamp(220px, 85%, 300px);
       padding: 15px 20px;
       border-radius: 10px;
       border: 2px solid #fff;
@@ -602,40 +598,24 @@ const brands = [
   /* Versión Desktop */
   @media (min-width: 1024px) {
     .promo-box {
-      display: block;
-      position: absolute;
-      right: 8%;
-      bottom: -35%;
-      background-color: rgba(0, 0, 0, 0.85);
-      color: white;
-      padding: 25px 30px;
-      border-radius: 10px;
-      max-width: 280px;
-      border: 2px solid #fff;
-      text-align: center;
-      box-shadow: 0 5px 25px rgba(0,0,0,0.5);
-      animation: fadeIn 1s ease-out;
-      z-index: 10;
-      overflow: hidden;
-    }
-    
-    .promo-box {
-      position: absolute;
-      right: 8%;
-      bottom: -35%;
-      max-width: 280px;
-      width: 100%;
-      height: 60%; /* Aumentada la altura */
-      padding: 25px 30px;
-      border-radius: 10px;
-      border: 2px solid #fff;
-      text-align: center;
-      box-shadow: 0 5px 25px rgba(0,0,0,0.5);
-      overflow: hidden;
-      z-index: 10;
       display: flex;
+      position: absolute;
+      right: 8%;
+      bottom: -35%;
+      width: 100%;
+      max-width: 280px;
+      height: 60%;
+      padding: 25px 30px;
+      border-radius: 10px;
+      border: 2px solid #fff;
+      text-align: center;
+      box-shadow: 0 5px 25px rgba(0,0,0,0.5);
+      background-color: rgba(0, 0, 0, 0.85);
+      z-index: 10;
+      overflow: hidden;
       align-items: center;
       justify-content: center;
+      animation: fadeIn 1s ease-out;
     }
     
     .promo-bg {
@@ -1382,11 +1362,10 @@ const brands = [
       left: 50%;
       bottom: -90px;
       transform: translateX(-50%);
-      width: 85%;
-      max-width: 300px;
+      width: clamp(220px, 85%, 300px);
       margin: 0 auto;
       z-index: 100;
-      background-color: #d00;
+      background-color: rgba(0,0,0,0.85);
       color: white;
       padding: 15px 20px;
       border-radius: 5px;
