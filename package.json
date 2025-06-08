@@ -8,9 +8,7 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro",
-    "setup": "node scripts/copy-assets.js",
-    "postinstall": "npm run setup"
+    "astro": "astro"
   },
   "dependencies": {
     "astro": "^4.0.3",
