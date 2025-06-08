@@ -1,0 +1,174 @@
+---
+interface Testimonial {
+  quote: string;
+  name: string;
+  designation: string;
+  src: string;
+}
+
+interface Props {
+  testimonials: Testimonial[];
+  autoplay?: boolean;
+}
+
+const { testimonials, autoplay = false } = Astro.props;
+---
+
+<section class="animated-testimonials" data-testimonials={JSON.stringify(testimonials)} data-autoplay={autoplay}>
+  <div class="images-wrapper">
+    {testimonials.map((t, index) => (
+      <img src={t.src} alt={t.name} class:list={["testimonial-image", { active: index === 0 }]} loading="lazy" />
+    ))}
+  </div>
+  <div class="content-wrapper">
+    <div class="text-content">
+      <h3 class="testimonial-name">{testimonials[0].name}</h3>
+      <p class="testimonial-role">{testimonials[0].designation}</p>
+      <p class="testimonial-quote">{testimonials[0].quote}</p>
+    </div>
+    <div class="controls">
+      <button class="prev" aria-label="Anterior">&#9664;</button>
+      <button class="next" aria-label="Siguiente">&#9654;</button>
+    </div>
+  </div>
+</section>
+
+<script>
+  function initAnimatedTestimonials() {
+    const section = document.querySelector('.animated-testimonials');
+    if (!section) return;
+
+    const images = Array.from(section.querySelectorAll('.testimonial-image'));
+    const nameEl = section.querySelector('.testimonial-name');
+    const roleEl = section.querySelector('.testimonial-role');
+    const quoteEl = section.querySelector('.testimonial-quote');
+    const prevBtn = section.querySelector('.prev');
+    const nextBtn = section.querySelector('.next');
+
+    if (!images.length || !nameEl || !roleEl || !quoteEl || !prevBtn || !nextBtn) return;
+
+    const data = JSON.parse(section.dataset.testimonials || '[]');
+    const autoplay = section.dataset.autoplay === 'true';
+    let current = 0;
+    let interval = null;
+
+    function update(index) {
+      images.forEach((img, i) => {
+        img.classList.toggle('active', i === index);
+      });
+      nameEl.textContent = data[index].name;
+      roleEl.textContent = data[index].designation;
+      quoteEl.textContent = data[index].quote;
+    }
+
+    function next() {
+      current = (current + 1) % data.length;
+      update(current);
+    }
+
+    function prev() {
+      current = (current - 1 + data.length) % data.length;
+      update(current);
+    }
+
+    prevBtn.addEventListener('click', prev);
+    nextBtn.addEventListener('click', next);
+
+    if (autoplay) {
+      interval = setInterval(next, 5000);
+      section.addEventListener('mouseenter', () => clearInterval(interval));
+      section.addEventListener('mouseleave', () => { interval = setInterval(next, 5000); });
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', initAnimatedTestimonials);
+  document.addEventListener('astro:page-load', initAnimatedTestimonials);
+</script>
+
+<style>
+  .animated-testimonials {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 3rem 1rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  @media (min-width: 768px) {
+    .animated-testimonials {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .images-wrapper {
+    position: relative;
+    height: 18rem;
+  }
+
+  .testimonial-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 1rem;
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+
+  .testimonial-image.active {
+    opacity: 1;
+    transform: scale(1);
+    z-index: 1;
+  }
+
+  .content-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .testimonial-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--biker-black);
+  }
+
+  .testimonial-role {
+    color: var(--biker-red);
+    margin: 0.25rem 0 1rem;
+    font-weight: 500;
+  }
+
+  .testimonial-quote {
+    font-size: 1.125rem;
+    color: var(--text-muted, #555);
+    line-height: 1.6;
+  }
+
+  .controls {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .controls button {
+    background: var(--gray-200, #eee);
+    border: none;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+  }
+
+  .controls button:hover {
+    transform: scale(1.1);
+  }
+</style>
