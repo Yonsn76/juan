@@ -1,20 +1,20 @@
-/* Lamborghini-Inspired Services Styles */
+/* Estilos de Servicios Inspirados en Marcas Premium */
 :root {
-    /* Color Palette - Lamborghini Style */
-    --biker-red: #ff6b35;
-    --biker-black: #0a0a0a;
-    --racing-blue: #1e3a8a;
+    /* Paleta de colores inspirada en Tesla, Ducati y Ferrari */
+    --biker-red: #cc0000; /* Ferrari/Tesla */
+    --biker-black: #0d0d0d;
+    --racing-blue: #0045ad; /* Toque Ducati */
     --chrome-silver: #c0c0c0;
-    --safety-yellow: #d4af37;
-    --mechanic-gray: #2a2a2a;
-    --custom-purple: #7c3aed;
-    --delivery-orange: #ff8c42;
-    --collector-green: #059669;
+    --safety-yellow: #f1c40f;
+    --mechanic-gray: #555555;
+    --custom-purple: #5b2c6f;
+    --delivery-orange: #e67e22;
+    --collector-green: #0b6d0b;
 
     /* Typography */
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     --font-heading: 'Montserrat', var(--font-sans);
-    --font-size-base: 1rem;
+    --font-size-base: 0.9rem;
     --line-height-base: 1.6;
     --text-primary: #2d3748;
     --text-secondary: #4a5568;
@@ -39,7 +39,7 @@
 
 /* Base Styles */
 html {
-    font-size: 16px;
+    font-size: 14px;
     scroll-behavior: smooth;
 }
 
@@ -100,16 +100,16 @@ a:hover {
 }
 
 .services-list > .container {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: var(--space-xl);
-    max-width: 1000px;
+    max-width: 1200px;
 }
 
 /* Service Card */
 .service-card {
-    background: rgba(255, 255, 255, 0.98);
-    border-radius: 1.25rem;
+    background: #ffffff;
+    border-radius: 1rem;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
     border: 1px solid rgba(0, 0, 0, 0.08);
     overflow: hidden;
@@ -123,6 +123,10 @@ a:hover {
     flex-direction: column;
     align-items: stretch;
     will-change: transform, box-shadow;
+}
+
+.service-card.reverse {
+    /* diseño simétrico en modo inverso */
 }
 
 .service-card:hover {
@@ -193,15 +197,12 @@ a:hover {
     
     .content-section {
         width: 50%;
-        padding: 2rem;
+        padding: var(--space-xl);
     }
     
-    .service-card.reverse .media-section {
-        border-radius: 0 1.5rem 1.5rem 0;
-    }
-    
+    .service-card.reverse .media-section,
     .service-card:not(.reverse) .media-section {
-        border-radius: 1.5rem 0 0 1.5rem;
+        border-radius: 1rem;
     }
 }
 
@@ -266,9 +267,10 @@ a:hover {
 
 /* Content Section */
 .content-section {
-    padding: var(--space-lg) var(--space-md);
+    padding: var(--space-lg);
     display: flex;
     flex-direction: column;
+    gap: var(--space-sm);
     justify-content: center;
     width: 100%;
     box-sizing: border-box;
@@ -303,7 +305,7 @@ a:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.9);
+    background: #ffffff;
     border: 1px solid rgba(0, 0, 0, 0.05);
     box-shadow: var(--shadow-sm);
     transition: var(--transition-base);
@@ -346,9 +348,9 @@ a:hover {
 
 .service-description {
     color: #444;
-    margin-bottom: 1.75rem;
-    line-height: 1.7;
-    font-size: 1.05rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+    font-size: 0.95rem;
 }
 
 .service-description p {
@@ -366,7 +368,7 @@ a:hover {
 }
 
 .service-title {
-    font-size: 1.7rem;
+    font-size: 1.4rem;
     font-weight: 300;
     color: #181818;
     letter-spacing: 0.11em;
@@ -379,7 +381,7 @@ a:hover {
 }
 @media (min-width: 700px) {
   .service-title {
-    font-size: 2.15rem;
+    font-size: 1.8rem;
     letter-spacing: 0.18em;
   }
 }
@@ -388,9 +390,9 @@ a:hover {
 /* Service Description */
 .service-description p {
     color: #444;
-    margin-bottom: 1.3rem;
-    line-height: 1.65;
-    font-size: 1.17rem;
+    margin-bottom: 1.2rem;
+    line-height: 1.5;
+    font-size: 0.9rem;
     text-align: center;
     font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
     font-weight: 300;
@@ -402,32 +404,23 @@ a:hover {
 
 /* Features Grid */
 .features-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.7rem 1.2rem;
-    justify-content: center;
-    margin: 2rem 0 1.5rem 0;
-    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    margin: 1.5rem 0 2rem 0;
+    width: 100%;
 }
 @media (min-width: 768px) {
     .features-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
-/* Features Grid */
-.features-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 0.85rem;
-    margin: 0 0 2rem 0;
-    width: 100%;
-}
 
 .feature-item {
     display: flex;
     align-items: flex-start;
     gap: 0.85rem;
-    font-size: 0.98rem;
+    font-size: 0.85rem;
     color: #444;
     padding: 0.4rem 0;
     transition: var(--transition-base);
@@ -485,7 +478,9 @@ a:hover {
     font-size: clamp(2.5rem, 6vw, 4rem);
     font-weight: 900;
     margin-bottom: 1.5rem;
-    color: var(--lambo-white);
+    background: linear-gradient(90deg, var(--biker-red), var(--racing-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
     text-transform: uppercase;
     letter-spacing: 3px;
     line-height: 1.1;
@@ -579,7 +574,7 @@ a:hover {
     }
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
     .features-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
@@ -590,8 +585,8 @@ a:hover {
     align-items: center;
     background: rgba(240,240,240,0.5);
     border-radius: 2rem;
-    padding: 0.45rem 1.3rem;
-    font-size: 1.04rem;
+    padding: 0.4rem 1.1rem;
+    font-size: 0.85rem;
     color: #222;
     font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
     font-weight: 300;
@@ -610,7 +605,7 @@ a:hover {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0.9rem 2.2rem;
+    padding: 0.7rem 1.8rem;
     border-radius: 2rem;
     font-weight: 400;
     color: #222;
@@ -620,7 +615,7 @@ a:hover {
     text-decoration: none;
     min-width: 170px;
     box-shadow: none;
-    font-size: 1.07rem;
+    font-size: 0.9rem;
     letter-spacing: 0.04em;
     text-transform: uppercase;
     font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
@@ -640,15 +635,35 @@ a:hover {
     margin-left: 0.7rem;
 }
 
-/* Service Card Color Variants */
-/* Elimina los bordes de color para look Tesla */
-.service-card.biker-red-card,
-.service-card.racing-blue-card,
-.service-card.safety-yellow-card,
-.service-card.mechanic-gray-card,
-.service-card.custom-purple-card,
+/* Variantes de color para un estilo moderno */
+.service-card.biker-red-card {
+    background: linear-gradient(135deg, var(--biker-red) 0%, #f9f9f9 72%);
+    border-color: var(--biker-red);
+}
+
+.service-card.racing-blue-card {
+    background: linear-gradient(135deg, var(--racing-blue) 0%, #f9f9f9 72%);
+    border-color: var(--racing-blue);
+}
+
+.service-card.safety-yellow-card {
+    background: linear-gradient(135deg, var(--safety-yellow) 0%, #f9f9f9 72%);
+    border-color: var(--safety-yellow);
+}
+
+.service-card.mechanic-gray-card {
+    background: linear-gradient(135deg, var(--mechanic-gray) 0%, #f9f9f9 72%);
+    border-color: var(--mechanic-gray);
+}
+
+.service-card.custom-purple-card {
+    background: linear-gradient(135deg, var(--custom-purple) 0%, #f9f9f9 72%);
+    border-color: var(--custom-purple);
+}
+
 .service-card.collector-green-card {
-    border-left: none;
+    background: linear-gradient(135deg, var(--collector-green) 0%, #f9f9f9 72%);
+    border-color: var(--collector-green);
 }
 
 /* Hover Background Effects - minimalista: sin colores de fondo llamativos */
