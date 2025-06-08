@@ -110,7 +110,7 @@ a:hover {
 .service-card {
     background: rgba(255, 255, 255, 0.98);
     border-radius: 0;
-    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), 50% 100%, 0 calc(100% - 20px));
+    clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 50%, calc(100% - 20px) 100%, 0 100%, 20px 50%);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
     border: 1px solid rgba(0, 0, 0, 0.08);
     overflow: hidden;
@@ -124,6 +124,10 @@ a:hover {
     flex-direction: column;
     align-items: stretch;
     will-change: transform, box-shadow;
+}
+
+.service-card.reverse {
+    clip-path: polygon(20px 0, 100% 0, 100% 100%, 20px 100%, 0 50%);
 }
 
 .service-card:hover {
@@ -643,13 +647,34 @@ a:hover {
 
 /* Service Card Color Variants */
 /* Elimina los bordes de color para look Tesla */
-.service-card.biker-red-card,
-.service-card.racing-blue-card,
-.service-card.safety-yellow-card,
-.service-card.mechanic-gray-card,
-.service-card.custom-purple-card,
+.service-card.biker-red-card {
+    background: linear-gradient(90deg, var(--biker-red) 0%, #fff 70%);
+    border-color: var(--biker-red);
+}
+
+.service-card.racing-blue-card {
+    background: linear-gradient(90deg, var(--racing-blue) 0%, #fff 70%);
+    border-color: var(--racing-blue);
+}
+
+.service-card.safety-yellow-card {
+    background: linear-gradient(90deg, var(--safety-yellow) 0%, #fff 70%);
+    border-color: var(--safety-yellow);
+}
+
+.service-card.mechanic-gray-card {
+    background: linear-gradient(90deg, var(--mechanic-gray) 0%, #fff 70%);
+    border-color: var(--mechanic-gray);
+}
+
+.service-card.custom-purple-card {
+    background: linear-gradient(90deg, var(--custom-purple) 0%, #fff 70%);
+    border-color: var(--custom-purple);
+}
+
 .service-card.collector-green-card {
-    border-left: none;
+    background: linear-gradient(90deg, var(--collector-green) 0%, #fff 70%);
+    border-color: var(--collector-green);
 }
 
 /* Hover Background Effects - minimalista: sin colores de fondo llamativos */
