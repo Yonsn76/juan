@@ -6,7 +6,7 @@ export function animateServices() {
   gsap.utils.toArray('.service-card').forEach((card) => {
     gsap.from(card, {
       opacity: 0,
-      x: card.classList.contains('reverse') ? -60 : 60,
+      y: 60,
       duration: 0.8,
       ease: 'power2.out',
       scrollTrigger: {
